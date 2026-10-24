@@ -77,8 +77,9 @@
 
 7. **Saudi Cultural Calendar (`تقويم المملكة`):** Founding Day (Feb 21–23) and National Day (Sep 22–24) give ×1.5 order SAR and double prestige; Ramadan (×1.25 / ×1.5) and Eid (×2 SAR) are detected from the Umm al-Qura Hijri calendar. A banner in the merge view shows the active season.
 8. **Rub'a al-Finjan Pouring Mini-Game (`تحدي ربع الفنجال`):** each renovation upgrade earns one challenge. Hold to pour and release near the 25% mark (±4 perfect, ±10 good) for SAR, gems and a Royal Joker.
-
 9. **Ambient Hijaz Oud Loop:** a quiet synthesized oud phrase over a low D drone plays while the game is unmuted; no audio files.
+10. **Blender-rendered hero art:** seven procedurally modeled props (dallah, finjan, V60, mabkhara, dates, chest, beans) rendered by `tools/blender/make_art.py` into `public/assets/art/`; the title emblem uses the dallah. See `docs/ASSETS.md` for extending them and for where to source the remaining art, music and voice.
+11. **Optional music file:** drop `public/assets/audio/ambient.mp3` to replace the synthesized loop (falls back to the synth if missing).
 
 ---
 

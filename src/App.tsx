@@ -756,49 +756,22 @@ export default function App() {
         {/* Main Asymmetric / Centered Monument Spotlight with >35% Calm Negative Space */}
         <div className="relative z-10 flex-1 max-w-5xl w-full mx-auto px-6 py-10 flex flex-col lg:flex-row items-center justify-between gap-10">
           {/* Column 1: Interactive Hero Centerpiece (Gilded Najdi Dallah & V60 Crest) */}
-          <div className="w-56 h-56 sm:w-72 sm:h-72 rounded-full bg-[#241812] border-2 border-[#D99B26]/60 shadow-[0_0_60px_rgba(217,155,38,0.2)] flex items-center justify-center p-6 shrink-0">
-            <svg viewBox="0 0 200 200" className="w-full h-full">
+          <div className="relative w-56 h-56 sm:w-72 sm:h-72 rounded-full bg-[#241812] border-2 border-[#D99B26]/60 shadow-[0_0_60px_rgba(217,155,38,0.2)] flex items-center justify-center p-6 shrink-0">
+            <svg viewBox="0 0 200 200" className="absolute inset-6 w-[calc(100%-3rem)] h-[calc(100%-3rem)]" aria-hidden="true">
               <polygon
                 points="100,10 126,42 168,32 158,74 190,100 158,126 168,168 126,158 100,190 74,158 32,168 42,126 10,100 42,74 32,32 74,42"
                 fill="#2E1E16"
                 stroke="#D99B26"
                 strokeWidth="3"
               />
-              <path
-                d="M78,76 L122,76 L132,148 L68,148 Z"
-                fill="#E9C46A"
-                stroke="#2A180D"
-                strokeWidth="4"
-              />
-              <path
-                d="M78,78 L42,60 L62,102 Z"
-                fill="#F4A261"
-                stroke="#2A180D"
-                strokeWidth="3.5"
-              />
-              <path
-                d="M122,82 C152,82 152,128 126,134"
-                fill="none"
-                stroke="#D99B26"
-                strokeWidth="7"
-                strokeLinecap="round"
-              />
-              <path
-                d="M84,76 L100,40 L116,76 Z"
-                fill="#D97724"
-                stroke="#2A180D"
-                strokeWidth="3.5"
-              />
-              <circle cx="100" cy="36" r="5" fill="#FBF7F0" />
-              <path d="M73,112 L127,112" stroke="#9E2A2B" strokeWidth="5" />
-              <path
-                d="M52,44 Q46,28 58,20 M100,24 Q106,12 96,6"
-                stroke="#FDE68A"
-                strokeWidth="3"
-                fill="none"
-                strokeLinecap="round"
-              />
             </svg>
+            <img
+              src="/assets/art/dallah.png"
+              alt={lang === 'ar' ? 'دلة نجدية ذهبية' : 'Gilded Najdi dallah'}
+              width={512}
+              height={512}
+              className="relative w-4/5 h-4/5 object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,0.5)]"
+            />
           </div>
 
           {/* Column 2: Custom SVG Title Lockup & <= 3 Menu Actions */}

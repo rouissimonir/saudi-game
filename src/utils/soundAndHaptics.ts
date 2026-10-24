@@ -15,9 +15,43 @@ class SoundAndHapticsManager {
   private ambientTimer: number | null = null;
   private ambientStep = 0;
 
-  /** Soft looping oud phrase over a low D drone; safe to call repeatedly. */
+  private ambientWanted = false;
+  private ambientFile: HTMLAudioElement | null = null;
+  private ambientFileMissing = false;
+
+  /**
+   * Background music: plays `public/assets/audio/ambient.mp3` when present,
+   * otherwise a soft synthesized oud phrase over a low D drone. Safe to call repeatedly.
+   */
   public startAmbient() {
-    if (this.muted || this.ambientTimer !== null || typeof window === 'undefined') return;
+    this.ambientWanted = true;
+    if (this.muted || typeof window === 'undefined') return;
+    if (!this.ambientFileMissing && typeof Audio !== 'undefined') {
+      this.startAmbientFile();
+      return;
+    }
+    this.startAmbientSynth();
+  }
+
+  private startAmbientFile() {
+    if (!this.ambientFile) {
+      const el = new Audio('/assets/audio/ambient.mp3');
+      el.loop = true;
+      el.volume = 0.35;
+      el.addEventListener('error', () => {
+        this.ambientFile = null;
+        this.ambientFileMissing = true;
+        if (this.ambientWanted && !this.muted) this.startAmbientSynth();
+      });
+      this.ambientFile = el;
+    }
+    this.ambientFile.play().catch(() => {
+      // Autoplay blocked or file unreadable: the error handler above covers unreadable files
+    });
+  }
+
+  private startAmbientSynth() {
+    if (this.ambientTimer !== null || typeof window === 'undefined') return;
     if (!this.ensureContext()) return;
     this.ambientStep = 0;
     this.playAmbientStep();
@@ -25,6 +59,8 @@ class SoundAndHapticsManager {
   }
 
   public stopAmbient() {
+    this.ambientWanted = false;
+    this.ambientFile?.pause();
     if (this.ambientTimer !== null) {
       window.clearInterval(this.ambientTimer);
       this.ambientTimer = null;
