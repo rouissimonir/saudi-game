@@ -78,6 +78,8 @@
 7. **Saudi Cultural Calendar (`تقويم المملكة`):** Founding Day (Feb 21–23) and National Day (Sep 22–24) give ×1.5 order SAR and double prestige; Ramadan (×1.25 / ×1.5) and Eid (×2 SAR) are detected from the Umm al-Qura Hijri calendar. A banner in the merge view shows the active season.
 8. **Rub'a al-Finjan Pouring Mini-Game (`تحدي ربع الفنجال`):** each renovation upgrade earns one challenge. Hold to pour and release near the 25% mark (±4 perfect, ±10 good) for SAR, gems and a Royal Joker.
 
+9. **Ambient Hijaz Oud Loop:** a quiet synthesized oud phrase over a low D drone plays while the game is unmuted; no audio files.
+
 ---
 
 ### C. Meta-Renovation, Kingdom Map, LiveOps & Saudi Monetization
@@ -175,3 +177,21 @@ To scale **Qahwa & Majlis Merge** from soft launch in Saudi Arabia & UAE to a **
      - Exclusive **Golden Sadu Nameplate** on the Diwan Al-Karam Leaderboard.
 9. **Saudi Dialect Voice Acting (تمثيل صوتي باللهجات النجدية والحجازية والجنوبية):**
    - Add warm, authentic 3-second voice lines for Grandmother Noura (*"يا هلا والله بضيوفنا"*), Barista Faisal, and Sheikh Tariq when their orders are served or when story chapters open.
+
+
+---
+
+## 5. Fasih Kids (فصيح) — Arabic Reading & Tashkeel Coach (Blueprint 3)
+
+A second page in the same Vite project (`fasih.html`, entry `src/fasih/main.tsx`), so one repo and one Capacitor shell can ship both apps.
+
+- **Live reading coach:** the child reads a fully-voweled story line or classical poem aloud (Mutanabbi, Ahmed Shawqi, children's stories). Recognised speech is aligned to the target text *while streaming*: each word turns green (correct), amber (a different word was spoken), red (skipped) or stays neutral until reached. Stars: ≥90% three, ≥70% two, ≥40% one.
+- **Tashkeel coach:** pick damma, fatha or kasra for a word's case ending, then see the grammatical reason (e.g. "مفعول به منصوب").
+- **Parent report:** weekly-style summary (stars, lessons, Tashkeel accuracy, practice streak) with a one-tap WhatsApp share link.
+- **Engine:** `src/fasih/engine.ts` (pure, tested in `src/fasih/engine.test.ts`); content in `src/fasih/content.ts`.
+- **Run:** `npm run dev` then open `/fasih.html`; `npm run build` emits both pages.
+
+**Known limits (be honest in store listings):**
+1. Speech engines return *undiacritized* text, so the coach detects skipped and mispronounced **words**, not wrong **vowels**; vowels are trained in the Tashkeel coach instead. A true vowel-level ASR needs a custom model.
+2. Recognition uses the browser's `SpeechRecognition` (`ar-SA`), which needs network on most engines and is absent in some WebViews. Without it the app falls back to tap-to-mark self-checking. A native iOS build should add a Capacitor speech-recognition plugin.
+3. Lesson text and diacritics were written by hand and should be proofread by an Arabic teacher before launch.

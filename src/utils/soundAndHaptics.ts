@@ -2,9 +2,72 @@ import { GameState } from '../game/rules';
 
 const STORAGE_KEY = 'qahwa_majlis_merge_save_v3';
 
+/** D Hijaz maqam (D Eb F# G A Bb C# D) in Hz, one octave. */
+export const HIJAZ_SCALE_HZ = [293.66, 311.13, 369.99, 392.0, 440.0, 466.16, 554.37, 587.33];
+
+/** Looping oud phrase as indices into HIJAZ_SCALE_HZ; -1 is a rest. Ends on the tonic. */
+export const AMBIENT_PHRASE = [0, 2, 3, 2, 1, 0, -1, 4, 3, 2, 3, 5, 4, 3, 2, 1, 0, -1, 0, 1, 2, 3, 4, 7, 5, 4, 3, 2, 1, 0, -1, -1];
+const AMBIENT_STEP_MS = 520;
+
 class SoundAndHapticsManager {
   private ctx: AudioContext | null = null;
   public muted: boolean = false;
+  private ambientTimer: number | null = null;
+  private ambientStep = 0;
+
+  /** Soft looping oud phrase over a low D drone; safe to call repeatedly. */
+  public startAmbient() {
+    if (this.muted || this.ambientTimer !== null || typeof window === 'undefined') return;
+    if (!this.ensureContext()) return;
+    this.ambientStep = 0;
+    this.playAmbientStep();
+    this.ambientTimer = window.setInterval(() => this.playAmbientStep(), AMBIENT_STEP_MS);
+  }
+
+  public stopAmbient() {
+    if (this.ambientTimer !== null) {
+      window.clearInterval(this.ambientTimer);
+      this.ambientTimer = null;
+    }
+  }
+
+  private playAmbientStep() {
+    const ctx = this.ensureContext();
+    if (!ctx) {
+      this.stopAmbient();
+      return;
+    }
+    const now = ctx.currentTime;
+    const noteIdx = AMBIENT_PHRASE[this.ambientStep % AMBIENT_PHRASE.length];
+
+    if (this.ambientStep % AMBIENT_PHRASE.length === 0) {
+      const drone = ctx.createOscillator();
+      const droneGain = ctx.createGain();
+      drone.type = 'sine';
+      drone.frequency.value = HIJAZ_SCALE_HZ[0] / 4;
+      droneGain.gain.setValueAtTime(0.0001, now);
+      droneGain.gain.linearRampToValueAtTime(0.035, now + 1.5);
+      droneGain.gain.linearRampToValueAtTime(0.0001, now + (AMBIENT_PHRASE.length * AMBIENT_STEP_MS) / 1000);
+      drone.connect(droneGain);
+      droneGain.connect(ctx.destination);
+      drone.start(now);
+      drone.stop(now + (AMBIENT_PHRASE.length * AMBIENT_STEP_MS) / 1000 + 0.1);
+    }
+
+    if (noteIdx >= 0) {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.value = HIJAZ_SCALE_HZ[noteIdx] / 2;
+      gain.gain.setValueAtTime(0.045, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 1.1);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 1.15);
+    }
+    this.ambientStep += 1;
+  }
 
   private ensureContext(): AudioContext | null {
     if (this.muted || typeof window === 'undefined') return null;

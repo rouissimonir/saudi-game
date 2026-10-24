@@ -305,3 +305,10 @@ test('upgrading a renovation wing earns a pour challenge token', () => {
   assert.equal(res.upgraded, true);
   assert.equal(res.state.pourTokens, state.pourTokens + 1);
 });
+
+test('ambient oud phrase stays inside the Hijaz scale and resolves to the tonic', async () => {
+  const { AMBIENT_PHRASE, HIJAZ_SCALE_HZ } = await import('../utils/soundAndHaptics');
+  assert.ok(AMBIENT_PHRASE.every((n) => n === -1 || (n >= 0 && n < HIJAZ_SCALE_HZ.length)));
+  const lastNote = [...AMBIENT_PHRASE].reverse().find((n) => n !== -1);
+  assert.equal(lastNote, 0);
+});

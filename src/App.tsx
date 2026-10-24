@@ -154,6 +154,16 @@ export default function App() {
     document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
   }, [lang]);
 
+  // Ambient Hijaz oud loop while playing and unmuted
+  useEffect(() => {
+    if (shellState === 'playing' && !muted) {
+      soundFX.startAmbient();
+    } else {
+      soundFX.stopAmbient();
+    }
+    return () => soundFX.stopAmbient();
+  }, [shellState, muted]);
+
   // Offer the daily login reward once per calendar day when play begins
   useEffect(() => {
     if (shellState !== 'playing') return;
