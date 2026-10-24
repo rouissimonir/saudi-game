@@ -6,7 +6,7 @@
 | --- | --- | --- |
 | Hero 3D renders (dallah, finjan, V60, mabkhara, dates, chest, beans) | Generated with Blender, 512x512 transparent PNG | `public/assets/art/*.png` |
 | Title-screen emblem | Uses `dallah.png` | `src/App.tsx` |
-| The 30 merge-board item icons | Still hand-drawn SVG (`src/components/ItemArtwork.tsx`) | not replaced yet |
+| The 30 merge-board item icons | Generated with Blender, 256x256 transparent PNG, shown by `ItemArtwork` (old SVG kept as fallback) | `public/assets/art/items/<itemId>.png` |
 | Character portraits (Noura, Faisal, Tariq...) | Still SVG | `src/components/CompetitorModalsAndPortraits.tsx` |
 | Sound effects | Synthesized in code | `src/utils/soundAndHaptics.ts` |
 | Background music | Synthesized oud loop, **or** your file (see below) | `public/assets/audio/ambient.mp3` |
@@ -22,19 +22,28 @@ SAMPLES=96 ONLY=dallah,chest .venv-bpy/bin/python tools/blender/make_art.py -- p
 ```
 Each prop is a function in `tools/blender/make_art.py`. Add a function, add it to the list at the bottom, run it. About 10 to 15 seconds per prop on CPU.
 
-Limits: these are clean stylized props, not painterly game-art. Characters (faces, hands, clothing) are not realistic to do procedurally. For people and for a distinctive art style you need an illustrator.
+The 30 item icons come from `tools/blender/make_items.py` (one function per item id; same camera, light and palette for all, auto-framed so each icon fills its tile):
+
+```bash
+cd tools/blender
+SAMPLES=64 SIZE=256 .venv-bpy/bin/python make_items.py -- ../../public/assets/art/items            # all 30
+SAMPLES=64 SIZE=256 ONLY=qahwa_3,oud_5 .venv-bpy/bin/python make_items.py -- ../../public/assets/art/items  # just some
+```
+
+Limits: these are clean stylized 3D props, not painterly game-art. Some are simple (for example the agarwood chips and the paper filter) and are good candidates for an artist to redo. Characters (faces, hands, clothing) are not realistic to do procedurally. For people and for a distinctive art style you need an illustrator.
 
 ## 2. Drop-in rules for art you provide
 
 - **Format:** PNG with transparent background, 512x512 (square, object centered with ~8% padding). WebP is fine if you tell me.
-- **Item icons:** one file per item id, `public/assets/art/items/<itemId>.png`.
+- **Item icons** (already filled with Blender renders; replace any you like): one file per item id, `public/assets/art/items/<itemId>.png`.
   - Generators: `gen_qahwa`, `gen_barista`, `gen_sweets`, `gen_oud`
   - Chains (levels 1 to 6): `qahwa_1`..`qahwa_6`, `barista_1`..`barista_6`, `sweets_1`..`sweets_6`, `oud_1`..`oud_6`
   - Chests: `chest_1`, `chest_2`
   - Item names for each level are in `DOCUMENTATION.md` section 2.A.
 - **Characters:** `public/assets/art/characters/<name>.png`, 512x512 bust portrait: `noura`, `faisal`, `tariq`, `lama`, `sultan`, `jury`.
 - Items in the same chain should share one light direction and one palette so the evolution reads at a glance.
-- I will wire new art into the game when you send it (the item and character code currently draws SVG; it needs a small change to prefer the PNG).
+- **Items need no code change:** `ItemArtwork` loads `public/assets/art/items/<itemId>.png` automatically, so replacing a file replaces the icon. If a file is missing the game falls back to the old SVG for that item only.
+- Character portraits still draw SVG; send PNGs and I will wire them in.
 
 ## 3. Music and sound: what to ask for
 

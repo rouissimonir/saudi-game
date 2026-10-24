@@ -4,7 +4,7 @@ import bpy, bmesh
 from mathutils import Vector
 
 OUT = sys.argv[sys.argv.index('--') + 1]
-SIZE = 512
+SIZE = int(os.environ.get('SIZE', '512'))
 SAMPLES = int(os.environ.get('SAMPLES', '48'))
 
 
@@ -29,7 +29,7 @@ def reset():
     ramp.color_ramp.elements[1].position = 0.62; ramp.color_ramp.elements[1].color = (1.0, 0.90, 0.72, 1)
 
 
-def mat(name, color, metallic=0.0, rough=0.5, coat=0.0, emission=None):
+def mat(name, color, metallic=0.0, rough=0.5, coat=0.0, emission=None, transmission=0.0, alpha=1.0):
     m = bpy.data.materials.new(name); m.use_nodes = True
     b = m.node_tree.nodes['Principled BSDF']
     b.inputs['Base Color'].default_value = (*color, 1)
@@ -38,6 +38,11 @@ def mat(name, color, metallic=0.0, rough=0.5, coat=0.0, emission=None):
     if coat:
         b.inputs['Coat Weight'].default_value = coat
         b.inputs['Coat Roughness'].default_value = 0.08
+    if transmission:
+        b.inputs['Transmission Weight'].default_value = transmission
+        b.inputs['IOR'].default_value = 1.45
+    if alpha < 1.0:
+        b.inputs['Alpha'].default_value = alpha
     if emission:
         b.inputs['Emission Color'].default_value = (*emission, 1)
         b.inputs['Emission Strength'].default_value = 1.5
@@ -126,8 +131,8 @@ def render(name):
 
 
 # ---------------------------------------------------------------- assets
-def dallah():
-    reset(); b = BRASS()
+def build_dallah():
+    b = BRASS()
     body = [(0.0, 0.0), (0.74, 0.0), (0.9, 0.1), (0.88, 0.3), (0.62, 0.7), (0.42, 1.1), (0.36, 1.5), (0.5, 1.82), (0.56, 1.95), (0.0, 1.95)]
     lathe(body, b, name='body')
     lathe([(0.0, 0.0), (0.8, 0.0), (0.8, 0.07), (0.0, 0.07)], COPPER(), name='base')
@@ -138,31 +143,41 @@ def dallah():
     curve_tube([(0.62, 0, 0.35), (1.0, 0, 0.8), (1.3, 0, 1.5), (1.15, 0, 2.15), (0.85, 0, 2.55)], 0.1, b, radii=[2.2, 1.5, 1.0, 0.75, 0.55])
     sphere((0.85, 0, 2.58), (0.1, 0.1, 0.1), COPPER())
     curve_tube([(-0.5, 0, 1.75), (-1.15, 0, 1.9), (-1.2, 0, 0.9), (-0.75, 0, 0.35)], 0.075, WOOD())
+
+
+def dallah():
+    reset(); build_dallah()
     stage(center_z=1.25, dist=8.5); render('dallah')
 
 
-def finjan():
-    reset()
+def build_finjan():
     lathe([(0.0, 0.0), (0.22, 0.0), (0.3, 0.05), (0.42, 0.4), (0.5, 0.62), (0.46, 0.63), (0.38, 0.4), (0.3, 0.12), (0.0, 0.1)], WHITE(), name='cup')
     cof = cyl((0, 0, 0.5), 0.41, 0.02, COFFEE())
     lathe([(0.0, 0.0), (0.7, 0.02), (0.95, 0.1), (0.9, 0.12), (0.0, 0.1)], WHITE(), name='saucer').location.z = -0.12
     torus((0, 0, 0.5), 0.5, 0.025, BRASS())
     sphere((0.9, 0.6, -0.04), (0.16, 0.12, 0.1), mat('cardamom', (0.3, 0.55, 0.2), 0, 0.4))
+
+
+def finjan():
+    reset(); build_finjan()
     stage(center_z=0.3, dist=5.0, elev=28); render('finjan')
 
 
-def v60():
-    reset()
+def build_v60():
     lathe([(0.0, 0.0), (0.12, 0.0), (0.2, 0.05), (0.75, 0.9), (0.8, 1.0), (0.74, 1.0), (0.18, 0.12), (0.0, 0.12)], WHITE(), name='cone')
     torus((0, 0, 1.0), 0.78, 0.04, WHITE())
     lathe([(0.0, -1.3), (0.52, -1.3), (0.62, -1.1), (0.48, -0.5), (0.3, -0.2), (0.3, -0.05), (0.0, -0.05)], mat('glass', (0.7, 0.85, 0.9), 0.0, 0.03, coat=1.0), name='server')
     lathe([(0.0, -1.28), (0.5, -1.28), (0.58, -1.1), (0.5, -0.9), (0.0, -0.9)], COFFEE(), name='brew')
     curve_tube([(0.75, 0, 0.95), (1.1, 0, 1.1), (1.2, 0, 0.8), (0.95, 0, 0.5)], 0.05, WHITE())
+
+
+def v60():
+    reset(); build_v60()
     stage(center_z=-0.1, dist=7.5); render('v60')
 
 
-def mabkhara():
-    reset(); b = BRASS()
+def build_mabkhara():
+    b = BRASS()
     lathe([(0.0, 0.0), (0.5, 0.0), (0.55, 0.06), (0.32, 0.18), (0.22, 0.6), (0.4, 0.95), (0.62, 1.1), (0.6, 1.2), (0.0, 1.0)], b, name='stem')
     lathe([(0.0, 1.05), (0.55, 1.1), (0.7, 1.3), (0.66, 1.34), (0.0, 1.2)], COPPER(), name='bowl')
     for i in range(14):
@@ -171,11 +186,15 @@ def mabkhara():
     ember = mat('ember', (1.0, 0.25, 0.04), 0, 0.5, emission=(1.0, 0.3, 0.05))
     for _ in range(6):
         sphere((random.uniform(-0.3, 0.3), random.uniform(-0.3, 0.3), 1.28), (0.1, 0.09, 0.07), ember)
+
+
+def mabkhara():
+    reset(); build_mabkhara()
     stage(center_z=0.65, dist=5.2, elev=30); render('mabkhara')
 
 
-def dates():
-    reset(); random.seed(7)
+def build_dates():
+    random.seed(7)
     lathe([(0.0, 0.0), (0.7, 0.0), (1.05, 0.25), (1.1, 0.5), (1.02, 0.5), (0.85, 0.3), (0.5, 0.14), (0.0, 0.12)], WOOD(), name='bowl')
     d = DATE()
     for ring, (rad, z, n) in enumerate([(0.62, 0.38, 7), (0.35, 0.58, 5), (0.0, 0.76, 1), (0.82, 0.46, 9)]):
@@ -183,11 +202,15 @@ def dates():
             a = i * 2 * math.pi / max(n, 1) + ring
             o = sphere((rad * math.cos(a), rad * math.sin(a), z), (0.2, 0.13, 0.12), d)
             o.rotation_euler = (random.uniform(-.4, .4), random.uniform(-.4, .4), random.uniform(0, 3.14))
+
+
+def dates():
+    reset(); build_dates()
     stage(center_z=0.45, dist=5.4, elev=34); render('dates')
 
 
-def chest():
-    reset(); w = WOOD(); b = BRASS()
+def build_chest():
+    w = WOOD(); b = BRASS()
     box((0, 0, 0.45), (1.0, 0.65, 0.45), w)
     bpy.ops.mesh.primitive_cylinder_add(vertices=48, radius=0.65, depth=2.0, location=(0, 0, 0.9), rotation=(0, math.pi / 2, 0))
     lid = bpy.context.object; lid.scale = (1, 1, 1); bpy.ops.object.shade_smooth(); assign(lid, w)
@@ -199,17 +222,25 @@ def chest():
         cyl((x, 0, 0.9), 0.68, 0.12, b, rot=(0, math.pi / 2, 0))
     box((0, -0.66, 0.78), (0.14, 0.04, 0.16), b)
     box((0, -0.62, 0.15), (0.97, 0.02, 0.08), RED())
+
+
+def chest():
+    reset(); build_chest()
     stage(center_z=0.6, dist=6.5, azim=-30); render('chest')
 
 
-def beans():
-    reset(); random.seed(3); m = BEAN()
+def build_beans():
+    random.seed(3); m = BEAN()
     for i in range(46):
         r = 0.75 * math.sqrt(random.random()); a = random.uniform(0, 6.28)
         z = 0.14 + 0.35 * (1 - r / 0.75) ** 1.5
         o = sphere((r * math.cos(a), r * math.sin(a), z), (0.17, 0.11, 0.09), m, seg=20)
         o.rotation_euler = (random.uniform(-.5, .5), random.uniform(-.5, .5), random.uniform(0, 6.28))
         sp = bpy.data.objects.new('seam', bpy.data.meshes.new('seam'))
+
+
+def beans():
+    reset(); build_beans()
     stage(center_z=0.25, dist=5.5, elev=38); render('beans')
 
 

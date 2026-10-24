@@ -59,7 +59,7 @@ import {
   loadSavedGameState,
   clearSavedGameState,
 } from './utils/soundAndHaptics';
-import { ItemArtwork } from './components/ItemArtwork';
+import { ItemArtwork, preloadItemArt } from './components/ItemArtwork';
 import { MajlisRenovationView } from './components/MajlisRenovationView';
 import { StoryDialogueModal } from './components/StoryDialogueModal';
 import { DailyLoginModal } from './components/DailyLoginModal';
@@ -153,6 +153,10 @@ export default function App() {
     document.documentElement.lang = lang;
     document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
   }, [lang]);
+
+  useEffect(() => {
+    preloadItemArt();
+  }, []);
 
   // Ambient Hijaz oud loop while playing and unmuted
   useEffect(() => {
