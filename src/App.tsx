@@ -26,6 +26,10 @@ import {
   spawnFromGenerator,
   mergeOrMoveCells,
   COMBO_WINDOW_MS,
+  dayKeyFromDate,
+  getDailyLoginDay,
+  claimDailyLoginReward,
+  getTutorialStep,
   type LevelUpReward,
   findBestMergePair,
   sellBoardItem,
@@ -56,6 +60,7 @@ import {
 import { ItemArtwork } from './components/ItemArtwork';
 import { MajlisRenovationView } from './components/MajlisRenovationView';
 import { StoryDialogueModal } from './components/StoryDialogueModal';
+import { DailyLoginModal } from './components/DailyLoginModal';
 import { ShopAndMadaModal } from './components/ShopAndMadaModal';
 import {
   CustomerPortrait,
@@ -111,6 +116,8 @@ export default function App() {
   const [comboLive, setComboLive] = useState<boolean>(false);
   const [levelUpToast, setLevelUpToast] = useState<LevelUpReward | null>(null);
   const comboTimeoutRef = useRef<number | null>(null);
+  const [dailyLoginDay, setDailyLoginDay] = useState<number | null>(null);
+  const tutorialStep = getTutorialStep(gameState);
 
   const [shopModalOpen, setShopModalOpen] = useState<boolean>(false);
   const [shopInitialTab, setShopInitialTab] = useState<'shop' | 'liveops' | 'almanac' | 'capacitor'>('shop');
@@ -141,6 +148,22 @@ export default function App() {
     document.documentElement.lang = lang;
     document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
   }, [lang]);
+
+  // Offer the daily login reward once per calendar day when play begins
+  useEffect(() => {
+    if (shellState !== 'playing') return;
+    setDailyLoginDay(getDailyLoginDay(gameState, dayKeyFromDate(new Date())));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shellState]);
+
+  const handleClaimDailyLogin = () => {
+    const res = claimDailyLoginReward(gameState, dayKeyFromDate(new Date()));
+    setDailyLoginDay(null);
+    if (!res.claimed) return;
+    soundFX.playOrderComplete();
+    setGameState(res.state);
+    showFeedback(isAr ? `استلمت هدية اليوم ${res.day}!` : `Claimed Day ${res.day} reward!`);
+  };
 
   // Save game state automatically on change
   useEffect(() => {
@@ -1054,6 +1077,30 @@ export default function App() {
             </button>
           </div>
 
+          {tutorialStep && (
+            <div
+              data-testid="tutorial-coach"
+              className="flex items-start gap-2 px-3.5 py-2 rounded-xl bg-[#10B981]/15 border border-[#10B981] text-xs font-bold text-[#A7F3D0]"
+            >
+              <span className="flex-1 leading-relaxed">
+                {tutorialStep === 'merge'
+                  ? isAr
+                    ? 'ابدأ هنا: اسحب عنصراً فوق عنصر مطابق (أو انقر الاثنين) لدمجهما. المربعات ذات الإطار الأخضر تعني دمجاً ممكناً.'
+                    : 'Start here: drag an item onto a matching one (or tap both) to merge. Green-ringed tiles are matches.'
+                  : isAr
+                  ? 'ممتاز! الآن جهّز العناصر ذات علامة ✓ الخضراء واضغط «تقديم!» لإسعاد ضيوف المجلس.'
+                  : 'Nice! Gather the items marked with a green ✓, then press “Serve!” to delight your guests.'}
+              </span>
+              <button
+                type="button"
+                onClick={() => setGameState((prev) => ({ ...prev, tutorialDismissed: true }))}
+                className="shrink-0 underline text-[#6EE7B7]"
+              >
+                {isAr ? 'تخطي' : 'Skip'}
+              </button>
+            </div>
+          )}
+
           {comboLive && gameState.comboCount >= 2 && (
             <div
               data-testid="combo-meter"
@@ -1727,6 +1774,8 @@ export default function App() {
         chapter={activeStoryChapter}
         onClose={handleClaimStoryChapter}
       />
+
+      <DailyLoginModal lang={lang} day={gameState.activeStoryId ? null : dailyLoginDay} onClaim={handleClaimDailyLogin} />
 
       <ChainTreeModal
         lang={lang}

@@ -72,6 +72,9 @@
 3. **Level-Up Rewards:** every 100 XP grants `+5💎` per level gained and refills Energy to max, with a celebratory toast.
 4. **Merge Burst FX:** a golden burst on every merge (larger for Lv.4+, green for Mega Merge); honours `prefers-reduced-motion`.
 
+5. **7-Day Daily Login Streak (`غبقة اليوم`):** one reward per calendar day (Energy, SAR, Gems, Scissors, Joker, a free wheel spin, and a Gilded chest on Day 7). Missing a day resets the streak; the cycle repeats after Day 7. If the board is full on Day 7 the chest converts to 180 SAR.
+6. **First-Run Coach:** a dismissible banner teaches merging first, then serving an order; existing saves that already merged skip it.
+
 ---
 
 ### C. Meta-Renovation, Kingdom Map, LiveOps & Saudi Monetization

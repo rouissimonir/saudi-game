@@ -205,6 +205,9 @@ export interface GameState {
   liveOpsPoints: number;
   liveOpsMilestones: LiveOpsMilestone[];
   vipPassActive: boolean;
+  loginStreak: number;
+  lastLoginDay: string;
+  tutorialDismissed: boolean;
   lastMergedItemId: string | null;
 }
 
@@ -1079,6 +1082,9 @@ export function createInitialGameState(): GameState {
     liveOpsPoints: 15,
     liveOpsMilestones: INITIAL_LIVEOPS_MILESTONES.map((m) => ({ ...m })),
     vipPassActive: false,
+    loginStreak: 0,
+    lastLoginDay: '',
+    tutorialDismissed: false,
     lastMergedItemId: null,
   };
 }
@@ -1853,4 +1859,100 @@ export function upgradeRenovationZone(
     upgraded: true,
     triggeredStoryId,
   };
+}
+
+// ---------------------------------------------------------------------------
+// Daily Login Streak ("Ghabga Al-Yawm") & First-Run Coaching
+// ---------------------------------------------------------------------------
+
+export interface DailyReward {
+  day: number;
+  energy: number;
+  coins: number;
+  gems: number;
+  scissors: number;
+  joker: number;
+  freeSpins: number;
+  chest: boolean;
+}
+
+export const DAILY_LOGIN_REWARDS: DailyReward[] = [
+  { day: 1, energy: 20, coins: 0, gems: 0, scissors: 0, joker: 0, freeSpins: 0, chest: false },
+  { day: 2, energy: 0, coins: 100, gems: 0, scissors: 0, joker: 0, freeSpins: 0, chest: false },
+  { day: 3, energy: 0, coins: 0, gems: 10, scissors: 0, joker: 0, freeSpins: 0, chest: false },
+  { day: 4, energy: 25, coins: 0, gems: 0, scissors: 1, joker: 0, freeSpins: 0, chest: false },
+  { day: 5, energy: 0, coins: 150, gems: 0, scissors: 0, joker: 1, freeSpins: 0, chest: false },
+  { day: 6, energy: 0, coins: 0, gems: 20, scissors: 0, joker: 0, freeSpins: 1, chest: false },
+  { day: 7, energy: 0, coins: 0, gems: 30, scissors: 0, joker: 0, freeSpins: 0, chest: true },
+];
+
+export function dayKeyFromDate(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+function daysBetweenKeys(fromKey: string, toKey: string): number {
+  const a = Date.parse(`${fromKey}T00:00:00Z`);
+  const b = Date.parse(`${toKey}T00:00:00Z`);
+  return Math.round((b - a) / 86_400_000);
+}
+
+/** Streak day (1..7) the player would be on if they claimed today, or null if already claimed. */
+export function getDailyLoginDay(state: GameState, todayKey: string): number | null {
+  if (state.lastLoginDay === todayKey) return null;
+  const gap = state.lastLoginDay ? daysBetweenKeys(state.lastLoginDay, todayKey) : Infinity;
+  if (gap < 0) return null; // clock moved backwards: never pay twice
+  const streak = gap === 1 ? state.loginStreak + 1 : 1;
+  return ((streak - 1) % DAILY_LOGIN_REWARDS.length) + 1;
+}
+
+export function claimDailyLoginReward(
+  state: GameState,
+  todayKey: string
+): { state: GameState; claimed: boolean; reward: DailyReward | null; day: number } {
+  const day = getDailyLoginDay(state, todayKey);
+  if (day === null) return { state, claimed: false, reward: null, day: state.loginStreak };
+  const reward = DAILY_LOGIN_REWARDS[day - 1];
+  const gap = state.lastLoginDay ? daysBetweenKeys(state.lastLoginDay, todayKey) : Infinity;
+  const streak = gap === 1 ? state.loginStreak + 1 : 1;
+
+  let board = state.board;
+  let bonusCoins = 0;
+  if (reward.chest) {
+    const emptyIdx = findNearestEmptyCell(board, 24);
+    if (emptyIdx !== null) {
+      board = board.map((c, i) => (i === emptyIdx ? { ...c, itemId: 'chest_2' } : c));
+    } else {
+      bonusCoins = 180; // board full: pay out the chest's coins instead of losing it
+    }
+  }
+
+  return {
+    state: {
+      ...state,
+      board,
+      loginStreak: streak,
+      lastLoginDay: todayKey,
+      energy: state.energy + reward.energy,
+      coins: state.coins + reward.coins + bonusCoins,
+      diamonds: state.diamonds + reward.gems,
+      scissorsCount: state.scissorsCount + reward.scissors,
+      jokerCount: state.jokerCount + reward.joker,
+      freeSpinsAvailable: state.freeSpinsAvailable + reward.freeSpins,
+    },
+    claimed: true,
+    reward,
+    day,
+  };
+}
+
+export type TutorialStep = 'merge' | 'serve' | null;
+
+export function getTutorialStep(state: GameState): TutorialStep {
+  if (state.tutorialDismissed) return null;
+  if (state.totalMerges === 0) return 'merge';
+  if (state.ordersCompleted === 0) return 'serve';
+  return null;
 }

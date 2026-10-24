@@ -18,6 +18,9 @@ import {
   openBoardChest,
   spinLuckyWheel,
   voteMazayenEntry,
+  getDailyLoginDay,
+  claimDailyLoginReward,
+  getTutorialStep,
 } from './rules';
 
 test('initial game state sets up 7x7 board with 4 heritage generators (including Oud) and starter items', () => {
@@ -180,4 +183,55 @@ test('crossing an XP threshold grants gems and refills energy exactly once', () 
   const again = withItems({ ...res.state, board: res.state.board.map((c) => ({ ...c, itemId: null })) }, { 24: 'qahwa_1', 25: 'qahwa_1' });
   const res2 = mergeOrMoveCells(again, 24, 25, 9100);
   assert.equal(res2.levelUp, undefined);
+});
+
+test('daily login streak: first claim, consecutive days, reset after a gap, never double-pays', () => {
+  const base = createInitialGameState();
+  assert.equal(getDailyLoginDay(base, '2026-03-01'), 1);
+
+  const d1 = claimDailyLoginReward(base, '2026-03-01');
+  assert.equal(d1.claimed, true);
+  assert.equal(d1.state.energy, base.energy + 20);
+  assert.equal(claimDailyLoginReward(d1.state, '2026-03-01').claimed, false);
+
+  const d2 = claimDailyLoginReward(d1.state, '2026-03-02');
+  assert.equal(d2.day, 2);
+  assert.equal(d2.state.coins, d1.state.coins + 100);
+  assert.equal(d2.state.loginStreak, 2);
+
+  const afterGap = claimDailyLoginReward(d2.state, '2026-03-05');
+  assert.equal(afterGap.day, 1);
+  assert.equal(afterGap.state.loginStreak, 1);
+
+  assert.equal(getDailyLoginDay(d2.state, '2026-03-01'), null);
+});
+
+test('daily login day 7 drops a Gilded chest and the cycle wraps back to day 1', () => {
+  let state = createInitialGameState();
+  for (let i = 1; i <= 7; i++) {
+    state = claimDailyLoginReward(state, `2026-03-0${i}`).state;
+  }
+  assert.equal(state.loginStreak, 7);
+  assert.ok(state.board.some((c) => c.itemId === 'chest_2'));
+  assert.equal(getDailyLoginDay(state, '2026-03-08'), 1);
+  const wrapped = claimDailyLoginReward(state, '2026-03-08');
+  assert.equal(wrapped.day, 1);
+  assert.equal(wrapped.state.loginStreak, 8);
+});
+
+test('day 7 chest converts to coins when the board is full', () => {
+  let state = createInitialGameState();
+  state = { ...state, board: state.board.map((c) => (c.itemId ? c : { ...c, itemId: 'qahwa_1' })), loginStreak: 6, lastLoginDay: '2026-03-06' };
+  const res = claimDailyLoginReward(state, '2026-03-07');
+  assert.equal(res.day, 7);
+  assert.equal(res.state.coins, state.coins + 180);
+  assert.ok(!res.state.board.some((c) => c.itemId === 'chest_2'));
+});
+
+test('tutorial coaches merge first, then serving an order, then stops', () => {
+  const s = createInitialGameState();
+  assert.equal(getTutorialStep(s), 'merge');
+  assert.equal(getTutorialStep({ ...s, totalMerges: 1 }), 'serve');
+  assert.equal(getTutorialStep({ ...s, totalMerges: 1, ordersCompleted: 1 }), null);
+  assert.equal(getTutorialStep({ ...s, tutorialDismissed: true }), null);
 });
