@@ -21,6 +21,11 @@ import {
   getDailyLoginDay,
   claimDailyLoginReward,
   getTutorialStep,
+  getActiveSeason,
+  SEASONS,
+  gradePour,
+  completePour,
+  POUR_REWARDS,
 } from './rules';
 
 test('initial game state sets up 7x7 board with 4 heritage generators (including Oud) and starter items', () => {
@@ -234,4 +239,69 @@ test('tutorial coaches merge first, then serving an order, then stops', () => {
   assert.equal(getTutorialStep({ ...s, totalMerges: 1 }), 'serve');
   assert.equal(getTutorialStep({ ...s, totalMerges: 1, ordersCompleted: 1 }), null);
   assert.equal(getTutorialStep({ ...s, tutorialDismissed: true }), null);
+});
+
+test('Saudi seasons: Founding Day and National Day windows boost order rewards; ordinary days do not', () => {
+  assert.equal(getActiveSeason(new Date(2026, 1, 22))?.id, 'founding_day');
+  assert.equal(getActiveSeason(new Date(2026, 8, 23))?.id, 'national_day');
+  assert.equal(getActiveSeason(new Date(2026, 6, 1)), null);
+
+  const state = createInitialGameState();
+  const order = state.activeOrders[0];
+  const ready = {
+    ...state,
+    board: state.board.map((c) => c),
+  };
+  // put the required items on empty cells so the order can be served
+  let board = ready.board.map((c) => ({ ...c, itemId: null as string | null, sandLocked: false }));
+  order.requiredItemIds.forEach((id, i) => {
+    board = board.map((c) => (c.index === 10 + i ? { ...c, itemId: id } : c));
+  });
+  const withItems = { ...ready, board };
+  const plain = fulfillCustomerOrder(withItems, order.id);
+  const festive = fulfillCustomerOrder(withItems, order.id, SEASONS.national_day);
+  assert.equal(plain.fulfilled, true);
+  assert.ok(festive.state.coins > plain.state.coins);
+  assert.equal(
+    festive.state.prestigePoints - state.prestigePoints,
+    2 * (plain.state.prestigePoints - state.prestigePoints)
+  );
+});
+
+test('Ramadan is detected through the Hijri calendar when the runtime supports it', () => {
+  // 2026-03-01 falls inside Ramadan 1447 (umalqura); skip quietly on runtimes without that calendar
+  const supports = (() => {
+    try {
+      new Intl.DateTimeFormat('en-u-ca-islamic-umalqura').format(new Date());
+      return true;
+    } catch {
+      return false;
+    }
+  })();
+  if (!supports) return;
+  assert.equal(getActiveSeason(new Date(2026, 2, 1))?.id, 'ramadan');
+});
+
+test('pour grading rewards a quarter-finjan pour and consumes one token', () => {
+  assert.equal(gradePour(25), 'perfect');
+  assert.equal(gradePour(21), 'perfect');
+  assert.equal(gradePour(29), 'perfect');
+  assert.equal(gradePour(16), 'good');
+  assert.equal(gradePour(10), 'short');
+  assert.equal(gradePour(60), 'overflow');
+
+  const base = { ...createInitialGameState(), pourTokens: 1 };
+  const res = completePour(base, 26);
+  assert.equal(res.grade, 'perfect');
+  assert.equal(res.state.pourTokens, 0);
+  assert.equal(res.state.diamonds, base.diamonds + POUR_REWARDS.perfect.gems);
+  assert.equal(completePour(res.state, 26).poured, false);
+});
+
+test('upgrading a renovation wing earns a pour challenge token', () => {
+  const state = { ...createInitialGameState(), stars: 99 };
+  const zone = state.renovationZones[0];
+  const res = upgradeRenovationZone(state, zone.id);
+  assert.equal(res.upgraded, true);
+  assert.equal(res.state.pourTokens, state.pourTokens + 1);
 });

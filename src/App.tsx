@@ -30,6 +30,8 @@ import {
   getDailyLoginDay,
   claimDailyLoginReward,
   getTutorialStep,
+  getActiveSeason,
+  completePour,
   type LevelUpReward,
   findBestMergePair,
   sellBoardItem,
@@ -61,6 +63,7 @@ import { ItemArtwork } from './components/ItemArtwork';
 import { MajlisRenovationView } from './components/MajlisRenovationView';
 import { StoryDialogueModal } from './components/StoryDialogueModal';
 import { DailyLoginModal } from './components/DailyLoginModal';
+import { FinjanPourModal } from './components/FinjanPourModal';
 import { ShopAndMadaModal } from './components/ShopAndMadaModal';
 import {
   CustomerPortrait,
@@ -118,6 +121,8 @@ export default function App() {
   const comboTimeoutRef = useRef<number | null>(null);
   const [dailyLoginDay, setDailyLoginDay] = useState<number | null>(null);
   const tutorialStep = getTutorialStep(gameState);
+  const activeSeason = React.useMemo(() => getActiveSeason(new Date()), []);
+  const [pourOpen, setPourOpen] = useState<boolean>(false);
 
   const [shopModalOpen, setShopModalOpen] = useState<boolean>(false);
   const [shopInitialTab, setShopInitialTab] = useState<'shop' | 'liveops' | 'almanac' | 'capacitor'>('shop');
@@ -155,6 +160,13 @@ export default function App() {
     setDailyLoginDay(getDailyLoginDay(gameState, dayKeyFromDate(new Date())));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shellState]);
+
+  const handleFinishPour = (fillPercent: number) => {
+    const res = completePour(gameState, fillPercent);
+    if (!res.poured) return;
+    soundFX.playOrderComplete();
+    setGameState(res.state);
+  };
 
   const handleClaimDailyLogin = () => {
     const res = claimDailyLoginReward(gameState, dayKeyFromDate(new Date()));
@@ -580,7 +592,7 @@ export default function App() {
 
   // Fulfill Customer Order
   const handleFulfillOrder = (orderId: string) => {
-    const res = fulfillCustomerOrder(gameState, orderId);
+    const res = fulfillCustomerOrder(gameState, orderId, activeSeason);
     if (res.fulfilled) {
       soundFX.playOrderComplete();
       setGameState(res.state);
@@ -1076,6 +1088,30 @@ export default function App() {
               <span>{isAr ? 'مزاين المجالس' : 'Mazayen Contest'}</span>
             </button>
           </div>
+
+          {activeSeason && (
+            <div
+              data-testid="season-banner"
+              className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#065F46] to-[#047857] border border-[#34D399] text-xs font-bold text-[#D1FAE5]"
+            >
+              <span className="font-extrabold">{isAr ? activeSeason.nameAr : activeSeason.nameEn}</span>
+              <span className="mx-1.5 opacity-60">·</span>
+              <span>{isAr ? activeSeason.descAr : activeSeason.descEn}</span>
+            </div>
+          )}
+
+          {gameState.pourTokens > 0 && (
+            <button
+              type="button"
+              data-testid="pour-challenge-button"
+              onClick={() => setPourOpen(true)}
+              className="px-3.5 py-1.5 rounded-xl bg-[#D97724] hover:bg-[#EA8A35] text-xs font-extrabold text-white text-start"
+            >
+              {isAr
+                ? `☕ تحدي ربع الفنجال جاهز (${gameState.pourTokens}) · اربح جواهر وجوكر`
+                : `☕ Rub'a al-Finjan challenge ready (${gameState.pourTokens}) · win gems & a Joker`}
+            </button>
+          )}
 
           {tutorialStep && (
             <div
@@ -1776,6 +1812,14 @@ export default function App() {
       />
 
       <DailyLoginModal lang={lang} day={gameState.activeStoryId ? null : dailyLoginDay} onClaim={handleClaimDailyLogin} />
+
+      <FinjanPourModal
+        lang={lang}
+        isOpen={pourOpen}
+        tokens={gameState.pourTokens}
+        onFinish={handleFinishPour}
+        onClose={() => setPourOpen(false)}
+      />
 
       <ChainTreeModal
         lang={lang}

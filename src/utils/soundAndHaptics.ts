@@ -157,6 +157,7 @@ export function loadSavedGameState(): GameState | null {
         loginStreak: parsed.loginStreak ?? 0,
         lastLoginDay: parsed.lastLoginDay ?? '',
         tutorialDismissed: parsed.tutorialDismissed ?? parsed.totalMerges > 0,
+        pourTokens: parsed.pourTokens ?? 0,
       };
     }
     return null;
