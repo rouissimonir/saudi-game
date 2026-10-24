@@ -1,5 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ITEM_CATALOG } from '../game/rules';
+
+/** Warm the browser cache so merge results never flash blank. */
+export function preloadItemArt(): void {
+  if (typeof Image === 'undefined') return;
+  Object.keys(ITEM_CATALOG).forEach((id) => {
+    const img = new Image();
+    img.src = `/assets/art/items/${id}.png`;
+  });
+}
 
 interface ItemArtworkProps {
   itemId: string;
@@ -8,6 +17,9 @@ interface ItemArtworkProps {
 
 export const ItemArtwork: React.FC<ItemArtworkProps> = ({ itemId, size = 'md' }) => {
   const def = ITEM_CATALOG[itemId];
+  // Blender-rendered icon in public/assets/art/items/<itemId>.png; falls back to the built-in SVG if missing
+  const [failedId, setFailedId] = useState<string | null>(null);
+  const imgFailed = failedId === itemId;
   if (!def) return null;
 
   const sizeClass =
@@ -15,6 +27,18 @@ export const ItemArtwork: React.FC<ItemArtworkProps> = ({ itemId, size = 'md' })
 
   return (
     <div className={`relative flex items-center justify-center ${sizeClass} select-none pointer-events-none`}>
+      {!imgFailed && (
+        <img
+          src={`/assets/art/items/${itemId}.png`}
+          alt=""
+          width={256}
+          height={256}
+          draggable={false}
+          onError={() => setFailedId(itemId)}
+          className="w-full h-full object-contain drop-shadow-[0_2px_3px_rgba(0,0,0,0.45)]"
+        />
+      )}
+      {imgFailed && (
       <svg viewBox="0 0 64 64" className="w-full h-full drop-shadow-[0_2px_4px_rgba(0,0,0,0.65)]">
         {/* GENERATOR 1: Khawlani Coffee Sack */}
         {itemId === 'gen_qahwa' && (
@@ -303,6 +327,7 @@ export const ItemArtwork: React.FC<ItemArtworkProps> = ({ itemId, size = 'md' })
           </g>
         )}
       </svg>
+      )}
     </div>
   );
 };

@@ -194,6 +194,7 @@ export interface GameState {
   xp: number;
   level: number;
   comboCount: number;
+  lastMergeAt: number;
   ordersCompleted: number;
   totalMerges: number;
   activeOrders: CustomerOrder[];
@@ -204,6 +205,10 @@ export interface GameState {
   liveOpsPoints: number;
   liveOpsMilestones: LiveOpsMilestone[];
   vipPassActive: boolean;
+  loginStreak: number;
+  lastLoginDay: string;
+  tutorialDismissed: boolean;
+  pourTokens: number;
   lastMergedItemId: string | null;
 }
 
@@ -1051,6 +1056,7 @@ export function createInitialGameState(): GameState {
     xp: 0,
     level: 1,
     comboCount: 0,
+    lastMergeAt: 0,
     ordersCompleted: 0,
     totalMerges: 0,
     activeOrders: [
@@ -1077,6 +1083,10 @@ export function createInitialGameState(): GameState {
     liveOpsPoints: 15,
     liveOpsMilestones: INITIAL_LIVEOPS_MILESTONES.map((m) => ({ ...m })),
     vipPassActive: false,
+    loginStreak: 0,
+    lastLoginDay: '',
+    tutorialDismissed: false,
+    pourTokens: 0,
     lastMergedItemId: null,
   };
 }
@@ -1507,14 +1517,54 @@ export function spawnFromGenerator(
   };
 }
 
+export const COMBO_WINDOW_MS = 6000;
+export const MAX_COMBO_BONUS_COINS = 20;
+
+export interface LevelUpReward {
+  fromLevel: number;
+  toLevel: number;
+  gems: number;
+  energy: number;
+}
+
+export function getComboBonusCoins(combo: number): number {
+  return combo >= 3 ? Math.min(MAX_COMBO_BONUS_COINS, (combo - 2) * 2) : 0;
+}
+
+export function getLevelFromXp(xp: number): number {
+  return Math.floor(xp / 100) + 1;
+}
+
+function getAdjacentMatchIndex(board: BoardCell[], targetIndex: number, excludeIndex: number, itemId: string): number | null {
+  const target = board[targetIndex];
+  const neighbours = [
+    [target.row - 1, target.col],
+    [target.row + 1, target.col],
+    [target.row, target.col - 1],
+    [target.row, target.col + 1],
+  ];
+  for (const [r, c] of neighbours) {
+    const cell = board.find((b) => b.row === r && b.col === c);
+    if (cell && cell.index !== excludeIndex && !cell.sandLocked && cell.itemId === itemId) {
+      return cell.index;
+    }
+  }
+  return null;
+}
+
 export function mergeOrMoveCells(
   state: GameState,
   fromIndex: number,
-  toIndex: number
+  toIndex: number,
+  now: number = Date.now()
 ): {
   state: GameState;
   action: 'MERGED' | 'MOVED' | 'SWAPPED' | 'INVALID';
   mergedItemId?: string;
+  comboCount?: number;
+  comboBonusCoins?: number;
+  megaMerge?: boolean;
+  levelUp?: LevelUpReward;
 } {
   if (fromIndex === toIndex) {
     return { state, action: 'INVALID' };
@@ -1532,31 +1582,51 @@ export function mergeOrMoveCells(
     const nextItemId = getNextMergedItemId(fromCell.itemId);
     if (!nextItemId) return { state, action: 'INVALID' };
 
-    const nextDef = ITEM_CATALOG[nextItemId];
-    const gainedXp = nextDef ? nextDef.mergeXp : 5;
+    // Mega Merge: a third matching item touching the merge tile is absorbed for a free extra level.
+    const megaSourceIndex = getAdjacentMatchIndex(state.board, toIndex, fromIndex, fromCell.itemId);
+    const megaItemId = megaSourceIndex !== null ? getNextMergedItemId(nextItemId) : null;
+    const megaMerge = megaSourceIndex !== null && megaItemId !== null;
+    const resultItemId = megaMerge ? (megaItemId as string) : nextItemId;
+    const nextDef = ITEM_CATALOG[resultItemId];
+
+    const comboCount =
+      state.lastMergeAt > 0 && now - state.lastMergeAt <= COMBO_WINDOW_MS ? state.comboCount + 1 : 1;
+    const comboBonusCoins = getComboBonusCoins(comboCount);
+
+    const gainedXp = (nextDef ? nextDef.mergeXp : 5) + Math.min(comboCount - 1, 10);
     const newXp = state.xp + gainedXp;
-    const newLevel = Math.floor(newXp / 100) + 1;
+    const newLevel = getLevelFromXp(newXp);
+
+    let levelUp: LevelUpReward | undefined;
+    if (newLevel > state.level) {
+      levelUp = {
+        fromLevel: state.level,
+        toLevel: newLevel,
+        gems: 5 * (newLevel - state.level),
+        energy: state.maxEnergy,
+      };
+    }
 
     const nextBoard = state.board.map((cell, idx) => {
-      if (idx === fromIndex) {
+      if (idx === fromIndex || (megaMerge && idx === megaSourceIndex)) {
         return { ...cell, itemId: null };
       }
       if (idx === toIndex) {
-        return { ...cell, itemId: nextItemId, sandLocked: false };
+        return { ...cell, itemId: resultItemId, sandLocked: false };
       }
       return cell;
     });
 
-    const discovered = state.discoveredItemIds.includes(nextItemId)
-      ? state.discoveredItemIds
-      : [...state.discoveredItemIds, nextItemId];
+    const discovered = new Set(state.discoveredItemIds);
+    discovered.add(nextItemId);
+    discovered.add(resultItemId);
 
-    const bonusCoins = nextDef && nextDef.level >= 4 ? nextDef.level * 3 : 0;
+    const bonusCoins = (nextDef && nextDef.level >= 4 ? nextDef.level * 3 : 0) + comboBonusCoins;
 
     // Spawn a Gossip-Harbor style Golden Bonus Bubble when merging into Level 3+!
     const nextBubble: BonusBubble | null =
       nextDef && nextDef.level >= 3
-        ? { itemId: nextItemId, gemCost: nextDef.level * 4 }
+        ? { itemId: resultItemId, gemCost: nextDef.level * 4 }
         : state.bonusBubble;
 
     return {
@@ -1567,16 +1637,23 @@ export function mergeOrMoveCells(
         xp: newXp,
         level: newLevel,
         coins: state.coins + bonusCoins,
-        comboCount: state.comboCount + 1,
+        diamonds: state.diamonds + (levelUp ? levelUp.gems : 0),
+        energy: levelUp ? Math.max(state.energy, levelUp.energy) : state.energy,
+        comboCount,
+        lastMergeAt: now,
         totalMerges: state.totalMerges + 1,
         prestigePoints: state.prestigePoints + (nextDef ? nextDef.level * 3 : 3),
         liveOpsPoints: state.liveOpsPoints + (nextDef ? nextDef.level * 2 : 2),
-        discoveredItemIds: discovered,
-        lastMergedItemId: nextItemId,
+        discoveredItemIds: Array.from(discovered),
+        lastMergedItemId: resultItemId,
         bonusBubble: nextBubble,
       },
       action: 'MERGED',
-      mergedItemId: nextItemId,
+      mergedItemId: resultItemId,
+      comboCount,
+      comboBonusCoins,
+      megaMerge,
+      levelUp,
     };
   }
 
@@ -1670,7 +1747,8 @@ export function findCellsForOrder(board: BoardCell[], requiredItemIds: string[])
 
 export function fulfillCustomerOrder(
   state: GameState,
-  orderId: string
+  orderId: string,
+  season: Season | null = null
 ): { state: GameState; fulfilled: boolean; spawnedChest?: boolean } {
   const order = state.activeOrders.find((o) => o.id === orderId);
   if (!order) return { state, fulfilled: false };
@@ -1711,13 +1789,14 @@ export function fulfillCustomerOrder(
     state: {
       ...state,
       board: nextBoard,
-      coins: state.coins + order.rewardCoins + prestigeBonus,
+      coins: state.coins + Math.round((order.rewardCoins + prestigeBonus) * (season ? season.coinMultiplier : 1)),
       stars: state.stars + order.rewardStars,
       diamonds: state.diamonds + vipGemBonus,
       xp: newXp,
       level: Math.floor(newXp / 100) + 1,
       ordersCompleted: state.ordersCompleted + 1,
-      prestigePoints: state.prestigePoints + (order.isVip ? 55 : 35),
+      prestigePoints:
+        state.prestigePoints + Math.round((order.isVip ? 55 : 35) * (season ? season.prestigeMultiplier : 1)),
       liveOpsPoints: state.liveOpsPoints + (order.isVip ? 25 : 15),
       activeOrders: nextOrders,
       selectedCellIndex: null,
@@ -1769,6 +1848,7 @@ export function upgradeRenovationZone(
       xp: state.xp + 40,
       level: Math.floor((state.xp + 40) / 100) + 1,
       prestigePoints: state.prestigePoints + 60,
+      pourTokens: state.pourTokens + 1,
       liveOpsPoints: state.liveOpsPoints + 25,
       activeStoryId: triggeredStoryId || state.activeStoryId,
       renovationZones: state.renovationZones.map((z) =>
@@ -1783,5 +1863,220 @@ export function upgradeRenovationZone(
     },
     upgraded: true,
     triggeredStoryId,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Daily Login Streak ("Ghabga Al-Yawm") & First-Run Coaching
+// ---------------------------------------------------------------------------
+
+export interface DailyReward {
+  day: number;
+  energy: number;
+  coins: number;
+  gems: number;
+  scissors: number;
+  joker: number;
+  freeSpins: number;
+  chest: boolean;
+}
+
+export const DAILY_LOGIN_REWARDS: DailyReward[] = [
+  { day: 1, energy: 20, coins: 0, gems: 0, scissors: 0, joker: 0, freeSpins: 0, chest: false },
+  { day: 2, energy: 0, coins: 100, gems: 0, scissors: 0, joker: 0, freeSpins: 0, chest: false },
+  { day: 3, energy: 0, coins: 0, gems: 10, scissors: 0, joker: 0, freeSpins: 0, chest: false },
+  { day: 4, energy: 25, coins: 0, gems: 0, scissors: 1, joker: 0, freeSpins: 0, chest: false },
+  { day: 5, energy: 0, coins: 150, gems: 0, scissors: 0, joker: 1, freeSpins: 0, chest: false },
+  { day: 6, energy: 0, coins: 0, gems: 20, scissors: 0, joker: 0, freeSpins: 1, chest: false },
+  { day: 7, energy: 0, coins: 0, gems: 30, scissors: 0, joker: 0, freeSpins: 0, chest: true },
+];
+
+export function dayKeyFromDate(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+function daysBetweenKeys(fromKey: string, toKey: string): number {
+  const a = Date.parse(`${fromKey}T00:00:00Z`);
+  const b = Date.parse(`${toKey}T00:00:00Z`);
+  return Math.round((b - a) / 86_400_000);
+}
+
+/** Streak day (1..7) the player would be on if they claimed today, or null if already claimed. */
+export function getDailyLoginDay(state: GameState, todayKey: string): number | null {
+  if (state.lastLoginDay === todayKey) return null;
+  const gap = state.lastLoginDay ? daysBetweenKeys(state.lastLoginDay, todayKey) : Infinity;
+  if (gap < 0) return null; // clock moved backwards: never pay twice
+  const streak = gap === 1 ? state.loginStreak + 1 : 1;
+  return ((streak - 1) % DAILY_LOGIN_REWARDS.length) + 1;
+}
+
+export function claimDailyLoginReward(
+  state: GameState,
+  todayKey: string
+): { state: GameState; claimed: boolean; reward: DailyReward | null; day: number } {
+  const day = getDailyLoginDay(state, todayKey);
+  if (day === null) return { state, claimed: false, reward: null, day: state.loginStreak };
+  const reward = DAILY_LOGIN_REWARDS[day - 1];
+  const gap = state.lastLoginDay ? daysBetweenKeys(state.lastLoginDay, todayKey) : Infinity;
+  const streak = gap === 1 ? state.loginStreak + 1 : 1;
+
+  let board = state.board;
+  let bonusCoins = 0;
+  if (reward.chest) {
+    const emptyIdx = findNearestEmptyCell(board, 24);
+    if (emptyIdx !== null) {
+      board = board.map((c, i) => (i === emptyIdx ? { ...c, itemId: 'chest_2' } : c));
+    } else {
+      bonusCoins = 180; // board full: pay out the chest's coins instead of losing it
+    }
+  }
+
+  return {
+    state: {
+      ...state,
+      board,
+      loginStreak: streak,
+      lastLoginDay: todayKey,
+      energy: state.energy + reward.energy,
+      coins: state.coins + reward.coins + bonusCoins,
+      diamonds: state.diamonds + reward.gems,
+      scissorsCount: state.scissorsCount + reward.scissors,
+      jokerCount: state.jokerCount + reward.joker,
+      freeSpinsAvailable: state.freeSpinsAvailable + reward.freeSpins,
+    },
+    claimed: true,
+    reward,
+    day,
+  };
+}
+
+export type TutorialStep = 'merge' | 'serve' | null;
+
+export function getTutorialStep(state: GameState): TutorialStep {
+  if (state.tutorialDismissed) return null;
+  if (state.totalMerges === 0) return 'merge';
+  if (state.ordersCompleted === 0) return 'serve';
+  return null;
+}
+
+// ---------------------------------------------------------------------------
+// Saudi Cultural Calendar LiveOps
+// ---------------------------------------------------------------------------
+
+export interface Season {
+  id: 'founding_day' | 'national_day' | 'ramadan' | 'eid';
+  nameAr: string;
+  nameEn: string;
+  descAr: string;
+  descEn: string;
+  coinMultiplier: number;
+  prestigeMultiplier: number;
+}
+
+export const SEASONS: Record<Season['id'], Season> = {
+  founding_day: {
+    id: 'founding_day',
+    nameAr: 'يوم التأسيس',
+    nameEn: 'Founding Day',
+    descAr: 'ريالات الطلبات ×1.5 وهيبة مضاعفة احتفالاً بالدرعية',
+    descEn: 'Order SAR x1.5 and double prestige celebrating Diriyah',
+    coinMultiplier: 1.5,
+    prestigeMultiplier: 2,
+  },
+  national_day: {
+    id: 'national_day',
+    nameAr: 'اليوم الوطني',
+    nameEn: 'Saudi National Day',
+    descAr: 'ريالات الطلبات ×1.5 وهيبة مضاعفة · الأخضر يعلو',
+    descEn: 'Order SAR x1.5 and double prestige · the green rises',
+    coinMultiplier: 1.5,
+    prestigeMultiplier: 2,
+  },
+  ramadan: {
+    id: 'ramadan',
+    nameAr: 'غبقات رمضان',
+    nameEn: 'Ramadan Ghabga Nights',
+    descAr: 'ريالات الطلبات ×1.25 وهيبة ×1.5 على موائد الغبقة',
+    descEn: 'Order SAR x1.25 and prestige x1.5 at the Ghabga tables',
+    coinMultiplier: 1.25,
+    prestigeMultiplier: 1.5,
+  },
+  eid: {
+    id: 'eid',
+    nameAr: 'أيام العيد',
+    nameEn: 'Eid Days',
+    descAr: 'ريالات الطلبات ×2 في ضيافة العيد',
+    descEn: 'Order SAR x2 for Eid hospitality',
+    coinMultiplier: 2,
+    prestigeMultiplier: 1.5,
+  },
+};
+
+export function getActiveSeason(date: Date): Season | null {
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  if (month === 2 && day >= 21 && day <= 23) return SEASONS.founding_day;
+  if (month === 9 && day >= 22 && day <= 24) return SEASONS.national_day;
+  try {
+    const parts = new Intl.DateTimeFormat('en-u-ca-islamic-umalqura', {
+      month: 'numeric',
+      day: 'numeric',
+    }).formatToParts(date);
+    const hijriMonth = Number(parts.find((p) => p.type === 'month')?.value);
+    const hijriDay = Number(parts.find((p) => p.type === 'day')?.value);
+    if (hijriMonth === 9) return SEASONS.ramadan;
+    if (hijriMonth === 10 && hijriDay <= 3) return SEASONS.eid;
+  } catch {
+    // Intl calendar unavailable: fall back to fixed Gregorian seasons only
+  }
+  return null;
+}
+
+// ---------------------------------------------------------------------------
+// "Rub'a al-Finjan" Pouring Mini-Game
+// ---------------------------------------------------------------------------
+
+export type PourGrade = 'perfect' | 'good' | 'short' | 'overflow';
+
+/** Tradition: a host pours only a quarter of the finjan, so refills show generosity. */
+export const POUR_TARGET_PERCENT = 25;
+export const POUR_PERFECT_TOLERANCE = 4;
+export const POUR_GOOD_TOLERANCE = 10;
+
+export function gradePour(fillPercent: number): PourGrade {
+  const off = Math.abs(fillPercent - POUR_TARGET_PERCENT);
+  if (off <= POUR_PERFECT_TOLERANCE) return 'perfect';
+  if (off <= POUR_GOOD_TOLERANCE) return 'good';
+  return fillPercent < POUR_TARGET_PERCENT ? 'short' : 'overflow';
+}
+
+export const POUR_REWARDS: Record<PourGrade, { coins: number; gems: number; joker: number }> = {
+  perfect: { coins: 100, gems: 8, joker: 1 },
+  good: { coins: 50, gems: 3, joker: 0 },
+  short: { coins: 20, gems: 0, joker: 0 },
+  overflow: { coins: 20, gems: 0, joker: 0 },
+};
+
+export function completePour(
+  state: GameState,
+  fillPercent: number
+): { state: GameState; poured: boolean; grade: PourGrade | null } {
+  if (state.pourTokens <= 0) return { state, poured: false, grade: null };
+  const grade = gradePour(fillPercent);
+  const reward = POUR_REWARDS[grade];
+  return {
+    state: {
+      ...state,
+      pourTokens: state.pourTokens - 1,
+      coins: state.coins + reward.coins,
+      diamonds: state.diamonds + reward.gems,
+      jokerCount: state.jokerCount + reward.joker,
+      prestigePoints: state.prestigePoints + (grade === 'perfect' ? 20 : 5),
+    },
+    poured: true,
+    grade,
   };
 }

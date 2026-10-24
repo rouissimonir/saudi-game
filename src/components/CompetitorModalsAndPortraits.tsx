@@ -26,16 +26,41 @@ import { ItemArtwork } from './ItemArtwork';
 /**
  * Illustrated Khaleeji Character Portraits for the Gossip Harbor / Travel Town Customer Order Strip
  */
+export const PORTRAIT_BACKDROP: Record<string, string> = {
+  noura: '#5A1E1E',
+  faisal: '#1E3A4A',
+  tariq: '#3A2616',
+  lama: '#4A1F44',
+  sultan: '#3E2412',
+  ghabga: '#1E1B4B',
+};
+
 export const CustomerPortrait: React.FC<{
   avatarKey?: 'noura' | 'faisal' | 'tariq' | 'lama' | 'sultan' | 'ghabga' | string;
-  size?: 'sm' | 'md';
+  size?: 'sm' | 'md' | 'lg';
 }> = ({ avatarKey = 'noura', size = 'md' }) => {
-  const dim = size === 'sm' ? 'w-9 h-9' : 'w-11 h-11';
+  const dim = size === 'sm' ? 'w-9 h-9' : size === 'lg' ? 'w-14 h-14' : 'w-11 h-11';
+  // Blender-rendered bust in public/assets/art/characters/<key>.png; falls back to the built-in SVG if missing
+  const [failedKey, setFailedKey] = React.useState<string | null>(null);
+  const useImage = failedKey !== avatarKey && avatarKey in PORTRAIT_BACKDROP;
 
   return (
     <div
+      style={useImage ? { backgroundColor: PORTRAIT_BACKDROP[avatarKey] } : undefined}
       className={`${dim} rounded-full overflow-hidden border-2 border-[#D99B26] bg-[#2B1D14] shrink-0 shadow-inner flex items-center justify-center`}
     >
+      {useImage && (
+        <img
+          src={`/assets/art/characters/${avatarKey}.png`}
+          alt=""
+          width={256}
+          height={256}
+          draggable={false}
+          onError={() => setFailedKey(avatarKey)}
+          className="w-full h-full object-cover scale-[1.12] translate-y-[6%]"
+        />
+      )}
+      {!useImage && (
       <svg viewBox="0 0 64 64" className="w-full h-full">
         {avatarKey === 'noura' && (
           <g>
@@ -118,6 +143,7 @@ export const CustomerPortrait: React.FC<{
           </g>
         )}
       </svg>
+      )}
     </div>
   );
 };

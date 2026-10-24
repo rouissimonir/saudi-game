@@ -25,6 +25,14 @@ import {
   STORY_CHAPTERS,
   spawnFromGenerator,
   mergeOrMoveCells,
+  COMBO_WINDOW_MS,
+  dayKeyFromDate,
+  getDailyLoginDay,
+  claimDailyLoginReward,
+  getTutorialStep,
+  getActiveSeason,
+  completePour,
+  type LevelUpReward,
   findBestMergePair,
   sellBoardItem,
   findCellsForOrder,
@@ -51,9 +59,12 @@ import {
   loadSavedGameState,
   clearSavedGameState,
 } from './utils/soundAndHaptics';
-import { ItemArtwork } from './components/ItemArtwork';
+import { ItemArtwork, preloadItemArt } from './components/ItemArtwork';
 import { MajlisRenovationView } from './components/MajlisRenovationView';
 import { StoryDialogueModal } from './components/StoryDialogueModal';
+import { DailyLoginModal } from './components/DailyLoginModal';
+import { isVoiceCharacter, speakerCharacter } from './game/voiceLines';
+import { FinjanPourModal } from './components/FinjanPourModal';
 import { ShopAndMadaModal } from './components/ShopAndMadaModal';
 import {
   CustomerPortrait,
@@ -105,6 +116,14 @@ export default function App() {
   const [hintPair, setHintPair] = useState<[number, number] | null>(null);
   const [dragFromIndex, setDragFromIndex] = useState<number | null>(null);
   const [feedbackBanner, setFeedbackBanner] = useState<string | null>(null);
+  const [mergeFx, setMergeFx] = useState<{ index: number; level: number; mega: boolean; key: number } | null>(null);
+  const [comboLive, setComboLive] = useState<boolean>(false);
+  const [levelUpToast, setLevelUpToast] = useState<LevelUpReward | null>(null);
+  const comboTimeoutRef = useRef<number | null>(null);
+  const [dailyLoginDay, setDailyLoginDay] = useState<number | null>(null);
+  const tutorialStep = getTutorialStep(gameState);
+  const activeSeason = React.useMemo(() => getActiveSeason(new Date()), []);
+  const [pourOpen, setPourOpen] = useState<boolean>(false);
 
   const [shopModalOpen, setShopModalOpen] = useState<boolean>(false);
   const [shopInitialTab, setShopInitialTab] = useState<'shop' | 'liveops' | 'almanac' | 'capacitor'>('shop');
@@ -135,6 +154,43 @@ export default function App() {
     document.documentElement.lang = lang;
     document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
   }, [lang]);
+
+  useEffect(() => {
+    preloadItemArt();
+  }, []);
+
+  // Ambient Hijaz oud loop while playing and unmuted
+  useEffect(() => {
+    if (shellState === 'playing' && !muted) {
+      soundFX.startAmbient();
+    } else {
+      soundFX.stopAmbient();
+    }
+    return () => soundFX.stopAmbient();
+  }, [shellState, muted]);
+
+  // Offer the daily login reward once per calendar day when play begins
+  useEffect(() => {
+    if (shellState !== 'playing') return;
+    setDailyLoginDay(getDailyLoginDay(gameState, dayKeyFromDate(new Date())));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shellState]);
+
+  const handleFinishPour = (fillPercent: number) => {
+    const res = completePour(gameState, fillPercent);
+    if (!res.poured) return;
+    soundFX.playOrderComplete();
+    setGameState(res.state);
+  };
+
+  const handleClaimDailyLogin = () => {
+    const res = claimDailyLoginReward(gameState, dayKeyFromDate(new Date()));
+    setDailyLoginDay(null);
+    if (!res.claimed) return;
+    soundFX.playOrderComplete();
+    setGameState(res.state);
+    showFeedback(isAr ? `استلمت هدية اليوم ${res.day}!` : `Claimed Day ${res.day} reward!`);
+  };
 
   // Save game state automatically on change
   useEffect(() => {
@@ -230,6 +286,44 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [shellState, shopModalOpen, chainModalOpen, leaderboardOpen, gameState.activeStoryId, handleStartGame, handleToggleMute]);
 
+  // Shared merge outcome handler: sound, burst FX, combo meter, Mega Merge and level-up rewards
+  const applyMergeResult = (
+    res: ReturnType<typeof mergeOrMoveCells>,
+    targetIndex: number,
+    auto: boolean = false
+  ) => {
+    if (res.action !== 'MERGED' || !res.mergedItemId) return;
+    const mergedDef = ITEM_CATALOG[res.mergedItemId];
+    const level = mergedDef?.level || 2;
+    soundFX.playMerge(res.megaMerge ? level + 1 : level);
+    setGameState(res.state);
+    setMergeFx({ index: targetIndex, level, mega: Boolean(res.megaMerge), key: Date.now() });
+
+    setComboLive(true);
+    if (comboTimeoutRef.current) window.clearTimeout(comboTimeoutRef.current);
+    comboTimeoutRef.current = window.setTimeout(() => setComboLive(false), COMBO_WINDOW_MS);
+
+    const name = isAr ? mergedDef.nameAr : mergedDef.nameEn;
+    const parts: string[] = [];
+    if (res.megaMerge) {
+      parts.push(isAr ? `دمج ثلاثي ممتاز! ${name} (المستوى ${level})` : `Mega Merge! ${name} (Lv.${level})`);
+    } else if (auto) {
+      parts.push(isAr ? `دمج تلقائي: ${name} (المستوى ${level})!` : `Auto-Merged: ${name} (Lv.${level})!`);
+    } else {
+      parts.push(isAr ? `دمج رائع! حصلت على: ${name} (المستوى ${level})` : `Merged! Created: ${name} (Lv.${level})`);
+    }
+    if (res.comboBonusCoins) {
+      parts.push(isAr ? `كومبو ×${res.comboCount} +${res.comboBonusCoins} ريال` : `Combo ×${res.comboCount} +${res.comboBonusCoins} SAR`);
+    }
+    showFeedback(parts.join(' · '));
+
+    if (res.levelUp) {
+      setLevelUpToast(res.levelUp);
+      soundFX.playLevelUp();
+      window.setTimeout(() => setLevelUpToast(null), 3200);
+    }
+  };
+
   // Cell Click / Tap Interaction
   const handleCellClick = (index: number) => {
     setHintPair(null);
@@ -305,14 +399,7 @@ export default function App() {
 
     const moveRes = mergeOrMoveCells(gameState, gameState.selectedCellIndex, index);
     if (moveRes.action === 'MERGED' && moveRes.mergedItemId) {
-      const mergedDef = ITEM_CATALOG[moveRes.mergedItemId];
-      soundFX.playMerge(mergedDef?.level || 2);
-      setGameState(moveRes.state);
-      showFeedback(
-        isAr
-          ? `دمج رائع! حصلت على: ${mergedDef.nameAr} (المستوى ${mergedDef.level})`
-          : `Merged! Created: ${mergedDef.nameEn} (Lv.${mergedDef.level})`
-      );
+      applyMergeResult(moveRes, index);
     } else if (moveRes.action === 'MOVED' || moveRes.action === 'SWAPPED') {
       soundFX.triggerHaptic('light');
       setGameState(moveRes.state);
@@ -338,14 +425,7 @@ export default function App() {
     }
     const moveRes = mergeOrMoveCells(gameState, dragFromIndex, targetIndex);
     if (moveRes.action === 'MERGED' && moveRes.mergedItemId) {
-      const mergedDef = ITEM_CATALOG[moveRes.mergedItemId];
-      soundFX.playMerge(mergedDef?.level || 2);
-      setGameState(moveRes.state);
-      showFeedback(
-        isAr
-          ? `دمج رائع! حصلت على: ${mergedDef.nameAr} (المستوى ${mergedDef.level})`
-          : `Merged! Created: ${mergedDef.nameEn} (Lv.${mergedDef.level})`
-      );
+      applyMergeResult(moveRes, targetIndex);
     } else if (moveRes.action === 'MOVED' || moveRes.action === 'SWAPPED') {
       soundFX.triggerHaptic('light');
       setGameState(moveRes.state);
@@ -368,16 +448,7 @@ export default function App() {
     const [fromIdx, toIdx] = pair;
     setHintPair(pair);
     const res = mergeOrMoveCells(gameState, fromIdx, toIdx);
-    if (res.action === 'MERGED' && res.mergedItemId) {
-      const mergedDef = ITEM_CATALOG[res.mergedItemId];
-      soundFX.playMerge(mergedDef?.level || 2);
-      setGameState(res.state);
-      showFeedback(
-        isAr
-          ? `دمج تلقائي: ${mergedDef.nameAr} (المستوى ${mergedDef.level})!`
-          : `Auto-Merged: ${mergedDef.nameEn} (Lv.${mergedDef.level})!`
-      );
-    }
+    applyMergeResult(res, toIdx, true);
   };
 
   // Power Boost Multiplier Toggle (1x -> 2x -> 4x)
@@ -536,9 +607,13 @@ export default function App() {
 
   // Fulfill Customer Order
   const handleFulfillOrder = (orderId: string) => {
-    const res = fulfillCustomerOrder(gameState, orderId);
+    const servedOrder = gameState.activeOrders.find((o) => o.id === orderId);
+    const res = fulfillCustomerOrder(gameState, orderId, activeSeason);
     if (res.fulfilled) {
       soundFX.playOrderComplete();
+      if (servedOrder && isVoiceCharacter(servedOrder.customerId)) {
+        soundFX.playVoice(servedOrder.customerId, servedOrder.isVip ? 'vip' : 'served');
+      }
       setGameState(res.state);
       showFeedback(
         res.spawnedChest
@@ -667,6 +742,15 @@ export default function App() {
   const activeStoryChapter =
     STORY_CHAPTERS.find((c) => c.id === gameState.activeStoryId) || null;
 
+  // The speaker greets the player when a story chapter opens
+  const storyChapterId = activeStoryChapter ? activeStoryChapter.id : null;
+  const storySpeaker = activeStoryChapter ? speakerCharacter(activeStoryChapter.speakerEn) : null;
+  useEffect(() => {
+    if (shellState === 'playing' && storyChapterId && storySpeaker) {
+      soundFX.playVoice(storySpeaker, 'greet');
+    }
+  }, [storyChapterId, storySpeaker, shellState]);
+
   // ============================================================================
   // 1. TITLE SCREEN ('title')
   // ============================================================================
@@ -690,49 +774,22 @@ export default function App() {
         {/* Main Asymmetric / Centered Monument Spotlight with >35% Calm Negative Space */}
         <div className="relative z-10 flex-1 max-w-5xl w-full mx-auto px-6 py-10 flex flex-col lg:flex-row items-center justify-between gap-10">
           {/* Column 1: Interactive Hero Centerpiece (Gilded Najdi Dallah & V60 Crest) */}
-          <div className="w-56 h-56 sm:w-72 sm:h-72 rounded-full bg-[#241812] border-2 border-[#D99B26]/60 shadow-[0_0_60px_rgba(217,155,38,0.2)] flex items-center justify-center p-6 shrink-0">
-            <svg viewBox="0 0 200 200" className="w-full h-full">
+          <div className="relative w-56 h-56 sm:w-72 sm:h-72 rounded-full bg-[#241812] border-2 border-[#D99B26]/60 shadow-[0_0_60px_rgba(217,155,38,0.2)] flex items-center justify-center p-6 shrink-0">
+            <svg viewBox="0 0 200 200" className="absolute inset-6 w-[calc(100%-3rem)] h-[calc(100%-3rem)]" aria-hidden="true">
               <polygon
                 points="100,10 126,42 168,32 158,74 190,100 158,126 168,168 126,158 100,190 74,158 32,168 42,126 10,100 42,74 32,32 74,42"
                 fill="#2E1E16"
                 stroke="#D99B26"
                 strokeWidth="3"
               />
-              <path
-                d="M78,76 L122,76 L132,148 L68,148 Z"
-                fill="#E9C46A"
-                stroke="#2A180D"
-                strokeWidth="4"
-              />
-              <path
-                d="M78,78 L42,60 L62,102 Z"
-                fill="#F4A261"
-                stroke="#2A180D"
-                strokeWidth="3.5"
-              />
-              <path
-                d="M122,82 C152,82 152,128 126,134"
-                fill="none"
-                stroke="#D99B26"
-                strokeWidth="7"
-                strokeLinecap="round"
-              />
-              <path
-                d="M84,76 L100,40 L116,76 Z"
-                fill="#D97724"
-                stroke="#2A180D"
-                strokeWidth="3.5"
-              />
-              <circle cx="100" cy="36" r="5" fill="#FBF7F0" />
-              <path d="M73,112 L127,112" stroke="#9E2A2B" strokeWidth="5" />
-              <path
-                d="M52,44 Q46,28 58,20 M100,24 Q106,12 96,6"
-                stroke="#FDE68A"
-                strokeWidth="3"
-                fill="none"
-                strokeLinecap="round"
-              />
             </svg>
+            <img
+              src="/assets/art/dallah.png"
+              alt={lang === 'ar' ? 'دلة نجدية ذهبية' : 'Gilded Najdi dallah'}
+              width={512}
+              height={512}
+              className="relative w-4/5 h-4/5 object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,0.5)]"
+            />
           </div>
 
           {/* Column 2: Custom SVG Title Lockup & <= 3 Menu Actions */}
@@ -1032,6 +1089,76 @@ export default function App() {
               <span>{isAr ? 'مزاين المجالس' : 'Mazayen Contest'}</span>
             </button>
           </div>
+
+          {activeSeason && (
+            <div
+              data-testid="season-banner"
+              className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#065F46] to-[#047857] border border-[#34D399] text-xs font-bold text-[#D1FAE5]"
+            >
+              <span className="font-extrabold">{isAr ? activeSeason.nameAr : activeSeason.nameEn}</span>
+              <span className="mx-1.5 opacity-60">·</span>
+              <span>{isAr ? activeSeason.descAr : activeSeason.descEn}</span>
+            </div>
+          )}
+
+          {gameState.pourTokens > 0 && (
+            <button
+              type="button"
+              data-testid="pour-challenge-button"
+              onClick={() => setPourOpen(true)}
+              className="px-3.5 py-1.5 rounded-xl bg-[#D97724] hover:bg-[#EA8A35] text-xs font-extrabold text-white text-start"
+            >
+              {isAr
+                ? `☕ تحدي ربع الفنجال جاهز (${gameState.pourTokens}) · اربح جواهر وجوكر`
+                : `☕ Rub'a al-Finjan challenge ready (${gameState.pourTokens}) · win gems & a Joker`}
+            </button>
+          )}
+
+          {tutorialStep && (
+            <div
+              data-testid="tutorial-coach"
+              className="flex items-start gap-2 px-3.5 py-2 rounded-xl bg-[#10B981]/15 border border-[#10B981] text-xs font-bold text-[#A7F3D0]"
+            >
+              <span className="flex-1 leading-relaxed">
+                {tutorialStep === 'merge'
+                  ? isAr
+                    ? 'ابدأ هنا: اسحب عنصراً فوق عنصر مطابق (أو انقر الاثنين) لدمجهما. المربعات ذات الإطار الأخضر تعني دمجاً ممكناً.'
+                    : 'Start here: drag an item onto a matching one (or tap both) to merge. Green-ringed tiles are matches.'
+                  : isAr
+                  ? 'ممتاز! الآن جهّز العناصر ذات علامة ✓ الخضراء واضغط «تقديم!» لإسعاد ضيوف المجلس.'
+                  : 'Nice! Gather the items marked with a green ✓, then press “Serve!” to delight your guests.'}
+              </span>
+              <button
+                type="button"
+                onClick={() => setGameState((prev) => ({ ...prev, tutorialDismissed: true }))}
+                className="shrink-0 underline text-[#6EE7B7]"
+              >
+                {isAr ? 'تخطي' : 'Skip'}
+              </button>
+            </div>
+          )}
+
+          {comboLive && gameState.comboCount >= 2 && (
+            <div
+              data-testid="combo-meter"
+              className="combo-meter flex items-center justify-between px-3.5 py-1 rounded-xl bg-gradient-to-r from-[#B45309] to-[#F59E0B] text-[#1C1410] text-xs font-extrabold"
+            >
+              <span>{isAr ? `كومبو ×${gameState.comboCount}` : `Combo ×${gameState.comboCount}`}</span>
+              <span className="combo-bar" style={{ animationDuration: `${COMBO_WINDOW_MS}ms` }} key={gameState.lastMergeAt} />
+            </div>
+          )}
+
+          {levelUpToast && (
+            <div
+              role="status"
+              data-testid="level-up-toast"
+              className="level-up-toast px-3.5 py-2 rounded-xl bg-[#10B981] text-white text-xs font-extrabold text-center"
+            >
+              {isAr
+                ? `ارتقيت للمستوى ${levelUpToast.toLevel}! +${levelUpToast.gems} جوهرة وطاقة ممتلئة`
+                : `Level ${levelUpToast.toLevel}! +${levelUpToast.gems} gems & full energy`}
+            </div>
+          )}
 
           {feedbackBanner && (
             <div
@@ -1340,6 +1467,13 @@ export default function App() {
                             : ''
                         }`}
                       >
+                        {mergeFx && mergeFx.index === cell.index && (
+                          <span
+                            key={mergeFx.key}
+                            aria-hidden="true"
+                            className={`merge-burst ${mergeFx.mega ? 'merge-burst-mega' : ''} ${mergeFx.level >= 4 ? 'merge-burst-big' : ''}`}
+                          />
+                        )}
                         {itemDef && (
                           <>
                             <ItemArtwork itemId={itemDef.id} size="md" />
@@ -1676,6 +1810,16 @@ export default function App() {
         lang={lang}
         chapter={activeStoryChapter}
         onClose={handleClaimStoryChapter}
+      />
+
+      <DailyLoginModal lang={lang} day={gameState.activeStoryId ? null : dailyLoginDay} onClaim={handleClaimDailyLogin} />
+
+      <FinjanPourModal
+        lang={lang}
+        isOpen={pourOpen}
+        tokens={gameState.pourTokens}
+        onFinish={handleFinishPour}
+        onClose={() => setPourOpen(false)}
       />
 
       <ChainTreeModal

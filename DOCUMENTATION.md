@@ -66,6 +66,24 @@
 
 ---
 
+### B2. Merge Feel & Progression (v4)
+1. **Timed Combo Chain (`كومبو`):** merges within 6 seconds of each other build a combo; from the 3rd merge each merge pays bonus SAR (capped at 20) and extra XP. A draining combo meter shows the remaining window.
+2. **Mega Merge (`دمج ثلاثي`):** when a third identical item touches the merge tile it is absorbed and the result jumps one extra level.
+3. **Level-Up Rewards:** every 100 XP grants `+5💎` per level gained and refills Energy to max, with a celebratory toast.
+4. **Merge Burst FX:** a golden burst on every merge (larger for Lv.4+, green for Mega Merge); honours `prefers-reduced-motion`.
+
+5. **7-Day Daily Login Streak (`غبقة اليوم`):** one reward per calendar day (Energy, SAR, Gems, Scissors, Joker, a free wheel spin, and a Gilded chest on Day 7). Missing a day resets the streak; the cycle repeats after Day 7. If the board is full on Day 7 the chest converts to 180 SAR.
+6. **First-Run Coach:** a dismissible banner teaches merging first, then serving an order; existing saves that already merged skip it.
+
+7. **Saudi Cultural Calendar (`تقويم المملكة`):** Founding Day (Feb 21–23) and National Day (Sep 22–24) give ×1.5 order SAR and double prestige; Ramadan (×1.25 / ×1.5) and Eid (×2 SAR) are detected from the Umm al-Qura Hijri calendar. A banner in the merge view shows the active season.
+8. **Rub'a al-Finjan Pouring Mini-Game (`تحدي ربع الفنجال`):** each renovation upgrade earns one challenge. Hold to pour and release near the 25% mark (±4 perfect, ±10 good) for SAR, gems and a Royal Joker.
+9. **Ambient Hijaz Oud Loop:** a quiet synthesized oud phrase over a low D drone plays while the game is unmuted; no audio files.
+10. **Blender-rendered art:** seven hero props (`tools/blender/make_art.py` into `public/assets/art/`, the title emblem uses the dallah) and all 30 board item icons (`tools/blender/make_items.py` into `public/assets/art/items/`, 256px, shown by `ItemArtwork` with the SVG as fallback), plus six 3D character busts (`tools/blender/make_characters.py` into `public/assets/art/characters/`, shown in the order strip and story dialogue). See `docs/ASSETS.md` for extending them and for where to source the remaining art, music and voice.
+11. **Generated music:** `tools/audio/make_music.py` renders a seamless 60 s Hijaz oud loop (`ambient.mp3`) plus `order_complete.mp3` and `level_up.mp3` stingers into `public/assets/audio/` (physically-modelled oud, darbuka, reverb; numeric checks in `verify_music.py`). The game loops the file gaplessly via WebAudio and falls back to the synthesized oud and chimes if a file is missing, so any file can be replaced by a human recording.
+12. **Character voice lines:** 32 dialect lines for the six characters (`src/game/voiceLines.ts`), spoken when an order is served and when a story chapter opens. Recorded with ElevenLabs Saudi-accent voices into `public/assets/audio/voice/<id>.mp3` (verified word-for-word by speech-to-text, loudness-matched; not yet listened to by a human). Playback uses the file, else the device's Arabic text-to-speech tuned per character, else silence; music ducks while a character speaks. `tools/voice/generate_elevenlabs.py` regenerates the files (see `docs/ASSETS.md`, section 4) and `docs/VOICE_LINES.md` is a recording sheet for a human actor.
+
+---
+
 ### C. Meta-Renovation, Kingdom Map, LiveOps & Saudi Monetization
 1. **Interactive Architectural Diorama (`MajlisRenovationView.tsx`):**
    - 4 upgradable architectural wings (**Najdi Mud-Brick Archway**, **Sadu Majlis & Brass Hearth**, **Specialty V60 & Espresso Bar**, **Courtyard Fountain & Ghabga Lanterns**), each with 2 upgrade tiers and **3 selectable Khaleeji interior design styles**.
@@ -161,3 +179,21 @@ To scale **Qahwa & Majlis Merge** from soft launch in Saudi Arabia & UAE to a **
      - Exclusive **Golden Sadu Nameplate** on the Diwan Al-Karam Leaderboard.
 9. **Saudi Dialect Voice Acting (تمثيل صوتي باللهجات النجدية والحجازية والجنوبية):**
    - Add warm, authentic 3-second voice lines for Grandmother Noura (*"يا هلا والله بضيوفنا"*), Barista Faisal, and Sheikh Tariq when their orders are served or when story chapters open.
+
+
+---
+
+## 5. Fasih Kids (فصيح) — Arabic Reading & Tashkeel Coach (Blueprint 3)
+
+A second page in the same Vite project (`fasih.html`, entry `src/fasih/main.tsx`), so one repo and one Capacitor shell can ship both apps.
+
+- **Live reading coach:** the child reads a fully-voweled story line or classical poem aloud (Mutanabbi, Ahmed Shawqi, children's stories). Recognised speech is aligned to the target text *while streaming*: each word turns green (correct), amber (a different word was spoken), red (skipped) or stays neutral until reached. Stars: ≥90% three, ≥70% two, ≥40% one.
+- **Tashkeel coach:** pick damma, fatha or kasra for a word's case ending, then see the grammatical reason (e.g. "مفعول به منصوب").
+- **Parent report:** weekly-style summary (stars, lessons, Tashkeel accuracy, practice streak) with a one-tap WhatsApp share link.
+- **Engine:** `src/fasih/engine.ts` (pure, tested in `src/fasih/engine.test.ts`); content in `src/fasih/content.ts`.
+- **Run:** `npm run dev` then open `/fasih.html`; `npm run build` emits both pages.
+
+**Known limits (be honest in store listings):**
+1. Speech engines return *undiacritized* text, so the coach detects skipped and mispronounced **words**, not wrong **vowels**; vowels are trained in the Tashkeel coach instead. A true vowel-level ASR needs a custom model.
+2. Recognition uses the browser's `SpeechRecognition` (`ar-SA`), which needs network on most engines and is absent in some WebViews. Without it the app falls back to tap-to-mark self-checking. A native iOS build should add a Capacitor speech-recognition plugin.
+3. Lesson text and diacritics were written by hand and should be proofread by an Arabic teacher before launch.
