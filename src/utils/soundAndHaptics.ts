@@ -8,6 +8,9 @@ export const HIJAZ_SCALE_HZ = [293.66, 311.13, 369.99, 392.0, 440.0, 466.16, 554
 /** Looping oud phrase as indices into HIJAZ_SCALE_HZ; -1 is a rest. Ends on the tonic. */
 export const AMBIENT_PHRASE = [0, 2, 3, 2, 1, 0, -1, 4, 3, 2, 3, 5, 4, 3, 2, 1, 0, -1, 0, 1, 2, 3, 4, 7, 5, 4, 3, 2, 1, 0, -1, -1];
 const AMBIENT_STEP_MS = 520;
+const AMBIENT_URL = '/assets/audio/ambient.mp3';
+const ORDER_COMPLETE_URL = '/assets/audio/order_complete.mp3';
+const LEVEL_UP_URL = '/assets/audio/level_up.mp3';
 
 class SoundAndHapticsManager {
   private ctx: AudioContext | null = null;
@@ -16,38 +19,88 @@ class SoundAndHapticsManager {
   private ambientStep = 0;
 
   private ambientWanted = false;
-  private ambientFile: HTMLAudioElement | null = null;
-  private ambientFileMissing = false;
+  private ambientSource: AudioBufferSourceNode | null = null;
+  private fileBuffers = new Map<string, AudioBuffer | 'missing'>();
+  private fileLoading = new Map<string, Promise<AudioBuffer | null>>();
+
+  /** Fetch and decode an audio file once; resolves null if it is missing or unreadable. */
+  private loadBuffer(url: string): Promise<AudioBuffer | null> {
+    const cached = this.fileBuffers.get(url);
+    if (cached) return Promise.resolve(cached === 'missing' ? null : cached);
+    const inflight = this.fileLoading.get(url);
+    if (inflight) return inflight;
+    const ctx = this.ensureContext();
+    if (!ctx || typeof fetch === 'undefined') return Promise.resolve(null);
+    const p = fetch(url)
+      .then((r) => {
+        if (!r.ok) throw new Error('missing');
+        return r.arrayBuffer();
+      })
+      .then((data) => ctx.decodeAudioData(data))
+      .then((buf) => {
+        this.fileBuffers.set(url, buf);
+        return buf as AudioBuffer | null;
+      })
+      .catch(() => {
+        // 404, or a dev server answering with index.html: treat as "no file" and use the synth
+        this.fileBuffers.set(url, 'missing');
+        return null;
+      })
+      .finally(() => this.fileLoading.delete(url));
+    this.fileLoading.set(url, p);
+    return p;
+  }
+
+  /** Warm the cache so the first stinger plays without a delay. */
+  public preloadAudioFiles() {
+    if (this.muted) return;
+    [AMBIENT_URL, ORDER_COMPLETE_URL, LEVEL_UP_URL].forEach((u) => void this.loadBuffer(u));
+  }
+
+  private playFile(url: string, volume: number, onMissing: () => void) {
+    void this.loadBuffer(url).then((buf) => {
+      if (this.muted) return;
+      const ctx = this.ensureContext();
+      if (!buf || !ctx) {
+        onMissing();
+        return;
+      }
+      const src = ctx.createBufferSource();
+      const gain = ctx.createGain();
+      src.buffer = buf;
+      gain.gain.value = volume;
+      src.connect(gain);
+      gain.connect(ctx.destination);
+      src.start();
+    });
+  }
 
   /**
-   * Background music: plays `public/assets/audio/ambient.mp3` when present,
+   * Background music: loops `public/assets/audio/ambient.mp3` gaplessly when present,
    * otherwise a soft synthesized oud phrase over a low D drone. Safe to call repeatedly.
    */
   public startAmbient() {
     this.ambientWanted = true;
     if (this.muted || typeof window === 'undefined') return;
-    if (!this.ambientFileMissing && typeof Audio !== 'undefined') {
-      this.startAmbientFile();
-      return;
-    }
-    this.startAmbientSynth();
-  }
-
-  private startAmbientFile() {
-    if (!this.ambientFile) {
-      const el = new Audio('/assets/audio/ambient.mp3');
-      el.loop = true;
-      el.volume = 0.35;
-      el.addEventListener('error', () => {
-        this.ambientFile = null;
-        this.ambientFileMissing = true;
-        if (this.ambientWanted && !this.muted) this.startAmbientSynth();
-      });
-      this.ambientFile = el;
-    }
-    this.ambientFile.play().catch(() => {
-      // Autoplay blocked or file unreadable: the error handler above covers unreadable files
+    if (this.ambientSource || this.ambientTimer !== null) return;
+    void this.loadBuffer(AMBIENT_URL).then((buf) => {
+      if (!this.ambientWanted || this.muted || this.ambientSource || this.ambientTimer !== null) return;
+      const ctx = this.ensureContext();
+      if (!buf || !ctx) {
+        this.startAmbientSynth();
+        return;
+      }
+      const src = ctx.createBufferSource();
+      const gain = ctx.createGain();
+      src.buffer = buf;
+      src.loop = true;
+      gain.gain.value = 0.6;
+      src.connect(gain);
+      gain.connect(ctx.destination);
+      src.start();
+      this.ambientSource = src;
     });
+    this.preloadAudioFiles();
   }
 
   private startAmbientSynth() {
@@ -60,7 +113,14 @@ class SoundAndHapticsManager {
 
   public stopAmbient() {
     this.ambientWanted = false;
-    this.ambientFile?.pause();
+    if (this.ambientSource) {
+      try {
+        this.ambientSource.stop();
+      } catch {
+        // already stopped
+      }
+      this.ambientSource = null;
+    }
     if (this.ambientTimer !== null) {
       window.clearInterval(this.ambientTimer);
       this.ambientTimer = null;
@@ -190,6 +250,16 @@ class SoundAndHapticsManager {
    */
   public playOrderComplete() {
     this.triggerHaptic('heavy');
+    this.playFile(ORDER_COMPLETE_URL, 0.85, () => this.playOrderCompleteSynth());
+  }
+
+  /** Bigger fanfare for a level-up; falls back to the order-complete chime. */
+  public playLevelUp() {
+    this.triggerHaptic('heavy');
+    this.playFile(LEVEL_UP_URL, 0.9, () => this.playOrderCompleteSynth());
+  }
+
+  private playOrderCompleteSynth() {
     const ctx = this.ensureContext();
     if (!ctx) return;
 

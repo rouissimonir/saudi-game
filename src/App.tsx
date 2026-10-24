@@ -318,7 +318,7 @@ export default function App() {
 
     if (res.levelUp) {
       setLevelUpToast(res.levelUp);
-      soundFX.playOrderComplete();
+      soundFX.playLevelUp();
       window.setTimeout(() => setLevelUpToast(null), 3200);
     }
   };

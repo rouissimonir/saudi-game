@@ -79,7 +79,7 @@
 8. **Rub'a al-Finjan Pouring Mini-Game (`تحدي ربع الفنجال`):** each renovation upgrade earns one challenge. Hold to pour and release near the 25% mark (±4 perfect, ±10 good) for SAR, gems and a Royal Joker.
 9. **Ambient Hijaz Oud Loop:** a quiet synthesized oud phrase over a low D drone plays while the game is unmuted; no audio files.
 10. **Blender-rendered art:** seven hero props (`tools/blender/make_art.py` into `public/assets/art/`, the title emblem uses the dallah) and all 30 board item icons (`tools/blender/make_items.py` into `public/assets/art/items/`, 256px, shown by `ItemArtwork` with the SVG as fallback), plus six 3D character busts (`tools/blender/make_characters.py` into `public/assets/art/characters/`, shown in the order strip and story dialogue). See `docs/ASSETS.md` for extending them and for where to source the remaining art, music and voice.
-11. **Optional music file:** drop `public/assets/audio/ambient.mp3` to replace the synthesized loop (falls back to the synth if missing).
+11. **Generated music:** `tools/audio/make_music.py` renders a seamless 60 s Hijaz oud loop (`ambient.mp3`) plus `order_complete.mp3` and `level_up.mp3` stingers into `public/assets/audio/` (physically-modelled oud, darbuka, reverb; numeric checks in `verify_music.py`). The game loops the file gaplessly via WebAudio and falls back to the synthesized oud and chimes if a file is missing, so any file can be replaced by a human recording.
 
 ---
 
