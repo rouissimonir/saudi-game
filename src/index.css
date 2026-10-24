@@ -60,3 +60,42 @@
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(217, 155, 38, 0.75);
 }
+
+/* Merge feedback FX */
+.merge-burst {
+  position: absolute;
+  inset: -6px;
+  border-radius: 14px;
+  pointer-events: none;
+  z-index: 20;
+  background: radial-gradient(circle, rgba(253, 230, 138, 0.95) 0%, rgba(245, 158, 11, 0.55) 40%, transparent 70%);
+  animation: merge-burst 0.55s ease-out forwards;
+}
+.merge-burst-big { animation-duration: 0.8s; box-shadow: 0 0 22px 6px rgba(251, 191, 36, 0.8); }
+.merge-burst-mega {
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.95) 0%, rgba(16, 185, 129, 0.6) 45%, transparent 72%);
+  box-shadow: 0 0 26px 8px rgba(16, 185, 129, 0.7);
+  animation-duration: 0.9s;
+}
+@keyframes merge-burst {
+  0% { transform: scale(0.4); opacity: 1; }
+  100% { transform: scale(1.7); opacity: 0; }
+}
+.combo-meter { position: relative; overflow: hidden; }
+.combo-bar {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 3px;
+  background: #1C1410;
+  transform-origin: left;
+  animation: combo-drain linear forwards;
+}
+[dir='rtl'] .combo-bar { transform-origin: right; }
+@keyframes combo-drain { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+.level-up-toast { animation: level-pop 0.45s cubic-bezier(0.2, 1.4, 0.4, 1); }
+@keyframes level-pop { from { transform: scale(0.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .merge-burst, .combo-bar, .level-up-toast { animation: none; }
+  .merge-burst { opacity: 0; }
+}

@@ -150,7 +150,7 @@ export function loadSavedGameState(): GameState | null {
     if (!raw) return null;
     const parsed = JSON.parse(raw) as GameState;
     if (parsed && Array.isArray(parsed.board) && parsed.board.length === 49) {
-      return parsed;
+      return { ...parsed, lastMergeAt: parsed.lastMergeAt ?? 0, comboCount: parsed.comboCount ?? 0 };
     }
     return null;
   } catch {

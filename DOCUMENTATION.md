@@ -66,6 +66,14 @@
 
 ---
 
+### B2. Merge Feel & Progression (v4)
+1. **Timed Combo Chain (`كومبو`):** merges within 6 seconds of each other build a combo; from the 3rd merge each merge pays bonus SAR (capped at 20) and extra XP. A draining combo meter shows the remaining window.
+2. **Mega Merge (`دمج ثلاثي`):** when a third identical item touches the merge tile it is absorbed and the result jumps one extra level.
+3. **Level-Up Rewards:** every 100 XP grants `+5💎` per level gained and refills Energy to max, with a celebratory toast.
+4. **Merge Burst FX:** a golden burst on every merge (larger for Lv.4+, green for Mega Merge); honours `prefers-reduced-motion`.
+
+---
+
 ### C. Meta-Renovation, Kingdom Map, LiveOps & Saudi Monetization
 1. **Interactive Architectural Diorama (`MajlisRenovationView.tsx`):**
    - 4 upgradable architectural wings (**Najdi Mud-Brick Archway**, **Sadu Majlis & Brass Hearth**, **Specialty V60 & Espresso Bar**, **Courtyard Fountain & Ghabga Lanterns**), each with 2 upgrade tiers and **3 selectable Khaleeji interior design styles**.

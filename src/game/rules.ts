@@ -194,6 +194,7 @@ export interface GameState {
   xp: number;
   level: number;
   comboCount: number;
+  lastMergeAt: number;
   ordersCompleted: number;
   totalMerges: number;
   activeOrders: CustomerOrder[];
@@ -1051,6 +1052,7 @@ export function createInitialGameState(): GameState {
     xp: 0,
     level: 1,
     comboCount: 0,
+    lastMergeAt: 0,
     ordersCompleted: 0,
     totalMerges: 0,
     activeOrders: [
@@ -1507,14 +1509,54 @@ export function spawnFromGenerator(
   };
 }
 
+export const COMBO_WINDOW_MS = 6000;
+export const MAX_COMBO_BONUS_COINS = 20;
+
+export interface LevelUpReward {
+  fromLevel: number;
+  toLevel: number;
+  gems: number;
+  energy: number;
+}
+
+export function getComboBonusCoins(combo: number): number {
+  return combo >= 3 ? Math.min(MAX_COMBO_BONUS_COINS, (combo - 2) * 2) : 0;
+}
+
+export function getLevelFromXp(xp: number): number {
+  return Math.floor(xp / 100) + 1;
+}
+
+function getAdjacentMatchIndex(board: BoardCell[], targetIndex: number, excludeIndex: number, itemId: string): number | null {
+  const target = board[targetIndex];
+  const neighbours = [
+    [target.row - 1, target.col],
+    [target.row + 1, target.col],
+    [target.row, target.col - 1],
+    [target.row, target.col + 1],
+  ];
+  for (const [r, c] of neighbours) {
+    const cell = board.find((b) => b.row === r && b.col === c);
+    if (cell && cell.index !== excludeIndex && !cell.sandLocked && cell.itemId === itemId) {
+      return cell.index;
+    }
+  }
+  return null;
+}
+
 export function mergeOrMoveCells(
   state: GameState,
   fromIndex: number,
-  toIndex: number
+  toIndex: number,
+  now: number = Date.now()
 ): {
   state: GameState;
   action: 'MERGED' | 'MOVED' | 'SWAPPED' | 'INVALID';
   mergedItemId?: string;
+  comboCount?: number;
+  comboBonusCoins?: number;
+  megaMerge?: boolean;
+  levelUp?: LevelUpReward;
 } {
   if (fromIndex === toIndex) {
     return { state, action: 'INVALID' };
@@ -1532,31 +1574,51 @@ export function mergeOrMoveCells(
     const nextItemId = getNextMergedItemId(fromCell.itemId);
     if (!nextItemId) return { state, action: 'INVALID' };
 
-    const nextDef = ITEM_CATALOG[nextItemId];
-    const gainedXp = nextDef ? nextDef.mergeXp : 5;
+    // Mega Merge: a third matching item touching the merge tile is absorbed for a free extra level.
+    const megaSourceIndex = getAdjacentMatchIndex(state.board, toIndex, fromIndex, fromCell.itemId);
+    const megaItemId = megaSourceIndex !== null ? getNextMergedItemId(nextItemId) : null;
+    const megaMerge = megaSourceIndex !== null && megaItemId !== null;
+    const resultItemId = megaMerge ? (megaItemId as string) : nextItemId;
+    const nextDef = ITEM_CATALOG[resultItemId];
+
+    const comboCount =
+      state.lastMergeAt > 0 && now - state.lastMergeAt <= COMBO_WINDOW_MS ? state.comboCount + 1 : 1;
+    const comboBonusCoins = getComboBonusCoins(comboCount);
+
+    const gainedXp = (nextDef ? nextDef.mergeXp : 5) + Math.min(comboCount - 1, 10);
     const newXp = state.xp + gainedXp;
-    const newLevel = Math.floor(newXp / 100) + 1;
+    const newLevel = getLevelFromXp(newXp);
+
+    let levelUp: LevelUpReward | undefined;
+    if (newLevel > state.level) {
+      levelUp = {
+        fromLevel: state.level,
+        toLevel: newLevel,
+        gems: 5 * (newLevel - state.level),
+        energy: state.maxEnergy,
+      };
+    }
 
     const nextBoard = state.board.map((cell, idx) => {
-      if (idx === fromIndex) {
+      if (idx === fromIndex || (megaMerge && idx === megaSourceIndex)) {
         return { ...cell, itemId: null };
       }
       if (idx === toIndex) {
-        return { ...cell, itemId: nextItemId, sandLocked: false };
+        return { ...cell, itemId: resultItemId, sandLocked: false };
       }
       return cell;
     });
 
-    const discovered = state.discoveredItemIds.includes(nextItemId)
-      ? state.discoveredItemIds
-      : [...state.discoveredItemIds, nextItemId];
+    const discovered = new Set(state.discoveredItemIds);
+    discovered.add(nextItemId);
+    discovered.add(resultItemId);
 
-    const bonusCoins = nextDef && nextDef.level >= 4 ? nextDef.level * 3 : 0;
+    const bonusCoins = (nextDef && nextDef.level >= 4 ? nextDef.level * 3 : 0) + comboBonusCoins;
 
     // Spawn a Gossip-Harbor style Golden Bonus Bubble when merging into Level 3+!
     const nextBubble: BonusBubble | null =
       nextDef && nextDef.level >= 3
-        ? { itemId: nextItemId, gemCost: nextDef.level * 4 }
+        ? { itemId: resultItemId, gemCost: nextDef.level * 4 }
         : state.bonusBubble;
 
     return {
@@ -1567,16 +1629,23 @@ export function mergeOrMoveCells(
         xp: newXp,
         level: newLevel,
         coins: state.coins + bonusCoins,
-        comboCount: state.comboCount + 1,
+        diamonds: state.diamonds + (levelUp ? levelUp.gems : 0),
+        energy: levelUp ? Math.max(state.energy, levelUp.energy) : state.energy,
+        comboCount,
+        lastMergeAt: now,
         totalMerges: state.totalMerges + 1,
         prestigePoints: state.prestigePoints + (nextDef ? nextDef.level * 3 : 3),
         liveOpsPoints: state.liveOpsPoints + (nextDef ? nextDef.level * 2 : 2),
-        discoveredItemIds: discovered,
-        lastMergedItemId: nextItemId,
+        discoveredItemIds: Array.from(discovered),
+        lastMergedItemId: resultItemId,
         bonusBubble: nextBubble,
       },
       action: 'MERGED',
-      mergedItemId: nextItemId,
+      mergedItemId: resultItemId,
+      comboCount,
+      comboBonusCoins,
+      megaMerge,
+      levelUp,
     };
   }
 

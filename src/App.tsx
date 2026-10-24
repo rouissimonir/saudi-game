@@ -25,6 +25,8 @@ import {
   STORY_CHAPTERS,
   spawnFromGenerator,
   mergeOrMoveCells,
+  COMBO_WINDOW_MS,
+  type LevelUpReward,
   findBestMergePair,
   sellBoardItem,
   findCellsForOrder,
@@ -105,6 +107,10 @@ export default function App() {
   const [hintPair, setHintPair] = useState<[number, number] | null>(null);
   const [dragFromIndex, setDragFromIndex] = useState<number | null>(null);
   const [feedbackBanner, setFeedbackBanner] = useState<string | null>(null);
+  const [mergeFx, setMergeFx] = useState<{ index: number; level: number; mega: boolean; key: number } | null>(null);
+  const [comboLive, setComboLive] = useState<boolean>(false);
+  const [levelUpToast, setLevelUpToast] = useState<LevelUpReward | null>(null);
+  const comboTimeoutRef = useRef<number | null>(null);
 
   const [shopModalOpen, setShopModalOpen] = useState<boolean>(false);
   const [shopInitialTab, setShopInitialTab] = useState<'shop' | 'liveops' | 'almanac' | 'capacitor'>('shop');
@@ -230,6 +236,44 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [shellState, shopModalOpen, chainModalOpen, leaderboardOpen, gameState.activeStoryId, handleStartGame, handleToggleMute]);
 
+  // Shared merge outcome handler: sound, burst FX, combo meter, Mega Merge and level-up rewards
+  const applyMergeResult = (
+    res: ReturnType<typeof mergeOrMoveCells>,
+    targetIndex: number,
+    auto: boolean = false
+  ) => {
+    if (res.action !== 'MERGED' || !res.mergedItemId) return;
+    const mergedDef = ITEM_CATALOG[res.mergedItemId];
+    const level = mergedDef?.level || 2;
+    soundFX.playMerge(res.megaMerge ? level + 1 : level);
+    setGameState(res.state);
+    setMergeFx({ index: targetIndex, level, mega: Boolean(res.megaMerge), key: Date.now() });
+
+    setComboLive(true);
+    if (comboTimeoutRef.current) window.clearTimeout(comboTimeoutRef.current);
+    comboTimeoutRef.current = window.setTimeout(() => setComboLive(false), COMBO_WINDOW_MS);
+
+    const name = isAr ? mergedDef.nameAr : mergedDef.nameEn;
+    const parts: string[] = [];
+    if (res.megaMerge) {
+      parts.push(isAr ? `دمج ثلاثي ممتاز! ${name} (المستوى ${level})` : `Mega Merge! ${name} (Lv.${level})`);
+    } else if (auto) {
+      parts.push(isAr ? `دمج تلقائي: ${name} (المستوى ${level})!` : `Auto-Merged: ${name} (Lv.${level})!`);
+    } else {
+      parts.push(isAr ? `دمج رائع! حصلت على: ${name} (المستوى ${level})` : `Merged! Created: ${name} (Lv.${level})`);
+    }
+    if (res.comboBonusCoins) {
+      parts.push(isAr ? `كومبو ×${res.comboCount} +${res.comboBonusCoins} ريال` : `Combo ×${res.comboCount} +${res.comboBonusCoins} SAR`);
+    }
+    showFeedback(parts.join(' · '));
+
+    if (res.levelUp) {
+      setLevelUpToast(res.levelUp);
+      soundFX.playOrderComplete();
+      window.setTimeout(() => setLevelUpToast(null), 3200);
+    }
+  };
+
   // Cell Click / Tap Interaction
   const handleCellClick = (index: number) => {
     setHintPair(null);
@@ -305,14 +349,7 @@ export default function App() {
 
     const moveRes = mergeOrMoveCells(gameState, gameState.selectedCellIndex, index);
     if (moveRes.action === 'MERGED' && moveRes.mergedItemId) {
-      const mergedDef = ITEM_CATALOG[moveRes.mergedItemId];
-      soundFX.playMerge(mergedDef?.level || 2);
-      setGameState(moveRes.state);
-      showFeedback(
-        isAr
-          ? `دمج رائع! حصلت على: ${mergedDef.nameAr} (المستوى ${mergedDef.level})`
-          : `Merged! Created: ${mergedDef.nameEn} (Lv.${mergedDef.level})`
-      );
+      applyMergeResult(moveRes, index);
     } else if (moveRes.action === 'MOVED' || moveRes.action === 'SWAPPED') {
       soundFX.triggerHaptic('light');
       setGameState(moveRes.state);
@@ -338,14 +375,7 @@ export default function App() {
     }
     const moveRes = mergeOrMoveCells(gameState, dragFromIndex, targetIndex);
     if (moveRes.action === 'MERGED' && moveRes.mergedItemId) {
-      const mergedDef = ITEM_CATALOG[moveRes.mergedItemId];
-      soundFX.playMerge(mergedDef?.level || 2);
-      setGameState(moveRes.state);
-      showFeedback(
-        isAr
-          ? `دمج رائع! حصلت على: ${mergedDef.nameAr} (المستوى ${mergedDef.level})`
-          : `Merged! Created: ${mergedDef.nameEn} (Lv.${mergedDef.level})`
-      );
+      applyMergeResult(moveRes, targetIndex);
     } else if (moveRes.action === 'MOVED' || moveRes.action === 'SWAPPED') {
       soundFX.triggerHaptic('light');
       setGameState(moveRes.state);
@@ -368,16 +398,7 @@ export default function App() {
     const [fromIdx, toIdx] = pair;
     setHintPair(pair);
     const res = mergeOrMoveCells(gameState, fromIdx, toIdx);
-    if (res.action === 'MERGED' && res.mergedItemId) {
-      const mergedDef = ITEM_CATALOG[res.mergedItemId];
-      soundFX.playMerge(mergedDef?.level || 2);
-      setGameState(res.state);
-      showFeedback(
-        isAr
-          ? `دمج تلقائي: ${mergedDef.nameAr} (المستوى ${mergedDef.level})!`
-          : `Auto-Merged: ${mergedDef.nameEn} (Lv.${mergedDef.level})!`
-      );
-    }
+    applyMergeResult(res, toIdx, true);
   };
 
   // Power Boost Multiplier Toggle (1x -> 2x -> 4x)
@@ -1033,6 +1054,28 @@ export default function App() {
             </button>
           </div>
 
+          {comboLive && gameState.comboCount >= 2 && (
+            <div
+              data-testid="combo-meter"
+              className="combo-meter flex items-center justify-between px-3.5 py-1 rounded-xl bg-gradient-to-r from-[#B45309] to-[#F59E0B] text-[#1C1410] text-xs font-extrabold"
+            >
+              <span>{isAr ? `كومبو ×${gameState.comboCount}` : `Combo ×${gameState.comboCount}`}</span>
+              <span className="combo-bar" style={{ animationDuration: `${COMBO_WINDOW_MS}ms` }} key={gameState.lastMergeAt} />
+            </div>
+          )}
+
+          {levelUpToast && (
+            <div
+              role="status"
+              data-testid="level-up-toast"
+              className="level-up-toast px-3.5 py-2 rounded-xl bg-[#10B981] text-white text-xs font-extrabold text-center"
+            >
+              {isAr
+                ? `ارتقيت للمستوى ${levelUpToast.toLevel}! +${levelUpToast.gems} جوهرة وطاقة ممتلئة`
+                : `Level ${levelUpToast.toLevel}! +${levelUpToast.gems} gems & full energy`}
+            </div>
+          )}
+
           {feedbackBanner && (
             <div
               role="status"
@@ -1340,6 +1383,13 @@ export default function App() {
                             : ''
                         }`}
                       >
+                        {mergeFx && mergeFx.index === cell.index && (
+                          <span
+                            key={mergeFx.key}
+                            aria-hidden="true"
+                            className={`merge-burst ${mergeFx.mega ? 'merge-burst-mega' : ''} ${mergeFx.level >= 4 ? 'merge-burst-big' : ''}`}
+                          />
+                        )}
                         {itemDef && (
                           <>
                             <ItemArtwork itemId={itemDef.id} size="md" />

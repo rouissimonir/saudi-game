@@ -119,3 +119,65 @@ test('Sadu Pantry inventory, Bonus Bubble, Customer Orders, and Renovation work 
     assert.equal(bub.unlocked, true);
   }
 });
+
+function emptyBoardState() {
+  const state = createInitialGameState();
+  return {
+    ...state,
+    board: state.board.map((c) => ({ ...c, itemId: null, sandLocked: false })),
+  };
+}
+
+function withItems(state: ReturnType<typeof emptyBoardState>, items: Record<number, string>) {
+  return { ...state, board: state.board.map((c) => (items[c.index] ? { ...c, itemId: items[c.index] } : c)) };
+}
+
+test('combo chain grows inside the window, pays bonus coins from the 3rd merge, and resets when stale', () => {
+  let state = withItems(emptyBoardState(), {
+    8: 'qahwa_1', 9: 'qahwa_1', 11: 'qahwa_1', 12: 'qahwa_1', 22: 'qahwa_1', 23: 'qahwa_1', 25: 'qahwa_1', 26: 'qahwa_1',
+  });
+  const t0 = 1_000_000;
+  const r1 = mergeOrMoveCells(state, 8, 9, t0);
+  assert.equal(r1.comboCount, 1);
+  const r2 = mergeOrMoveCells(r1.state, 11, 12, t0 + 2000);
+  assert.equal(r2.comboCount, 2);
+  const r3 = mergeOrMoveCells(r2.state, 22, 23, t0 + 4000);
+  assert.equal(r3.comboCount, 3);
+  assert.equal(r3.comboBonusCoins, 2);
+  assert.equal(r3.state.coins, r2.state.coins + 2);
+  const r4 = mergeOrMoveCells(r3.state, 25, 26, t0 + 4000 + 6001);
+  assert.equal(r4.comboCount, 1);
+  assert.equal(r4.comboBonusCoins, 0);
+});
+
+test('mega merge absorbs an adjacent third matching item for a free extra level', () => {
+  const state = withItems(emptyBoardState(), { 24: 'qahwa_1', 25: 'qahwa_1', 26: 'qahwa_1' });
+  const res = mergeOrMoveCells(state, 24, 25, 5000);
+  assert.equal(res.action, 'MERGED');
+  assert.equal(res.megaMerge, true);
+  assert.equal(res.mergedItemId, 'qahwa_3');
+  assert.equal(res.state.board[24].itemId, null);
+  assert.equal(res.state.board[26].itemId, null);
+  assert.equal(res.state.board[25].itemId, 'qahwa_3');
+});
+
+test('a non-adjacent third item does not trigger mega merge', () => {
+  const state = withItems(emptyBoardState(), { 24: 'qahwa_1', 25: 'qahwa_1', 40: 'qahwa_1' });
+  const res = mergeOrMoveCells(state, 24, 25, 5000);
+  assert.equal(res.megaMerge, false);
+  assert.equal(res.mergedItemId, 'qahwa_2');
+  assert.equal(res.state.board[40].itemId, 'qahwa_1');
+});
+
+test('crossing an XP threshold grants gems and refills energy exactly once', () => {
+  let state = withItems(emptyBoardState(), { 24: 'qahwa_5', 25: 'qahwa_5' });
+  state = { ...state, xp: 95, level: 1, energy: 3, diamonds: 10 };
+  const res = mergeOrMoveCells(state, 24, 25, 9000);
+  assert.ok(res.levelUp);
+  assert.equal(res.levelUp!.toLevel, res.state.level);
+  assert.equal(res.state.diamonds, 10 + res.levelUp!.gems);
+  assert.equal(res.state.energy, state.maxEnergy);
+  const again = withItems({ ...res.state, board: res.state.board.map((c) => ({ ...c, itemId: null })) }, { 24: 'qahwa_1', 25: 'qahwa_1' });
+  const res2 = mergeOrMoveCells(again, 24, 25, 9100);
+  assert.equal(res2.levelUp, undefined);
+});
