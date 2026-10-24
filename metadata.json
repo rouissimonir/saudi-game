@@ -1,0 +1,6 @@
+{
+  "name": "Qahwa & Majlis Merge — قهوة ومجلس",
+  "description": "Khaleeji Narrative Merge-2 Puzzle & Specialty Coffee Heritage Renovation Game built for iOS with Capacitor.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

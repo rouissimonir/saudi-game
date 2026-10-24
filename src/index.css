@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-display: 'Fraunces', 'Cairo', serif;
+    --font-sans: 'Plus Jakarta Sans', 'Cairo', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Cairo', 'Plus Jakarta Sans', monospace;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: #1C1410;
+    color: #FBF7F0;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  h1, h2, h3, .font-display {
+    font-family: var(--font-display);
+  }
+
+  .font-mono, .tabular-nums {
+    font-family: var(--font-sans);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Traditional Sadu geometric divider */
+.sadu-trim {
+  background-image: repeating-linear-gradient(
+    90deg,
+    #9E2A2B 0px,
+    #9E2A2B 12px,
+    #1C1410 12px,
+    #1C1410 16px,
+    #D99B26 16px,
+    #D99B26 24px,
+    #1C1410 24px,
+    #1C1410 28px,
+    #FBF7F0 28px,
+    #FBF7F0 32px,
+    #1C1410 32px,
+    #1C1410 36px
+  );
+}
+
+/* Custom subtle scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(28, 20, 16, 0.4);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(217, 155, 38, 0.45);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(217, 155, 38, 0.75);
+}
