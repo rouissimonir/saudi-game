@@ -64,12 +64,34 @@ Limits: these are clean stylized 3D props, not painterly game-art. Some are simp
 - **Search terms:** "oud taqsim", "maqam hijaz", "khaleeji instrumental", "arabic lounge", "majlis ambience".
 - **Optional later:** merge chimes per level (currently synthesized in code; I can wire in files).
 
-## 4. Voice lines: brief for a voice actor
+## 4. Voice lines
 
-Short 2 to 3 second lines, one file per line, mp3 or wav, clean studio recording, no music.
-- Noura (grandmother, Najdi dialect): "يا هلا والله بضيوفنا"
-- Faisal (barista, Hijazi dialect), Tariq (sheikh, Najdi), Lama (creator, young Riyadh dialect): one greeting and one "order served" line each.
-- Ask for a signed licence that covers game use and app-store distribution, in writing.
+**What exists:** 32 lines for the six characters (about 1,070 Arabic characters), written in Saudi dialect (Najdi for Noura, Tariq and Sultan; Hijazi for Faisal; Riyadh youth for Lama; formal Arabic for the jury). They are in `src/game/voiceLines.ts`. A character speaks when you serve one of their orders (normal or VIP line) and when their story chapter opens. Music ducks while they talk, and the Mute button silences voices too.
+
+**How a line is played, in order:**
+1. A recorded file `public/assets/audio/voice/<id>.mp3` if it exists (ids look like `noura_served_2`).
+2. Otherwise the phone's built-in Arabic voice, with a different pitch and pace per character, picking a female or male voice where the device has both.
+3. Otherwise silence. The game never reads Arabic with a non-Arabic voice. Desktop browsers on Linux, for example, often have no Arabic voice.
+
+**Making real voices with ElevenLabs** (tools in `tools/voice/`; no audio is committed yet because the sandbox I work in cannot reach ElevenLabs):
+```bash
+export ELEVENLABS_API_KEY=...                      # your key; never commit it or paste it into chat
+python3 tools/voice/generate_elevenlabs.py voices  # voices already on your account
+python3 tools/voice/generate_elevenlabs.py library --gender female   # browse Arabic voices in the shared library
+# put one voice_id per character into tools/voice/voices.json (tune stability/style/speed per character), then:
+python3 tools/voice/generate_elevenlabs.py generate --dry-run
+python3 tools/voice/generate_elevenlabs.py generate --limit 1        # trial: one line
+python3 tools/voice/generate_elevenlabs.py generate                  # all 32 lines
+```
+It trims silence, matches loudness (needs `ffmpeg`), skips lines that have not changed (cheap to re-run), and writes `public/assets/audio/voice/<id>.mp3`, which the game uses automatically. Edit lines in `voiceLines.ts`, then `npm run voice:export` to refresh `tools/voice/lines.json` and `docs/VOICE_LINES.md`. `npm run voice:test` tests the generator against a local fake of the API (no key or network).
+
+**Checks before shipping:**
+- Commercial use of ElevenLabs audio needs a paid plan, and every voice in their shared library has its own licence. Read both.
+- Do not clone a real person's voice without their written consent.
+- Have a native speaker of each dialect read all lines and fix wording. The Saudi-dialect phrasing was written by me, not a native.
+- Listen to each result in context: I cannot hear audio, so tone, accent and pronunciation are unchecked.
+
+**Hiring a human actor instead:** send them `docs/VOICE_LINES.md` (file names, dialect, direction and English meanings per line) and ask for a written licence that covers game use and app-store distribution.
 
 ## 5. Where to find assets
 

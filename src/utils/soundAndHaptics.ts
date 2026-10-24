@@ -1,4 +1,5 @@
 import { GameState } from '../game/rules';
+import { VoiceCharacter, VoiceEvent, VoiceProfile, pickVoiceLine, voiceFileUrl } from '../game/voiceLines';
 
 const STORAGE_KEY = 'qahwa_majlis_merge_save_v3';
 
@@ -20,6 +21,8 @@ class SoundAndHapticsManager {
 
   private ambientWanted = false;
   private ambientSource: AudioBufferSourceNode | null = null;
+  private ambientGain: GainNode | null = null;
+  private duck = 1;
   private fileBuffers = new Map<string, AudioBuffer | 'missing'>();
   private fileLoading = new Map<string, Promise<AudioBuffer | null>>();
 
@@ -49,6 +52,76 @@ class SoundAndHapticsManager {
       .finally(() => this.fileLoading.delete(url));
     this.fileLoading.set(url, p);
     return p;
+  }
+
+  // ------------------------------------------------------------ character voices
+  private lastVoiceAt = 0;
+  private voiceCounts = new Map<string, number>();
+
+  /** Lower the music while a character talks. */
+  private setDuck(on: boolean) {
+    this.duck = on ? 0.35 : 1;
+    const ctx = this.ctx;
+    if (ctx && this.ambientGain) this.ambientGain.gain.setTargetAtTime(0.6 * this.duck, ctx.currentTime, 0.12);
+  }
+
+  /**
+   * A character speaks a line. Order of preference:
+   *  1. a recorded file /assets/audio/voice/<id>.mp3 (drop in a voice actor's takes, no code change)
+   *  2. the device's Arabic text-to-speech, tuned per character
+   *  3. silence (no Arabic voice available): the game never reads Arabic with a non-Arabic voice
+   */
+  public playVoice(character: VoiceCharacter, event: VoiceEvent) {
+    if (this.muted || typeof window === 'undefined') return;
+    const nowMs = Date.now();
+    if (nowMs - this.lastVoiceAt < 900) return; // never talk over a line that just started
+    this.lastVoiceAt = nowMs;
+    const key = `${character}_${event}`;
+    const count = this.voiceCounts.get(key) ?? 0;
+    this.voiceCounts.set(key, count + 1);
+    const { id, line, profile } = pickVoiceLine(character, event, count);
+
+    void this.loadBuffer(voiceFileUrl(id)).then((buf) => {
+      if (this.muted) return;
+      const ctx = this.ensureContext();
+      if (buf && ctx) {
+        const src = ctx.createBufferSource();
+        src.buffer = buf;
+        src.connect(ctx.destination);
+        this.setDuck(true);
+        src.onended = () => this.setDuck(false);
+        src.start();
+        return;
+      }
+      this.speakArabic(line.ar, profile);
+    });
+  }
+
+  private speakArabic(text: string, profile: VoiceProfile) {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window) || typeof SpeechSynthesisUtterance === 'undefined') return;
+    const synth = window.speechSynthesis;
+    const arabic = synth.getVoices().filter((v) => /^ar/i.test(v.lang));
+    if (arabic.length === 0) return;
+
+    const FEMALE = /laila|layla|hoda|zira|salma|mariam|maryam|noura|fatima|amira|sara|female/i;
+    const MALE = /maged|majed|tarik|tareq|hamed|hamza|naayf|shakir|omar|ahmed|\bmale\b/i;
+    const wanted = profile.gender === 'female' ? FEMALE : MALE;
+    const byGender = arabic.filter((v) => wanted.test(v.name));
+    const pool = byGender.length > 0 ? byGender : arabic;
+    const voice = pool.find((v) => /ar[-_]SA/i.test(v.lang)) ?? pool[0];
+
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.voice = voice;
+    utter.lang = voice.lang || 'ar-SA';
+    utter.rate = profile.rate;
+    // When the device has no voice of the right gender, move the pitch so characters still sound different
+    utter.pitch = byGender.length > 0 ? profile.pitch : Math.min(2, Math.max(0.1, profile.pitch * (profile.gender === 'female' ? 1.25 : 0.8)));
+    utter.volume = 1;
+    utter.onstart = () => this.setDuck(true);
+    utter.onend = () => this.setDuck(false);
+    utter.onerror = () => this.setDuck(false);
+    synth.cancel();
+    synth.speak(utter);
   }
 
   /** Warm the cache so the first stinger plays without a delay. */
@@ -94,13 +167,15 @@ class SoundAndHapticsManager {
       const gain = ctx.createGain();
       src.buffer = buf;
       src.loop = true;
-      gain.gain.value = 0.6;
+      gain.gain.value = 0.6 * this.duck;
       src.connect(gain);
       gain.connect(ctx.destination);
       src.start();
       this.ambientSource = src;
+      this.ambientGain = gain;
     });
     this.preloadAudioFiles();
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) window.speechSynthesis.getVoices();
   }
 
   private startAmbientSynth() {
@@ -120,6 +195,7 @@ class SoundAndHapticsManager {
         // already stopped
       }
       this.ambientSource = null;
+      this.ambientGain = null;
     }
     if (this.ambientTimer !== null) {
       window.clearInterval(this.ambientTimer);
@@ -155,7 +231,7 @@ class SoundAndHapticsManager {
       const gain = ctx.createGain();
       osc.type = 'triangle';
       osc.frequency.value = HIJAZ_SCALE_HZ[noteIdx] / 2;
-      gain.gain.setValueAtTime(0.045, now);
+      gain.gain.setValueAtTime(0.045 * this.duck, now);
       gain.gain.exponentialRampToValueAtTime(0.001, now + 1.1);
       osc.connect(gain);
       gain.connect(ctx.destination);

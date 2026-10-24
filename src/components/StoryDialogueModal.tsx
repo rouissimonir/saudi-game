@@ -2,15 +2,10 @@ import React from 'react';
 import { Gem, Zap } from 'lucide-react';
 import { Language, StoryChapter } from '../game/rules';
 import { CustomerPortrait } from './CompetitorModalsAndPortraits';
+import { speakerCharacter } from '../game/voiceLines';
 
 function speakerKey(chapter: StoryChapter): string | null {
-  const name = chapter.speakerEn.toLowerCase();
-  if (name.includes('noura')) return 'noura';
-  if (name.includes('faisal')) return 'faisal';
-  if (name.includes('tariq')) return 'tariq';
-  if (name.includes('lama')) return 'lama';
-  if (name.includes('sultan')) return 'sultan';
-  return null;
+  return speakerCharacter(chapter.speakerEn);
 }
 
 interface StoryDialogueModalProps {

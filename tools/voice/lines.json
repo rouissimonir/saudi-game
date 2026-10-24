@@ -1,0 +1,310 @@
+{
+  "profiles": {
+    "noura": {
+      "nameEn": "Grandmother Noura",
+      "dialect": "Najdi",
+      "gender": "female",
+      "pitch": 0.92,
+      "rate": 0.82,
+      "direction": "Warm, unhurried grandmother; smiling voice, slight huskiness."
+    },
+    "faisal": {
+      "nameEn": "Barista Faisal",
+      "dialect": "Hijazi",
+      "gender": "male",
+      "pitch": 1.05,
+      "rate": 1,
+      "direction": "Friendly, upbeat young barista; quick and proud of his craft."
+    },
+    "tariq": {
+      "nameEn": "Sheikh Tariq",
+      "dialect": "Najdi",
+      "gender": "male",
+      "pitch": 0.8,
+      "rate": 0.85,
+      "direction": "Calm, dignified host in his fifties; measured, generous."
+    },
+    "lama": {
+      "nameEn": "Creator Lama",
+      "dialect": "Riyadh youth",
+      "gender": "female",
+      "pitch": 1.18,
+      "rate": 1.08,
+      "direction": "Energetic young content creator; bubbly, casual, a little breathless."
+    },
+    "sultan": {
+      "nameEn": "Sultan Al-Diriyah",
+      "dialect": "Najdi (formal)",
+      "gender": "male",
+      "pitch": 0.7,
+      "rate": 0.8,
+      "direction": "Stately ruler; deep, slow, ceremonial warmth."
+    },
+    "ghabga": {
+      "nameEn": "Coffee Festival Jury",
+      "dialect": "Modern Standard Arabic",
+      "gender": "male",
+      "pitch": 0.95,
+      "rate": 0.95,
+      "direction": "Polished festival announcer; clear and encouraging."
+    }
+  },
+  "lines": [
+    {
+      "id": "noura_greet_1",
+      "character": "noura",
+      "event": "greet",
+      "ar": "يا هلا والله بضيوفنا! حيّاكم الله",
+      "en": "A warm welcome to our guests! God keep you.",
+      "file": "public/assets/audio/voice/noura_greet_1.mp3"
+    },
+    {
+      "id": "noura_greet_2",
+      "character": "noura",
+      "event": "greet",
+      "ar": "تفضّلوا تفضّلوا، القهوة جاهزة والهيل طيّب",
+      "en": "Come in, come in, the coffee is ready and the cardamom is fresh.",
+      "file": "public/assets/audio/voice/noura_greet_2.mp3"
+    },
+    {
+      "id": "noura_served_1",
+      "character": "noura",
+      "event": "served",
+      "ar": "الله يعطيك العافية يا ولدي، قهوة تسرّ الخاطر",
+      "en": "God give you strength, my child, coffee that gladdens the heart.",
+      "file": "public/assets/audio/voice/noura_served_1.mp3"
+    },
+    {
+      "id": "noura_served_2",
+      "character": "noura",
+      "event": "served",
+      "ar": "ما قصّرت، الله يحفظك ويخلّيك",
+      "en": "You spared nothing. God protect you and keep you.",
+      "file": "public/assets/audio/voice/noura_served_2.mp3"
+    },
+    {
+      "id": "noura_served_3",
+      "character": "noura",
+      "event": "served",
+      "ar": "يا سلام! ريحة الهيل تجنّن",
+      "en": "Oh my! The smell of the cardamom is wonderful.",
+      "file": "public/assets/audio/voice/noura_served_3.mp3"
+    },
+    {
+      "id": "noura_vip_1",
+      "character": "noura",
+      "event": "vip",
+      "ar": "هلا وغلا بالموكب الكريم! أبشروا بالقهوة",
+      "en": "A hearty welcome to the honoured party! Coffee is on its way.",
+      "file": "public/assets/audio/voice/noura_vip_1.mp3"
+    },
+    {
+      "id": "faisal_greet_1",
+      "character": "faisal",
+      "event": "greet",
+      "ar": "أهلاً وسهلاً! تفضّل، أحلى قهوة مختصة عندي",
+      "en": "Welcome! Come in, the best specialty coffee is right here.",
+      "file": "public/assets/audio/voice/faisal_greet_1.mp3"
+    },
+    {
+      "id": "faisal_greet_2",
+      "character": "faisal",
+      "event": "greet",
+      "ar": "يا مرحبا! جاهز أحضّر لك أحلى كوب",
+      "en": "Hello there! Ready to make you the best cup.",
+      "file": "public/assets/audio/voice/faisal_greet_2.mp3"
+    },
+    {
+      "id": "faisal_served_1",
+      "character": "faisal",
+      "event": "served",
+      "ar": "تمام يا غالي! طلبك وصل، بالهنا والشفا",
+      "en": "All done, my friend! Your order is here, enjoy it.",
+      "file": "public/assets/audio/voice/faisal_served_1.mp3"
+    },
+    {
+      "id": "faisal_served_2",
+      "character": "faisal",
+      "event": "served",
+      "ar": "ممتاز! إن شاء الله تعجبك النكهة",
+      "en": "Excellent! I hope you enjoy the flavour.",
+      "file": "public/assets/audio/voice/faisal_served_2.mp3"
+    },
+    {
+      "id": "faisal_served_3",
+      "character": "faisal",
+      "event": "served",
+      "ar": "القهوة تبي لها صبر، وهذي نتيجة الصبر",
+      "en": "Coffee needs patience, and this is the reward for it.",
+      "file": "public/assets/audio/voice/faisal_served_3.mp3"
+    },
+    {
+      "id": "faisal_vip_1",
+      "character": "faisal",
+      "event": "vip",
+      "ar": "ضيوف كبار اليوم! الليلة نطلع أحلى ما عندنا",
+      "en": "Important guests today! Tonight we bring out our very best.",
+      "file": "public/assets/audio/voice/faisal_vip_1.mp3"
+    },
+    {
+      "id": "tariq_greet_1",
+      "character": "tariq",
+      "event": "greet",
+      "ar": "حيّاك الله، مجلسنا مجلسك",
+      "en": "God welcome you, our majlis is your majlis.",
+      "file": "public/assets/audio/voice/tariq_greet_1.mp3"
+    },
+    {
+      "id": "tariq_greet_2",
+      "character": "tariq",
+      "event": "greet",
+      "ar": "أهلاً بالضيف، تفضّل واستأنس",
+      "en": "Welcome, guest. Come in and make yourself at home.",
+      "file": "public/assets/audio/voice/tariq_greet_2.mp3"
+    },
+    {
+      "id": "tariq_served_1",
+      "character": "tariq",
+      "event": "served",
+      "ar": "جزاك الله خير، هذا هو الكرم",
+      "en": "May God reward you, this is true generosity.",
+      "file": "public/assets/audio/voice/tariq_served_1.mp3"
+    },
+    {
+      "id": "tariq_served_2",
+      "character": "tariq",
+      "event": "served",
+      "ar": "الله يكثّر من أمثالك، قهوة تستاهل الثناء",
+      "en": "May God increase people like you, coffee worthy of praise.",
+      "file": "public/assets/audio/voice/tariq_served_2.mp3"
+    },
+    {
+      "id": "tariq_vip_1",
+      "character": "tariq",
+      "event": "vip",
+      "ar": "أكرمتنا يا ابن الحلال، وقهوتك تستاهل الشكر",
+      "en": "You honoured us, noble friend, and your coffee deserves our thanks.",
+      "file": "public/assets/audio/voice/tariq_vip_1.mp3"
+    },
+    {
+      "id": "lama_greet_1",
+      "character": "lama",
+      "event": "greet",
+      "ar": "هاي! أحب هالمكان من أول نظرة",
+      "en": "Hi! I love this place at first sight.",
+      "file": "public/assets/audio/voice/lama_greet_1.mp3"
+    },
+    {
+      "id": "lama_greet_2",
+      "character": "lama",
+      "event": "greet",
+      "ar": "واو، الديكور خرافي! لازم أصوّره",
+      "en": "Wow, the decor is amazing! I have to film it.",
+      "file": "public/assets/audio/voice/lama_greet_2.mp3"
+    },
+    {
+      "id": "lama_served_1",
+      "character": "lama",
+      "event": "served",
+      "ar": "تحفة! بصوّرها وأنزلها ستوري الحين",
+      "en": "A masterpiece! I'm filming it for my story right now.",
+      "file": "public/assets/audio/voice/lama_served_1.mp3"
+    },
+    {
+      "id": "lama_served_2",
+      "character": "lama",
+      "event": "served",
+      "ar": "هذي أحلى قهوة جرّبتها، والله!",
+      "en": "This is the best coffee I've ever tried, honestly!",
+      "file": "public/assets/audio/voice/lama_served_2.mp3"
+    },
+    {
+      "id": "lama_served_3",
+      "character": "lama",
+      "event": "served",
+      "ar": "يا حبيبي، الطعم يجنّن!",
+      "en": "Oh my, the taste is incredible!",
+      "file": "public/assets/audio/voice/lama_served_3.mp3"
+    },
+    {
+      "id": "lama_vip_1",
+      "character": "lama",
+      "event": "vip",
+      "ar": "ما توقعت! كل هالفخامة عشاننا؟ شكراً من القلب",
+      "en": "I didn't expect this! All this luxury for us? Thank you from the heart.",
+      "file": "public/assets/audio/voice/lama_vip_1.mp3"
+    },
+    {
+      "id": "sultan_greet_1",
+      "character": "sultan",
+      "event": "greet",
+      "ar": "يا مرحبا بالضيف، الدرعية بيتك",
+      "en": "A great welcome to the guest, Diriyah is your home.",
+      "file": "public/assets/audio/voice/sultan_greet_1.mp3"
+    },
+    {
+      "id": "sultan_greet_2",
+      "character": "sultan",
+      "event": "greet",
+      "ar": "حيّاكم الله في دار الكرم والعزّ",
+      "en": "God welcome you to the house of generosity and pride.",
+      "file": "public/assets/audio/voice/sultan_greet_2.mp3"
+    },
+    {
+      "id": "sultan_served_1",
+      "character": "sultan",
+      "event": "served",
+      "ar": "الله يكثّر من أمثالك، هذا هو الكرم النجدي",
+      "en": "May God increase people like you, this is true Najdi generosity.",
+      "file": "public/assets/audio/voice/sultan_served_1.mp3"
+    },
+    {
+      "id": "sultan_served_2",
+      "character": "sultan",
+      "event": "served",
+      "ar": "أحسنت، فنجان يليق بمجالس الدرعية",
+      "en": "Well done, a cup worthy of the majlis of Diriyah.",
+      "file": "public/assets/audio/voice/sultan_served_2.mp3"
+    },
+    {
+      "id": "sultan_vip_1",
+      "character": "sultan",
+      "event": "vip",
+      "ar": "يا هلا بالركب الكريم، اليوم يومٌ مشهود",
+      "en": "Welcome to the noble convoy, today is a day to remember.",
+      "file": "public/assets/audio/voice/sultan_vip_1.mp3"
+    },
+    {
+      "id": "ghabga_greet_1",
+      "character": "ghabga",
+      "event": "greet",
+      "ar": "لجنة مهرجان القهوة السعودية ترحّب بكم",
+      "en": "The Saudi Coffee Festival jury welcomes you.",
+      "file": "public/assets/audio/voice/ghabga_greet_1.mp3"
+    },
+    {
+      "id": "ghabga_served_1",
+      "character": "ghabga",
+      "event": "served",
+      "ar": "تقييم ممتاز! ننتظر إبداعك القادم",
+      "en": "An excellent score! We await your next creation.",
+      "file": "public/assets/audio/voice/ghabga_served_1.mp3"
+    },
+    {
+      "id": "ghabga_served_2",
+      "character": "ghabga",
+      "event": "served",
+      "ar": "ضيافة راقية، تستحق التقدير",
+      "en": "Refined hospitality, worthy of recognition.",
+      "file": "public/assets/audio/voice/ghabga_served_2.mp3"
+    },
+    {
+      "id": "ghabga_vip_1",
+      "character": "ghabga",
+      "event": "vip",
+      "ar": "لقد أبهرتم اللجنة، مبروك!",
+      "en": "You have impressed the jury, congratulations!",
+      "file": "public/assets/audio/voice/ghabga_vip_1.mp3"
+    }
+  ]
+}

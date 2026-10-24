@@ -312,3 +312,27 @@ test('ambient oud phrase stays inside the Hijaz scale and resolves to the tonic'
   const lastNote = [...AMBIENT_PHRASE].reverse().find((n) => n !== -1);
   assert.equal(lastNote, 0);
 });
+
+test('voice lines: every character has every event, lines are short Arabic, ids are unique and picking round-robins', async () => {
+  const v = await import('./voiceLines');
+  const all = v.allVoiceLines();
+  const chars = Object.keys(v.VOICE_PROFILES);
+  assert.equal(chars.length, 6);
+  for (const c of chars) {
+    for (const e of ['greet', 'served', 'vip'] as const) {
+      assert.ok(v.VOICE_LINES[c as keyof typeof v.VOICE_LINES][e].length >= 1, `${c}.${e} has lines`);
+    }
+  }
+  assert.equal(new Set(all.map((l) => l.id)).size, all.length);
+  for (const l of all) {
+    assert.match(l.line.ar, /[؀-ۿ]/, `${l.id} is Arabic`);
+    assert.ok(l.line.ar.length <= 60, `${l.id} is short enough to speak in about 3 seconds`);
+    assert.ok(l.line.en.length > 3, `${l.id} has an English meaning`);
+  }
+  const a = v.pickVoiceLine('noura', 'served', 0);
+  const b = v.pickVoiceLine('noura', 'served', 1);
+  assert.notEqual(a.id, b.id);
+  assert.equal(v.pickVoiceLine('noura', 'served', 3).id, a.id);
+  assert.equal(v.pickVoiceLine('noura', 'served', -1).id, v.voiceLineId('noura', 'served', 2));
+  assert.equal(v.voiceFileUrl(a.id), '/assets/audio/voice/noura_served_1.mp3');
+});

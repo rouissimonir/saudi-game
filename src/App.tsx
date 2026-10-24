@@ -63,6 +63,7 @@ import { ItemArtwork, preloadItemArt } from './components/ItemArtwork';
 import { MajlisRenovationView } from './components/MajlisRenovationView';
 import { StoryDialogueModal } from './components/StoryDialogueModal';
 import { DailyLoginModal } from './components/DailyLoginModal';
+import { isVoiceCharacter, speakerCharacter } from './game/voiceLines';
 import { FinjanPourModal } from './components/FinjanPourModal';
 import { ShopAndMadaModal } from './components/ShopAndMadaModal';
 import {
@@ -606,9 +607,13 @@ export default function App() {
 
   // Fulfill Customer Order
   const handleFulfillOrder = (orderId: string) => {
+    const servedOrder = gameState.activeOrders.find((o) => o.id === orderId);
     const res = fulfillCustomerOrder(gameState, orderId, activeSeason);
     if (res.fulfilled) {
       soundFX.playOrderComplete();
+      if (servedOrder && isVoiceCharacter(servedOrder.customerId)) {
+        soundFX.playVoice(servedOrder.customerId, servedOrder.isVip ? 'vip' : 'served');
+      }
       setGameState(res.state);
       showFeedback(
         res.spawnedChest
@@ -736,6 +741,15 @@ export default function App() {
 
   const activeStoryChapter =
     STORY_CHAPTERS.find((c) => c.id === gameState.activeStoryId) || null;
+
+  // The speaker greets the player when a story chapter opens
+  const storyChapterId = activeStoryChapter ? activeStoryChapter.id : null;
+  const storySpeaker = activeStoryChapter ? speakerCharacter(activeStoryChapter.speakerEn) : null;
+  useEffect(() => {
+    if (shellState === 'playing' && storyChapterId && storySpeaker) {
+      soundFX.playVoice(storySpeaker, 'greet');
+    }
+  }, [storyChapterId, storySpeaker, shellState]);
 
   // ============================================================================
   // 1. TITLE SCREEN ('title')
