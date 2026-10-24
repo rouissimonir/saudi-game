@@ -51,7 +51,12 @@ def run(*args):
 
 # voices.json with an id for noura only, written to a temp copy so the repo config is untouched
 cfg_path = os.path.join(HERE, 'voices.json'); original = open(cfg_path).read()
-cfg = json.loads(original); cfg['voices']['noura']['voice_id'] = 'v_noura'
+cfg = json.loads(original)
+for v in cfg['voices'].values():
+    v['voice_id'] = ''
+cfg['voices']['noura']['voice_id'] = 'v_noura'
+cfg['voices']['noura'].update(stability=0.5, speed=0.88)
+cfg['model_id'] = 'eleven_multilingual_v2'
 open(cfg_path, 'w').write(json.dumps(cfg))
 out = tempfile.mkdtemp()
 try:

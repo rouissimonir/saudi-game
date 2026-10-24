@@ -1,13 +1,55 @@
 {
-  "_comment": "Fill in one ElevenLabs voice_id per character (run `generate_elevenlabs.py voices` to list the voices on your account). Tweak the settings per character; speed is 0.7 to 1.2.",
-  "model_id": "eleven_multilingual_v2",
+  "_comment": "Voice casting used for the shipped files (generated through the ElevenLabs connector, model eleven_v4, no inline tags, 1 take per line). The settings below only apply when regenerating with generate_elevenlabs.py over the REST API. Change a voice_id and re-run with --force to recast a character.",
+  "model_id": "eleven_v4",
   "output_format": "mp3_44100_128",
   "voices": {
-    "noura":  { "voice_id": "", "stability": 0.50, "similarity_boost": 0.80, "style": 0.30, "speed": 0.88 },
-    "faisal": { "voice_id": "", "stability": 0.40, "similarity_boost": 0.80, "style": 0.40, "speed": 1.00 },
-    "tariq":  { "voice_id": "", "stability": 0.60, "similarity_boost": 0.80, "style": 0.20, "speed": 0.90 },
-    "lama":   { "voice_id": "", "stability": 0.35, "similarity_boost": 0.75, "style": 0.50, "speed": 1.08 },
-    "sultan": { "voice_id": "", "stability": 0.65, "similarity_boost": 0.80, "style": 0.20, "speed": 0.85 },
-    "ghabga": { "voice_id": "", "stability": 0.55, "similarity_boost": 0.80, "style": 0.25, "speed": 0.95 }
+    "noura": {
+      "voice_id": "ckaeRWMtCV0u0pUT3wX1",
+      "stability": 0.5,
+      "similarity_boost": 0.8,
+      "style": 0.3,
+      "speed": 0.88,
+      "voice_name": "Noorah - Saudi Warm & Clear"
+    },
+    "faisal": {
+      "voice_id": "aLv8a8fbjjLsORNUDQ1J",
+      "stability": 0.4,
+      "similarity_boost": 0.8,
+      "style": 0.4,
+      "speed": 1.0,
+      "voice_name": "Bandar"
+    },
+    "tariq": {
+      "voice_id": "j5yKf07d4XvSvuWfxQwD",
+      "stability": 0.6,
+      "similarity_boost": 0.8,
+      "style": 0.2,
+      "speed": 0.9,
+      "voice_name": "Saleh - Saudi Arabic"
+    },
+    "lama": {
+      "voice_id": "VjxKp6w1MCufETfW5zFM",
+      "stability": 0.35,
+      "similarity_boost": 0.75,
+      "style": 0.5,
+      "speed": 1.08,
+      "voice_name": "Nouf - Saudi Commercial & Documentary"
+    },
+    "sultan": {
+      "voice_id": "ytGeTGTYCgaMW3Cef9LB",
+      "stability": 0.65,
+      "similarity_boost": 0.8,
+      "style": 0.2,
+      "speed": 0.85,
+      "voice_name": "Saadoun Professional Voice"
+    },
+    "ghabga": {
+      "voice_id": "YKGG8oefXIWbncG7wgoX",
+      "stability": 0.55,
+      "similarity_boost": 0.8,
+      "style": 0.25,
+      "speed": 0.95,
+      "voice_name": "Ahmed - deep warm MSA (احمد النبرة العميقة الدافئة)"
+    }
   }
 }
