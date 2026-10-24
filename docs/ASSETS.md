@@ -7,7 +7,7 @@
 | Hero 3D renders (dallah, finjan, V60, mabkhara, dates, chest, beans) | Generated with Blender, 512x512 transparent PNG | `public/assets/art/*.png` |
 | Title-screen emblem | Uses `dallah.png` | `src/App.tsx` |
 | The 30 merge-board item icons | Generated with Blender, 256x256 transparent PNG, shown by `ItemArtwork` (old SVG kept as fallback) | `public/assets/art/items/<itemId>.png` |
-| Character portraits (Noura, Faisal, Tariq...) | Still SVG | `src/components/CompetitorModalsAndPortraits.tsx` |
+| Character portraits (Noura, Faisal, Tariq, Lama, Sultan, Jury) | Stylized 3D busts rendered with Blender, 256px transparent PNG; shown in the order strip and story dialogue (SVG kept as fallback) | `public/assets/art/characters/<name>.png` |
 | Sound effects | Synthesized in code | `src/utils/soundAndHaptics.ts` |
 | Background music | Synthesized oud loop, **or** your file (see below) | `public/assets/audio/ambient.mp3` |
 | Voice lines | None | n/a |
@@ -24,13 +24,15 @@ Each prop is a function in `tools/blender/make_art.py`. Add a function, add it t
 
 The 30 item icons come from `tools/blender/make_items.py` (one function per item id; same camera, light and palette for all, auto-framed so each icon fills its tile):
 
+The six characters come from `tools/blender/make_characters.py` (ONLY=noura,tariq works the same way). The jury is a gold star medal with a ribbon, matching its star badge in the original art, not a person.
+
 ```bash
 cd tools/blender
 SAMPLES=64 SIZE=256 .venv-bpy/bin/python make_items.py -- ../../public/assets/art/items            # all 30
 SAMPLES=64 SIZE=256 ONLY=qahwa_3,oud_5 .venv-bpy/bin/python make_items.py -- ../../public/assets/art/items  # just some
 ```
 
-Limits: these are clean stylized 3D props, not painterly game-art. Some are simple (for example the agarwood chips and the paper filter) and are good candidates for an artist to redo. Characters (faces, hands, clothing) are not realistic to do procedurally. For people and for a distinctive art style you need an illustrator.
+Limits: these are clean stylized 3D props, not painterly game-art. Some are simple (for example the agarwood chips and the paper filter) and are good candidates for an artist to redo. The character busts are deliberately toy-like (big heads, simple faces): that style is achievable procedurally, but it is not a replacement for a real character artist, and they have one pose and one expression each. For emotional poses, full-body art or a distinctive style you need an illustrator. Please also have someone from the community review the characters' clothing and headwear for cultural accuracy before launch.
 
 ## 2. Drop-in rules for art you provide
 
@@ -40,10 +42,10 @@ Limits: these are clean stylized 3D props, not painterly game-art. Some are simp
   - Chains (levels 1 to 6): `qahwa_1`..`qahwa_6`, `barista_1`..`barista_6`, `sweets_1`..`sweets_6`, `oud_1`..`oud_6`
   - Chests: `chest_1`, `chest_2`
   - Item names for each level are in `DOCUMENTATION.md` section 2.A.
-- **Characters:** `public/assets/art/characters/<name>.png`, 512x512 bust portrait: `noura`, `faisal`, `tariq`, `lama`, `sultan`, `jury`.
+- **Characters:** `public/assets/art/characters/<name>.png`, square bust portrait with a transparent background, centred with the face in the upper half (they are cropped to a circle): `noura`, `faisal`, `tariq`, `lama`, `sultan`, `ghabga` (the jury).
 - Items in the same chain should share one light direction and one palette so the evolution reads at a glance.
 - **Items need no code change:** `ItemArtwork` loads `public/assets/art/items/<itemId>.png` automatically, so replacing a file replaces the icon. If a file is missing the game falls back to the old SVG for that item only.
-- Character portraits still draw SVG; send PNGs and I will wire them in.
+- **Characters need no code change either:** `CustomerPortrait` loads `public/assets/art/characters/<name>.png` (names: `noura`, `faisal`, `tariq`, `lama`, `sultan`, `ghabga`) and falls back to the SVG if a file is missing. The circle backdrop colours are in `PORTRAIT_BACKDROP` in `CompetitorModalsAndPortraits.tsx`.
 
 ## 3. Music and sound: what to ask for
 

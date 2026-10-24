@@ -1,6 +1,17 @@
 import React from 'react';
 import { Gem, Zap } from 'lucide-react';
 import { Language, StoryChapter } from '../game/rules';
+import { CustomerPortrait } from './CompetitorModalsAndPortraits';
+
+function speakerKey(chapter: StoryChapter): string | null {
+  const name = chapter.speakerEn.toLowerCase();
+  if (name.includes('noura')) return 'noura';
+  if (name.includes('faisal')) return 'faisal';
+  if (name.includes('tariq')) return 'tariq';
+  if (name.includes('lama')) return 'lama';
+  if (name.includes('sultan')) return 'sultan';
+  return null;
+}
 
 interface StoryDialogueModalProps {
   lang: Language;
@@ -37,13 +48,17 @@ export const StoryDialogueModal: React.FC<StoryDialogueModalProps> = ({
                 {isAr ? chapter.titleAr : chapter.titleEn}
               </h2>
             </div>
-            {/* Character Portrait Emblem */}
+            {/* Character portrait (Blender render) with the original emblem as fallback */}
+            {speakerKey(chapter) ? (
+              <CustomerPortrait avatarKey={speakerKey(chapter) as string} size="lg" />
+            ) : (
             <div className="w-12 h-12 rounded-full bg-[#D99B26]/20 border border-[#FBBF24] flex items-center justify-center shrink-0">
               <svg viewBox="0 0 40 40" className="w-8 h-8">
                 <circle cx="20" cy="14" r="7" fill="#E9C46A" />
                 <path d="M8 34 C8 24 32 24 32 34 Z" fill="#9E2A2B" />
               </svg>
             </div>
+            )}
           </div>
 
           <div className="rounded-xl bg-[#1C1410] border border-[#D99B26]/30 p-4 space-y-3">
