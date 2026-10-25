@@ -91,11 +91,11 @@ The story cast moves to semi-realistic painted 2D portraits, closer to Hollywood
   - Warm medium skin, kind brown eyes.
   - Emerald silk hijab with a thin gold band, cream abaya with gold trim, small gold pendant.
 - **Grandma Noura (70s):**
-  - Kind lined face, warm smile.
-  - Black abaya and black shayla with gold trim, matching her bust in `public/assets/art/characters/noura.webp`.
+  - Kind lined face, warm smile, round thin gold-rimmed glasses, a little white hair at the forehead.
+  - Rose-red shayla with a thin gold band, black abaya with gold trim, matching her story render `public/assets/art/story/noura_neutral.webp`.
 - **Rashid (rival developer, 40s):**
   - Neat black goatee, confident half-smile.
-  - White ghutra with a black agal, charcoal bisht over a white thobe, gold watch.
+  - White ghutra with a black agal, charcoal bisht with thin silver trim over a white thobe, gold watch.
 - **Expressions:**
   - Same as the Blender set: `neutral`, `happy`, `surprised`, `worried`, `angry`.
   - Only the face changes between them; clothing, light and framing stay identical.
