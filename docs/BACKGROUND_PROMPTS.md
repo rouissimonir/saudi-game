@@ -5,7 +5,7 @@ complete on its own: copy it as-is. Character prompts are in `docs/PORTRAIT_PROM
 
 ---
 
-## Task for Codex (copy this whole section into Codex)
+## Task for Codex, batch 1 (done: street, courtyard, dallah)
 
 > You are working in the `rouissimonir/saudi-game` repository on branch `feature/painted-backgrounds`.
 >
@@ -102,11 +102,161 @@ complete on its own: copy it as-is. Character prompts are in `docs/PORTRAIT_PROM
 
 ---
 
+## Batch 2: chapter locations
+
+The story chapters still reuse the prologue's street and courtyard. These 9 backgrounds give each chapter its own place.
+
+### Task for Codex, batch 2 (copy this whole subsection into Codex)
+
+> You are working in the `rouissimonir/saudi-game` repository. Check out the branch `art/codex`, creating it from `main` if it does not exist.
+> Generate the 9 backgrounds in the "Batch 2" section of `docs/BACKGROUND_PROMPTS.md` using your image generation tool.
+>
+> **References:** for every image, attach `tools/art/portrait_refs/style_layla_neutral.jpg` (style) and `public/assets/art/story/bg_courtyard.webp` (an already-painted background, for matching finish and detail level).
+>
+> **Output:** PNG, tall portrait, 9:16 (for example 1080x1920) or the tallest portrait size available, saved to `tools/art/background_inbox/` with the exact file names given.
+>
+> **Check:** look at each image before saving. Regenerate if any of these fail:
+> - The style matches the references.
+> - There are no people, animals, text, letters, logos or watermarks.
+> - The lower third is calm and uncluttered.
+> - The important details sit inside the central 80% of the width.
+> - The main light comes from the left.
+>
+> **Finish:** commit the 9 PNGs with the message "Add painted chapter backgrounds" and push the `art/codex` branch. Do not change any other files.
+
+### `bg_sadu.png`: Chapter 2 (Faisal): the Majlis's new Sadu coffee corner
+
+**Attach:** `tools/art/portrait_refs/style_layla_neutral.jpg` and `public/assets/art/story/bg_courtyard.webp`.
+
+**Prompt:**
+
+> Reference 1 shows the exact painting style and lighting to match: semi-realistic digital painting, soft painterly brushwork, warm golden rim light from the left. Reference 2 is an already-painted background from the same game: match its finish and level of detail.
+>
+> Paint a tall vertical 9:16 background of the inside of a traditional Najdi majlis being turned into a cosy specialty-coffee corner in the evening. Warm earthen walls of ochre clay with small triangular niches; long floor cushions and wall hangings woven in red, black, cream and gold Najdi Sadu patterns; a low wooden counter with a gleaming brass dallah, a modern pour-over coffee stand and glass jars of coffee beans and cardamom; a carved wooden door half-open on the left letting in golden evening light. Warm, inviting, a blend of heritage and modern café.
+>
+> Composition: the coffee counter and Sadu wall hangings fill the upper-middle; the bottom third is a plain Sadu rug and floor. Keep important details inside the central 80% of the width, and keep the bottom third simple because characters and a dialogue box cover it. Eye-level view, gentle atmospheric depth.
+>
+> Style: semi-realistic digital painting matching the references, soft painterly brushwork, believable perspective, warm rich colours, slightly softer detail than a character portrait. Not anime, not photoreal, not 3D, not flat vector. No people, animals, text, letters, signs, logos or watermarks.
+
+### `bg_lanterns.png`: Chapter 4 (Lama): Ramadan ghabga night under the lanterns
+
+**Attach:** `tools/art/portrait_refs/style_layla_neutral.jpg` and `public/assets/art/story/bg_courtyard.webp`.
+
+**Prompt:**
+
+> Reference 1 shows the exact painting style and lighting to match: semi-realistic digital painting, soft painterly brushwork, warm golden rim light from the left. Reference 2 is an already-painted background from the same game: match its finish and level of detail.
+>
+> Paint a tall vertical 9:16 background of the restored Majlis courtyard on a Ramadan night, decorated for a ghabga gathering. Najdi mud-brick walls of warm ochre clay with triangular openings and stepped crenellations; strings of glowing brass and coloured-glass lanterns hung across the courtyard; a crescent moon in a deep indigo-to-violet sky on the left; low majlis seating with Sadu cushions along the walls, a table of dates, dallahs and sweets near the back. Festive, warm and magical, lit mostly by warm lantern light from the left.
+>
+> Composition: the lanterns, walls and moon fill the upper-middle; the bottom third is open courtyard floor softly lit by the lanterns. Keep important details inside the central 80% of the width, and keep the bottom third simple because characters and a dialogue box cover it. Eye-level view, gentle atmospheric depth.
+>
+> Style: semi-realistic digital painting matching the references, soft painterly brushwork, believable perspective, warm rich colours, slightly softer detail than a character portrait. Not anime, not photoreal, not 3D, not flat vector. No people, animals, text, letters, signs, logos or watermarks.
+
+### `bg_jeddah.png`: Chapter 5 (Faisal): the Rawasheen of Jeddah Al-Balad
+
+**Attach:** `tools/art/portrait_refs/style_layla_neutral.jpg` and `public/assets/art/story/bg_courtyard.webp`.
+
+**Prompt:**
+
+> Reference 1 shows the exact painting style and lighting to match: semi-realistic digital painting, soft painterly brushwork, warm golden rim light from the left. Reference 2 is an already-painted background from the same game: match its finish and level of detail.
+>
+> Paint a tall vertical 9:16 background of a lane in historic Jeddah Al-Balad at golden hour. Tall coral-stone Hijazi houses with ornate carved wooden rawasheen balconies painted in teak brown and rawasheen green, latticed mashrabiya screens, white plaster trim; a glimpse of the old souq with hanging lanterns down the lane; a soft sea-breeze sky in peach and pale turquoise; low sun from the left casting long soft shadows to the right.
+>
+> Composition: the rawasheen balconies fill the upper-middle; the bottom third is the quiet stone-paved lane. Keep important details inside the central 80% of the width, and keep the bottom third simple because characters and a dialogue box cover it. Eye-level view, gentle atmospheric depth.
+>
+> Style: semi-realistic digital painting matching the references, soft painterly brushwork, believable perspective, warm rich colours, slightly softer detail than a character portrait. Not anime, not photoreal, not 3D, not flat vector. No people, animals, text, letters, signs, logos or watermarks.
+
+### `bg_alula.png`: Chapter 6 (Lama): the Stars of AlUla
+
+**Attach:** `tools/art/portrait_refs/style_layla_neutral.jpg` and `public/assets/art/story/bg_courtyard.webp`.
+
+**Prompt:**
+
+> Reference 1 shows the exact painting style and lighting to match: semi-realistic digital painting, soft painterly brushwork, warm golden rim light from the left. Reference 2 is an already-painted background from the same game: match its finish and level of detail.
+>
+> Paint a tall vertical 9:16 background of AlUla oasis at dusk, as the first stars appear. Towering rose-red sandstone cliffs and wind-carved rock formations, a band of date palms and a mud-brick old town with small lantern lights at their foot, and a deep blue-violet sky filling with stars and the faint Milky Way, with a last warm glow of sunset on the left horizon.
+>
+> Composition: the cliffs, palms and starry sky fill the upper-middle; the bottom third is a smooth sandy terrace. Keep important details inside the central 80% of the width, and keep the bottom third simple because characters and a dialogue box cover it. Eye-level view, gentle atmospheric depth.
+>
+> Style: semi-realistic digital painting matching the references, soft painterly brushwork, believable perspective, warm rich colours, slightly softer detail than a character portrait. Not anime, not photoreal, not 3D, not flat vector. No people, animals, text, letters, signs, logos or watermarks.
+
+### `bg_taif.png`: Chapter 7 (Noura): Rose Season in Taif
+
+**Attach:** `tools/art/portrait_refs/style_layla_neutral.jpg` and `public/assets/art/story/bg_courtyard.webp`.
+
+**Prompt:**
+
+> Reference 1 shows the exact painting style and lighting to match: semi-realistic digital painting, soft painterly brushwork, warm golden rim light from the left. Reference 2 is an already-painted background from the same game: match its finish and level of detail.
+>
+> Paint a tall vertical 9:16 background of the Taif rose gardens in the mountains during rose season, in soft morning sunlight. Terraced fields of pink Taif damask roses in full bloom, a small stone farmhouse with copper rose-water stills by its door, pomegranate trees, and misty blue-green Al-Hada mountains in the background under a pale sky; gentle sun from the left.
+>
+> Composition: the rose terraces and mountains fill the upper-middle; the bottom third is a calm stone path through low rose bushes. Keep important details inside the central 80% of the width, and keep the bottom third simple because characters and a dialogue box cover it. Eye-level view, gentle atmospheric depth.
+>
+> Style: semi-realistic digital painting matching the references, soft painterly brushwork, believable perspective, warm rich colours, slightly softer detail than a character portrait. Not anime, not photoreal, not 3D, not flat vector. No people, animals, text, letters, signs, logos or watermarks.
+
+### `bg_abha.png`: Chapter 8 (Tariq): Above the Clouds in Abha
+
+**Attach:** `tools/art/portrait_refs/style_layla_neutral.jpg` and `public/assets/art/story/bg_courtyard.webp`.
+
+**Prompt:**
+
+> Reference 1 shows the exact painting style and lighting to match: semi-realistic digital painting, soft painterly brushwork, warm golden rim light from the left. Reference 2 is an already-painted background from the same game: match its finish and level of detail.
+>
+> Paint a tall vertical 9:16 background of a village in the Sarawat mountains near Abha, above the clouds. Traditional Asiri stone-and-mud tower houses with walls painted in colourful Al-Qatt geometric bands (yellow, red, green, blue) around the windows, juniper trees, and a sea of white clouds filling the valley below with green mountain peaks rising through it; soft late-afternoon sun from the left.
+>
+> Composition: the painted houses and cloud sea fill the upper-middle; the bottom third is a quiet stone terrace. Keep important details inside the central 80% of the width, and keep the bottom third simple because characters and a dialogue box cover it. Eye-level view, gentle atmospheric depth.
+>
+> Style: semi-realistic digital painting matching the references, soft painterly brushwork, believable perspective, warm rich colours, slightly softer detail than a character portrait. Not anime, not photoreal, not 3D, not flat vector. No people, animals, text, letters, signs, logos or watermarks.
+
+### `bg_ahsa.png`: Chapter 9 (Noura): the Great Oasis of Al-Ahsa
+
+**Attach:** `tools/art/portrait_refs/style_layla_neutral.jpg` and `public/assets/art/story/bg_courtyard.webp`.
+
+**Prompt:**
+
+> Reference 1 shows the exact painting style and lighting to match: semi-realistic digital painting, soft painterly brushwork, warm golden rim light from the left. Reference 2 is an already-painted background from the same game: match its finish and level of detail.
+>
+> Paint a tall vertical 9:16 background of the Al-Ahsa oasis, among the largest palm oases in the world, in warm late-afternoon light. Endless rows of tall date palms heavy with golden dates, a clear spring-fed water channel reflecting the sky, a traditional mud-brick farm house with a wooden door, and the flat-topped Al-Qarah mountain in the hazy distance; low sun from the left.
+>
+> Composition: the palms, water channel and distant mountain fill the upper-middle; the bottom third is a calm sandy path beside the channel. Keep important details inside the central 80% of the width, and keep the bottom third simple because characters and a dialogue box cover it. Eye-level view, gentle atmospheric depth.
+>
+> Style: semi-realistic digital painting matching the references, soft painterly brushwork, believable perspective, warm rich colours, slightly softer detail than a character portrait. Not anime, not photoreal, not 3D, not flat vector. No people, animals, text, letters, signs, logos or watermarks.
+
+### `bg_riyadh.png`: Chapter 10 (Faisal): Riyadh Season
+
+**Attach:** `tools/art/portrait_refs/style_layla_neutral.jpg` and `public/assets/art/story/bg_courtyard.webp`.
+
+**Prompt:**
+
+> Reference 1 shows the exact painting style and lighting to match: semi-realistic digital painting, soft painterly brushwork, warm golden rim light from the left. Reference 2 is an already-painted background from the same game: match its finish and level of detail.
+>
+> Paint a tall vertical 9:16 background of modern Riyadh at night during Riyadh Season. The glowing skyline with Kingdom Centre's arch and the Al Faisaliah tower, festival lights and gentle fireworks in a deep blue sky, and in the foreground a stylish open-air café terrace that mixes Najdi mud-brick details and Sadu cushions with warm string lights; festive and modern, warm light from the left.
+>
+> Composition: the skyline, fireworks and terrace details fill the upper-middle; the bottom third is the calm terrace floor. Keep important details inside the central 80% of the width, and keep the bottom third simple because characters and a dialogue box cover it. Eye-level view, gentle atmospheric depth.
+>
+> Style: semi-realistic digital painting matching the references, soft painterly brushwork, believable perspective, warm rich colours, slightly softer detail than a character portrait. Not anime, not photoreal, not 3D, not flat vector. No people, animals, text, letters, signs, logos or watermarks.
+
+### `bg_khobar.png`: Chapter 11 (Sultan): Pearl of the Gulf in Khobar
+
+**Attach:** `tools/art/portrait_refs/style_layla_neutral.jpg` and `public/assets/art/story/bg_courtyard.webp`.
+
+**Prompt:**
+
+> Reference 1 shows the exact painting style and lighting to match: semi-realistic digital painting, soft painterly brushwork, warm golden rim light from the left. Reference 2 is an already-painted background from the same game: match its finish and level of detail.
+>
+> Paint a tall vertical 9:16 background of the Al Khobar corniche on the Arabian Gulf at sunset. Calm turquoise-to-gold sea, a traditional wooden dhow with a furled sail near the shore, the long curve of the corniche with palm trees, and a hint of an old pearl-diving heritage pier; a glowing low sun over the sea on the left with long reflections.
+>
+> Composition: the sea, dhow and corniche fill the upper-middle; the bottom third is the calm paved promenade. Keep important details inside the central 80% of the width, and keep the bottom third simple because characters and a dialogue box cover it. Eye-level view, gentle atmospheric depth.
+>
+> Style: semi-realistic digital painting matching the references, soft painterly brushwork, believable perspective, warm rich colours, slightly softer detail than a character portrait. Not anime, not photoreal, not 3D, not flat vector. No people, animals, text, letters, signs, logos or watermarks.
+
+---
+
 ## Without Codex (ChatGPT or another tool by hand)
 
 1. Use the same prompts and attachments.
 2. Download each result as PNG.
-3. Upload the files to `tools/art/background_inbox/` on the `feature/painted-backgrounds` branch with the exact names above. On GitHub: open the branch, choose Add file, then Upload files.
+3. Upload the files to `tools/art/background_inbox/` on the `art/codex` branch with the exact names above. On GitHub: open the branch, choose Add file, then Upload files.
 
 ## After the images arrive
 
