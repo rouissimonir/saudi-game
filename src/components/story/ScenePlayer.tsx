@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Coins, FastForward, Gem, Zap } from 'lucide-react';
 import { Language } from '../../game/rules';
-import { advance, choose, currentBeat, ScenePlay, skip, startScene } from '../../story/engine';
+import { advance, choose, currentBeat, ScenePlay, skip, startScene, upcomingBeats } from '../../story/engine';
 import { SCENES } from '../../story/scenes';
 import { CAST_NAMES, CastId, Expression, Scene, StagePos } from '../../story/types';
 import { assetUrl } from '../../utils/assetUrl';
@@ -25,7 +25,7 @@ function actorSrc(id: CastId, expr: Expression): string {
 }
 const bgSrc = (key: string, layer: '' | '_fg' = '') => assetUrl(`assets/art/story/bg_${key}${layer}.webp`);
 
-/** Warm the cache with every image a scene uses, so beats never pop in blank. */
+/** Warm the cache with every image a scene uses, so beats never pop in blank, plus the first line's voice. */
 export function preloadScene(sceneId: string): void {
   const scene = SCENES[sceneId];
   if (!scene || typeof Image === 'undefined') return;
@@ -40,6 +40,8 @@ export function preloadScene(sceneId: string): void {
     img.decoding = 'async';
     img.src = u;
   });
+  const first = scene.beats[0]?.voice;
+  if (first && typeof fetch !== 'undefined') void fetch(assetUrl(`assets/audio/story/${first}.mp3`), { priority: 'low' } as RequestInit).catch(() => {});
 }
 
 const prefersReducedMotion = () => typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
@@ -48,6 +50,7 @@ const prefersReducedMotion = () => typeof window !== 'undefined' && !!window.mat
 export interface SceneSound {
   playLine: (id: string) => void;
   stopLine: () => void;
+  preloadLine: (id: string) => void;
   haptic: (strength: 'light' | 'medium') => void;
   chime: () => void;
 }
@@ -92,6 +95,7 @@ export const ScenePlayer: React.FC<ScenePlayerProps> = ({ sceneId, lang, sound, 
     setTyped(reduced ? Number.MAX_SAFE_INTEGER : 0);
     if (beat.voice) sound.playLine(beat.voice);
     else sound.stopLine();
+    for (const b of upcomingBeats(scene, play)) if (b.voice) sound.preloadLine(b.voice);
   }, [beat?.id]);
 
   useEffect(() => {

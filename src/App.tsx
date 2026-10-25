@@ -94,6 +94,7 @@ const ScenePlayer = lazy(() => loadScenePlayer().then((m) => ({ default: m.Scene
 const SCENE_SOUND = {
   playLine: (id: string) => soundFX.playStoryLine(id),
   stopLine: () => soundFX.stopStoryLine(),
+  preloadLine: (id: string) => soundFX.preloadStoryLine(id),
   haptic: (strength: 'light' | 'medium') => soundFX.triggerHaptic(strength),
   chime: () => soundFX.playOrderComplete(),
 };

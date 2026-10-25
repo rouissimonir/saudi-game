@@ -101,11 +101,26 @@ class SoundAndHapticsManager {
 
   private storySource: AudioBufferSourceNode | null = null;
 
+  /** Fetch and decode a story line ahead of its beat, so it starts with its text even on a slow connection. */
+  public preloadStoryLine(id: string) {
+    if (this.muted || typeof window === 'undefined') return;
+    this.trackStoryLoad(this.loadBuffer(assetUrl(`assets/audio/story/${id}.mp3`)));
+  }
+
+  /** Story lines still downloading; the 700 KB music waits for them so a voice never queues behind it. */
+  private storyLoads = new Set<Promise<unknown>>();
+
+  private trackStoryLoad<T>(p: Promise<T>): Promise<T> {
+    this.storyLoads.add(p);
+    void p.finally(() => this.storyLoads.delete(p));
+    return p;
+  }
+
   /** Voiced story-scene line (public/assets/audio/story/<id>.mp3). Stops the previous line; silent if the file is missing. */
   public playStoryLine(id: string) {
     this.stopStoryLine();
     if (this.muted || typeof window === 'undefined') return;
-    void this.loadBuffer(assetUrl(`assets/audio/story/${id}.mp3`)).then((buf) => {
+    void this.trackStoryLoad(this.loadBuffer(assetUrl(`assets/audio/story/${id}.mp3`))).then((buf) => {
       const ctx = this.ensureContext();
       if (!buf || !ctx || this.muted) return;
       this.stopStoryLine();
@@ -203,6 +218,10 @@ class SoundAndHapticsManager {
     // on a slow connection the board art, screens and stingers arrive first, the music a moment later.
     this.ambientScheduled = true;
     const begin = () => {
+      if (this.storyLoads.size) {
+        void Promise.allSettled([...this.storyLoads]).then(begin);
+        return;
+      }
       this.ambientScheduled = false;
       if (this.ambientWanted && !this.muted) this.loadAndLoopAmbient();
     };

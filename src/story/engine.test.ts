@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { advance, applySceneResult, choose, currentBeat, skip, startScene } from './engine';
+import { advance, applySceneResult, choose, currentBeat, skip, startScene, upcomingBeats } from './engine';
 import { Scene } from './types';
 import { createInitialGameState } from '../game/rules';
 import { normalizeSave } from '../game/normalizeSave';
@@ -123,4 +123,13 @@ test('every prologue line is voiced and its audio file exists', async () => {
     assert.ok(b.voice, `beat "${b.id}" has no voice clip`);
     assert.ok(existsSync(`public/assets/audio/story/${b.voice}.mp3`), `missing public/assets/audio/story/${b.voice}.mp3`);
   }
+});
+
+test('upcomingBeats lists the next beat, both branches at a choice, and nothing at the end', async () => {
+  const { PROLOGUE } = await import('./scenes/prologue');
+  const at = (id: string) => ({ ...startScene(PROLOGUE), beatIndex: PROLOGUE.beats.findIndex((b) => b.id === id) });
+  assert.deepEqual(upcomingBeats(PROLOGUE, at('arrive')).map((b) => b.id), ['layla_home']);
+  assert.deepEqual(upcomingBeats(PROLOGUE, at('answer')).map((b) => b.id), ['say_firm', 'say_polite']);
+  assert.deepEqual(upcomingBeats(PROLOGUE, at('say_firm')).map((b) => b.id), ['rashid_firm']);
+  assert.deepEqual(upcomingBeats(PROLOGUE, at('promise')), []);
 });
