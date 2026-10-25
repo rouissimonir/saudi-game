@@ -1,7 +1,15 @@
 import React, { useState } from 'react';
-import { Castle, Coins, Gem, Gift, Grid3x3, Hammer, Languages, Menu, Pause, ScrollText, ShoppingBag, Star, Trophy, Volume2, VolumeX, X, Zap } from 'lucide-react';
+import { ArrowRightLeft, Castle, Coins, Gem, Gift, Grid3x3, Hammer, Languages, Menu, Pause, ScrollText, ShoppingBag, Star, Trophy, Volume2, VolumeX, X, Zap } from 'lucide-react';
 import { Language } from '../game/rules';
 import { formatCountdown } from './ProgressionModals';
+
+/** 980 -> "980", 12_480 -> "12.4k", 2_300_000 -> "2.3M" so pills never truncate on small phones. */
+export function compact(n: number): string {
+  const v = Math.round(n);
+  if (v < 10_000) return String(v);
+  if (v < 1_000_000) return `${Math.floor(v / 100) / 10}k`;
+  return `${Math.floor(v / 100_000) / 10}M`;
+}
 
 /** Compact single-row resource bar: keeps the board above the fold on phones. */
 export const GameHud: React.FC<{
@@ -23,6 +31,9 @@ export const GameHud: React.FC<{
   onToggleLanguage: () => void;
   onToggleMute: () => void;
   onPause: () => void;
+  onTransfer: () => void;
+  /** Optional strip under the resource row (the live festival bar). */
+  below?: React.ReactNode;
 }> = (p) => {
   const isAr = p.lang === 'ar';
   const [menuOpen, setMenuOpen] = useState(false);
@@ -30,8 +41,8 @@ export const GameHud: React.FC<{
   return (
     <header className="sticky top-0 z-40 w-full bg-gradient-to-b from-[#5C3A21] to-[#432815] border-b-[3px] border-[#C68B59] shadow-md">
       <div className="h-1 w-full sadu-trim" />
-      <div className="max-w-[460px] mx-auto px-2 py-1.5 flex items-center gap-1.5" data-testid="game-hud">
-        <div className="relative w-11 h-11 shrink-0" aria-label={`${isAr ? 'المستوى' : 'Level'} ${p.level}`}>
+      <div className="max-w-[460px] mx-auto px-1.5 min-[360px]:px-2 py-1.5 flex items-center gap-1 min-[360px]:gap-1.5" data-testid="game-hud">
+        <div className="relative w-10 h-10 min-[360px]:w-11 min-[360px]:h-11 shrink-0" aria-label={`${isAr ? 'المستوى' : 'Level'} ${p.level}`}>
           <svg viewBox="0 0 40 40" className="absolute inset-0 -rotate-90">
             <circle cx="20" cy="20" r="17" fill="none" stroke="#2A180D" strokeWidth="4" />
             <circle cx="20" cy="20" r="17" fill="none" stroke="#FDE047" strokeWidth="4" strokeLinecap="round" strokeDasharray={ring} strokeDashoffset={ring * (1 - p.levelProgress)} />
@@ -40,7 +51,7 @@ export const GameHud: React.FC<{
         </div>
 
         <button type="button" onClick={p.onEnergy} data-testid="hud-energy" aria-label={isAr ? 'الطاقة' : 'Energy'} className="hud-pill rounded-full flex-1 min-w-0 h-10 pl-1 pr-2 flex items-center gap-1">
-          <span className="w-7 h-7 rounded-full bg-gradient-to-b from-[#FDE047] to-[#F59E0B] border border-[#B45309] flex items-center justify-center shrink-0">
+          <span className="w-6 h-6 min-[360px]:w-7 min-[360px]:h-7 rounded-full bg-gradient-to-b from-[#FDE047] to-[#F59E0B] border border-[#B45309] flex items-center justify-center shrink-0">
             <Zap className="w-4 h-4 text-[#78350F] fill-[#78350F]" />
           </span>
           <span className="flex flex-col leading-none min-w-0">
@@ -52,24 +63,25 @@ export const GameHud: React.FC<{
         </button>
 
         <button type="button" onClick={p.onCoins} aria-label={isAr ? 'الريالات' : 'Coins'} className="hud-pill rounded-full flex-1 min-w-0 h-10 pl-1 pr-2 flex items-center gap-1">
-          <span className="w-7 h-7 rounded-full bg-gradient-to-b from-[#FBBF24] to-[#D97706] border border-[#92400E] flex items-center justify-center shrink-0">
+          <span className="w-6 h-6 min-[360px]:w-7 min-[360px]:h-7 rounded-full bg-gradient-to-b from-[#FBBF24] to-[#D97706] border border-[#92400E] flex items-center justify-center shrink-0">
             <Coins className="w-4 h-4 text-[#FFFBEB]" />
           </span>
-          <span className="text-sm font-black tabular-nums text-[#3E2723] truncate">{Math.round(p.coins)}</span>
+          <span className="text-sm font-black tabular-nums text-[#3E2723] truncate">{compact(p.coins)}</span>
         </button>
 
         <button type="button" onClick={p.onGems} aria-label={isAr ? 'الجواهر' : 'Gems'} className="hud-pill rounded-full flex-1 min-w-0 h-10 pl-1 pr-2 flex items-center gap-1">
-          <span className="w-7 h-7 rounded-full bg-gradient-to-b from-[#38BDF8] to-[#0284C7] border border-[#0369A1] flex items-center justify-center shrink-0">
+          <span className="w-6 h-6 min-[360px]:w-7 min-[360px]:h-7 rounded-full bg-gradient-to-b from-[#38BDF8] to-[#0284C7] border border-[#0369A1] flex items-center justify-center shrink-0">
             <Gem className="w-4 h-4 text-white" />
           </span>
-          <span className="text-sm font-black tabular-nums text-[#3E2723] truncate">{Math.round(p.gems)}</span>
+          <span className="text-sm font-black tabular-nums text-[#3E2723] truncate">{compact(p.gems)}</span>
         </button>
 
-        <button type="button" onClick={() => setMenuOpen((v) => !v)} aria-label={isAr ? 'القائمة' : 'Menu'} aria-expanded={menuOpen} className="relative w-10 h-10 rounded-full hud-pill flex items-center justify-center shrink-0">
+        <button type="button" onClick={() => setMenuOpen((v) => !v)} aria-label={isAr ? 'القائمة' : 'Menu'} aria-expanded={menuOpen} className="relative w-9 h-9 min-[360px]:w-10 min-[360px]:h-10 rounded-full hud-pill flex items-center justify-center shrink-0">
           {menuOpen ? <X className="w-5 h-5 text-[#5C3A21]" /> : <Menu className="w-5 h-5 text-[#5C3A21]" />}
           {p.freeSpins > 0 && !menuOpen && <span className="absolute top-0 right-0 w-3 h-3 rounded-full bg-[#10B981] border-2 border-white" />}
         </button>
       </div>
+      {p.below}
 
       {menuOpen && (
         <div className="absolute end-2 top-full mt-1 w-56 rounded-2xl bg-[#FFFDF9] border-2 border-[#D97706] shadow-2xl p-2 grid gap-1 text-[#3E2723]" data-testid="hud-menu">
@@ -78,6 +90,7 @@ export const GameHud: React.FC<{
             { icon: <Trophy className="w-4 h-4 text-[#D97706]" />, label: isAr ? 'ديوان الكرم' : 'Leaderboard', on: p.onRank },
             { icon: <Languages className="w-4 h-4" />, label: isAr ? 'English' : 'العربية', on: p.onToggleLanguage },
             { icon: p.muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />, label: p.muted ? (isAr ? 'تشغيل الصوت' : 'Sound on') : isAr ? 'كتم الصوت' : 'Mute', on: p.onToggleMute },
+            { icon: <ArrowRightLeft className="w-4 h-4" />, label: isAr ? 'نقل التقدم لجهاز آخر' : 'Transfer progress', on: p.onTransfer },
             { icon: <Pause className="w-4 h-4" />, label: isAr ? 'إيقاف مؤقت' : 'Pause', on: p.onPause },
           ].map((row) => (
             <button

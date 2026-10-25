@@ -77,6 +77,9 @@ import { BottomNav, GameHud, NavTab } from './components/GameChrome';
 import { DailyLoginModal } from './components/DailyLoginModal';
 import { FinjanPourModal } from './components/FinjanPourModal';
 import { ItemArtwork, preloadItemArt } from './components/ItemArtwork';
+import { EVENT_ORDER_POINTS, activeLiveEvent, addEventPoints, claimEventMilestone, mergeEventPoints } from './game/events';
+import { LiveEventBar, LiveEventModal } from './components/LiveEventUI';
+import { SaveTransferModal } from './components/SaveTransferModal';
 import {
   advanceArea,
   applyEnergyRegen,
@@ -157,6 +160,8 @@ export default function App() {
 
   const bannerTimeoutRef = useRef<number | null>(null);
   const [now, setNow] = useState<number>(() => Date.now());
+  const [transferOpen, setTransferOpen] = useState(false);
+  const [eventOpen, setEventOpen] = useState(false);
   const [energyOpen, setEnergyOpen] = useState(false);
   const [questsOpen, setQuestsOpen] = useState(false);
   const [workshopOpen, setWorkshopOpen] = useState(false);
@@ -211,6 +216,14 @@ export default function App() {
     setComboLive(true);
     if (comboTimeoutRef.current) window.clearTimeout(comboTimeoutRef.current);
     comboTimeoutRef.current = window.setTimeout(() => setComboLive(false), COMBO_WINDOW_MS);
+  };
+
+  // Festival points for a merge result; the featured chain earns double.
+  const withMergeEventPoints = (state: GameState, mergedItemId?: string | null): GameState => {
+    const def = mergedItemId ? ITEM_CATALOG[mergedItemId] : null;
+    if (!def) return state;
+    const now = Date.now();
+    return addEventPoints(state, now, mergeEventPoints(def.chain, def.level, activeLiveEvent(now).def.featuredChain));
   };
 
   const showFeedback = useCallback((msg: string) => {
@@ -429,7 +442,7 @@ export default function App() {
         comboCount: moveRes.comboCount,
       });
       handleMergeExtras(moveRes);
-      setGameState(moveRes.state);
+      setGameState(withMergeEventPoints(moveRes.state, moveRes.mergedItemId));
       showFeedback(
         isAr
           ? `دمج رائع! حصلت على: ${mergedDef.nameAr} (المستوى ${mergedDef.level})`
@@ -457,7 +470,7 @@ export default function App() {
         comboCount: moveRes.comboCount,
       });
       handleMergeExtras(moveRes);
-      setGameState(moveRes.state);
+      setGameState(withMergeEventPoints(moveRes.state, moveRes.mergedItemId));
       showFeedback(
         isAr
           ? `دمج رائع! حصلت على: ${mergedDef.nameAr} (المستوى ${mergedDef.level})`
@@ -525,7 +538,7 @@ export default function App() {
         comboCount: res.comboCount,
       });
       handleMergeExtras(res);
-      setGameState(res.state);
+      setGameState(withMergeEventPoints(res.state, res.mergedItemId));
       showFeedback(
         isAr
           ? `دمج تلقائي: ${mergedDef.nameAr} (المستوى ${mergedDef.level})!`
@@ -698,7 +711,7 @@ export default function App() {
       if (servedOrder && isVoiceCharacter(servedOrder.customerId)) {
         soundFX.playVoice(servedOrder.customerId, servedOrder.isVip ? 'vip' : 'served');
       }
-      setGameState(res.state);
+      setGameState(addEventPoints(res.state, Date.now(), EVENT_ORDER_POINTS));
       showFeedback(
         res.spawnedChest
           ? isAr
@@ -860,6 +873,13 @@ export default function App() {
       return;
     }
     soundFX.playMerge(2);
+    setGameState(r.state);
+  };
+  const handleClaimEventMilestone = (index: number) => {
+    const r = claimEventMilestone(gameState, Date.now(), index);
+    if (!r.claimed) return;
+    soundFX.playOrderComplete();
+    soundFX.triggerHaptic('medium');
     setGameState(r.state);
   };
   const handleClaimDiscovery = (itemId: string) => {
@@ -1071,12 +1091,14 @@ export default function App() {
         onToggleLanguage={handleToggleLanguage}
         onToggleMute={() => handleToggleMute()}
         onPause={() => handleTogglePause()}
+        onTransfer={() => setTransferOpen(true)}
+        below={<LiveEventBar lang={lang} state={gameState} now={now} onOpen={() => setEventOpen(true)} />}
       />
 
       {/* 2. MAIN CENTERED STAGE (Clean, Uncluttered Gossip Harbor / Travel Town Layout) */}
       <main className="flex-1 max-w-4xl w-full mx-auto px-2 sm:px-5 pt-1.5 pb-24 flex flex-col gap-1.5">
         {/* Transient status toasts float over the stage so they never push the board down */}
-        <div className="fixed top-[62px] inset-x-0 z-30 flex flex-col items-center gap-1 px-3 pointer-events-none" aria-live="polite">
+        <div className="fixed top-[92px] inset-x-0 z-30 flex flex-col items-center gap-1 px-3 pointer-events-none" aria-live="polite">
           {levelUpToast && (
             <div role="status" data-testid="level-up-toast" className="level-up-toast px-4 py-2 rounded-2xl bg-[#10B981] text-white text-sm font-extrabold shadow-lg">
               {isAr ? `ارتقيت للمستوى ${levelUpToast.toLevel}! +${levelUpToast.gems}💎 +${levelUpToast.energy}⚡` : `Level ${levelUpToast.toLevel}! +${levelUpToast.gems}💎 +${levelUpToast.energy}⚡`}
@@ -1244,8 +1266,8 @@ export default function App() {
                     </div>
 
                     {/* Speech-Bubble Recipe Tray + Serve CTA */}
-                    <div className="mt-1 pt-1 border-t border-[#D4B483]/50 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-1">
-                      <div className="flex items-center justify-center sm:justify-start gap-1">
+                    <div className="mt-1 pt-1 border-t border-[#D4B483]/50 flex flex-row items-center justify-between gap-1">
+                      <div className="flex items-center justify-start gap-0.5 min-w-0">
                         {order.requiredItemIds.map((reqId, idx) => {
                           const reqDef = ITEM_CATALOG[reqId];
                           const hasItem = gameState.board.some(
@@ -1282,7 +1304,7 @@ export default function App() {
                       <button
                         type="button"
                         onClick={() => handleFulfillOrder(order.id)}
-                        className={`px-2 py-0.5 sm:py-1 rounded-lg text-[10px] font-black transition-all cursor-pointer whitespace-nowrap text-center shrink-0 ${
+                        className={`px-1.5 py-1 rounded-lg text-[10px] font-black transition-all cursor-pointer whitespace-nowrap text-center shrink-0 ${
                           isReady
                             ? 'btn-3d-green text-white'
                             : 'bg-[#E6D5B8] text-[#785A3C] hover:bg-[#DBC6A4]'
@@ -1308,15 +1330,17 @@ export default function App() {
               <div className="flex items-center justify-between mb-1.5 px-1 gap-1">
                 <div className="flex items-center gap-1.5">
                   <button
+                    aria-label={isAr ? 'دمج تلقائي' : 'Auto-Merge'}
                     type="button"
                     onClick={handleAutoMergeOrHint}
                     className="px-2.5 py-1 rounded-xl btn-3d-green text-white text-[11px] font-extrabold inline-flex items-center gap-1 cursor-pointer whitespace-nowrap"
                   >
                     <Sparkles className="w-3 h-3" />
-                    <span>{isAr ? 'دمج تلقائي' : 'Auto-Merge'}</span>
+                    <span className="hidden min-[360px]:inline">{isAr ? 'دمج تلقائي' : 'Auto-Merge'}</span>
                   </button>
 
                   <button
+                    aria-label={isAr ? 'دليل السلاسل' : 'Chains'}
                     type="button"
                     onClick={() => {
                       const firstNew = newDiscoveries.length ? ITEM_CATALOG[newDiscoveries[0]]?.chain : null;
@@ -1332,7 +1356,7 @@ export default function App() {
                     className="px-2.5 py-1 rounded-xl bg-[#FFFDF9] hover:bg-[#FEF3C7] border border-[#D4B483] text-[#5C3A21] text-[11px] font-extrabold inline-flex items-center gap-1 cursor-pointer whitespace-nowrap shadow-sm"
                   >
                     <Info className="w-3 h-3 text-[#D97706]" />
-                    <span>{isAr ? 'دليل السلاسل' : 'Chains'}</span>
+                    <span className="hidden min-[360px]:inline">{isAr ? 'دليل السلاسل' : 'Chains'}</span>
                     {newDiscoveries.length > 0 && (
                       <span data-testid="discovery-badge" className="min-w-[16px] h-4 px-1 rounded-full bg-[#EF4444] text-white text-[10px] font-black flex items-center justify-center">
                         {newDiscoveries.length}
@@ -1666,6 +1690,24 @@ export default function App() {
           }
         }}
       />
+
+      {transferOpen && (
+        <SaveTransferModal
+          lang={lang}
+          state={gameState}
+          onClose={() => setTransferOpen(false)}
+          onImport={(imported) => {
+            setGameState(imported);
+            setTransferOpen(false);
+            soundFX.playLevelUp();
+            showFeedback(isAr ? 'تم نقل تقدمك بنجاح!' : 'Progress transferred!');
+          }}
+        />
+      )}
+
+      {eventOpen && (
+        <LiveEventModal lang={lang} state={gameState} now={now} onClose={() => setEventOpen(false)} onClaim={handleClaimEventMilestone} />
+      )}
 
       {energyOpen && (
         <EnergyModal
