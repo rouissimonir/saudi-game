@@ -237,6 +237,8 @@ export interface GameState {
     bonusClaimed: boolean;
   } | null;
   lastMergedItemId: string | null;
+  /** Progress in the current rotating festival (see events.ts); reset when a new festival starts. */
+  liveEvent: { instanceId: string; points: number; claimed: number[] } | null;
 }
 
 export const KSA_LEADERBOARD_RIVALS: LeaderboardEntry[] = [
@@ -1106,6 +1108,7 @@ export function createInitialGameState(): GameState {
       'chest_1',
     ],
     claimedDiscoveryIds: [],
+    liveEvent: null,
     completedStoryIds: [],
     activeStoryId: null,
     liveOpsPoints: 15,

@@ -1,4 +1,5 @@
-import { GameState, createInitialGameState } from '../game/rules';
+import { GameState } from '../game/rules';
+import { normalizeSave } from '../game/normalizeSave';
 import { assetUrl } from './assetUrl';
 import { VoiceCharacter, VoiceEvent, VoiceProfile, pickVoiceLine, voiceFileUrl } from '../game/voiceLines';
 
@@ -417,23 +418,7 @@ export function loadSavedGameState(): GameState | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
-    const parsed = JSON.parse(raw) as GameState;
-    if (parsed && Array.isArray(parsed.board) && parsed.board.length === 49) {
-      // Saves from older builds lack newer fields (rngSeed, generatorLevels, dailyQuests...): fill them from a fresh state.
-      const defaults = createInitialGameState();
-      return {
-        ...defaults,
-        ...parsed,
-        generatorLevels: { ...defaults.generatorLevels, ...parsed.generatorLevels },
-        lastMergeAt: parsed.lastMergeAt ?? 0,
-        comboCount: parsed.comboCount ?? 0,
-        loginStreak: parsed.loginStreak ?? 0,
-        lastLoginDay: parsed.lastLoginDay ?? '',
-        tutorialDismissed: parsed.tutorialDismissed ?? parsed.totalMerges > 0,
-        pourTokens: parsed.pourTokens ?? 0,
-      };
-    }
-    return null;
+    return normalizeSave(JSON.parse(raw));
   } catch {
     return null;
   }

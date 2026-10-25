@@ -383,11 +383,11 @@ function STORY_CHAPTERS_PLACEHOLDER(): AreaDef['chapter'] {
 
 export const AREA_COUNT_BEFORE_PRESTIGE = AREAS.length;
 
-export function areaInfo(areaIndex: number): { nameAr: string; nameEn: string; region: MajlisRegion; lap: number } {
+export function areaInfo(areaIndex: number): { id: string; nameAr: string; nameEn: string; region: MajlisRegion; lap: number } {
   const def = AREAS[areaIndex % AREAS.length];
   const lap = Math.floor(areaIndex / AREAS.length);
   const suffix = lap > 0 ? ` ✦${lap + 1}` : '';
-  return { nameAr: def.nameAr + suffix, nameEn: def.nameEn + suffix, region: def.region, lap };
+  return { id: def.id, nameAr: def.nameAr + suffix, nameEn: def.nameEn + suffix, region: def.region, lap };
 }
 
 /** The renovation wings for an area. Costs rise with every area so later areas take longer. */
@@ -708,13 +708,13 @@ export function discoveryReward(itemId: string): { coins: number; gems: number }
 }
 
 export function unclaimedDiscoveries(state: GameState): string[] {
-  const claimed = new Set(state.claimedDiscoveryIds ?? []);
+  const claimed = new Set(state.claimedDiscoveryIds);
   return state.discoveredItemIds.filter((id) => !claimed.has(id) && discoveryReward(id) !== null);
 }
 
 export function claimDiscovery(state: GameState, itemId: string): { state: GameState; claimed: boolean } {
   const reward = discoveryReward(itemId);
-  if (!reward || !state.discoveredItemIds.includes(itemId) || (state.claimedDiscoveryIds ?? []).includes(itemId)) {
+  if (!reward || !state.discoveredItemIds.includes(itemId) || state.claimedDiscoveryIds.includes(itemId)) {
     return { state, claimed: false };
   }
   return {
@@ -722,7 +722,7 @@ export function claimDiscovery(state: GameState, itemId: string): { state: GameS
       ...state,
       coins: state.coins + reward.coins,
       diamonds: state.diamonds + reward.gems,
-      claimedDiscoveryIds: [...(state.claimedDiscoveryIds ?? []), itemId],
+      claimedDiscoveryIds: [...state.claimedDiscoveryIds, itemId],
     },
     claimed: true,
   };

@@ -95,6 +95,9 @@ The engine lives in `src/game/progression.ts` (pure, seeded RNG in `state.rngSee
 9. **Collection book:** the first time an item appears it can be claimed in the Chains guide for 10 SAR × level, plus gems from Lv.3 (`discoveryReward`). Badges on the Chains button and chain tabs show unclaimed finds; starting items and generators pay nothing.
 10. **Installable and offline (PWA):** `public/manifest.webmanifest`, icons in `public/icons/` (rendered from the Blender dallah) and `public/sw.js` (network-first pages, cache-first assets). The build uses a relative base, so the same `dist/` runs from a domain root, a subpath such as GitHub Pages, or a Capacitor shell; files in `public/` are referenced through `assetUrl()`.
 11. **Hosting:** `.github/workflows/deploy-pages.yml` tests, builds and publishes `dist/` to the `gh-pages` branch on every push to `main`. One-time setup: repository Settings → Pages → Source "Deploy from a branch" → `gh-pages` / root. The game is then at `https://<owner>.github.io/<repo>/`.
+12. **Rotating festivals (`src/game/events.ts`):** a new three-day festival every three local days (Khawlani Coffee Festival ☕, Date Harvest 🌴, Lantern Nights 🏮, Specialty Coffee Week 🫖). Merges earn the result level in points (double for the featured chain) and every order +10. An eight-step milestone track (30 → 1000 points) pays coins, energy, gems, scissors and jokers. The bar under the HUD shows progress, claimable rewards and the time left; progress resets with each new festival.
+13. **Save transfer:** HUD menu → Transfer progress shows a gzip-compressed code (`QM1.…`, about 4–5k characters) to copy or share, and loads a pasted code after a confirmation (`src/utils/saveTransfer.ts`). This moves progress between phones without an account until a real cloud save exists.
+14. **Small phones:** the HUD shrinks and abbreviates large numbers below 360 px, and board toolbar labels collapse to icons, so nothing scrolls sideways at 320 px.
 
 ---
 

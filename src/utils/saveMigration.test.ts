@@ -31,3 +31,30 @@ test('saves from before the endless economy load with every new field filled in'
   assert.ok(Number.isFinite(seed));
   assert.ok(order.requiredItemIds.length > 0);
 });
+
+test('old saves do not get retroactive collection rewards for items found before the update', async () => {
+  const { createInitialGameState } = await import('../game/rules');
+  const { normalizeSave } = await import('../game/normalizeSave');
+  const { unclaimedDiscoveries } = await import('../game/progression');
+  const legacy: Record<string, unknown> = { ...createInitialGameState() };
+  legacy.discoveredItemIds = [...(legacy.discoveredItemIds as string[]), 'qahwa_4', 'oud_5'];
+  delete legacy.claimedDiscoveryIds;
+  const loaded = normalizeSave(legacy);
+  assert.ok(loaded);
+  assert.deepEqual(unclaimedDiscoveries(loaded), []);
+  const later = { ...loaded, discoveredItemIds: [...loaded.discoveredItemIds, 'qahwa_5'] };
+  assert.deepEqual(unclaimedDiscoveries(later), ['qahwa_5'], 'finds after the update still pay');
+});
+
+test('transfer codes from older builds get the same normalisation as local saves', async () => {
+  const { createInitialGameState } = await import('../game/rules');
+  const { exportSaveCode, importSaveCode } = await import('./saveTransfer');
+  const legacy: Record<string, unknown> = { ...createInitialGameState(), generatorLevels: { qahwa: 3 } };
+  delete legacy.tutorialDismissed;
+  legacy.totalMerges = 12;
+  const back = await importSaveCode(await exportSaveCode(legacy as never));
+  assert.ok(back);
+  assert.equal(back.generatorLevels.qahwa, 3);
+  assert.equal(back.generatorLevels.oud, 1, 'missing generator levels are filled in');
+  assert.equal(back.tutorialDismissed, true);
+});
