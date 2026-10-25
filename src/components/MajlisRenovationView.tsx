@@ -184,21 +184,8 @@ export const MajlisRenovationView: React.FC<MajlisRenovationViewProps> = ({
               </g>
             )}
 
-            {/* Regional Silhouette Horizon (AlUla Monoliths or Jeddah Coral Towers) */}
-            {activeRegion === 'alula' && (
-              <path
-                d="M0,240 L60,110 L130,110 L165,240 L610,240 L645,95 L735,95 L780,240 Z"
-                fill="#7C2D12"
-                opacity="0.45"
-              />
-            )}
-            {activeRegion === 'jeddah' && (
-              <g opacity="0.35">
-                <rect x="260" y="45" width="75" height="195" fill="#451A03" />
-                <rect x="270" y="65" width="55" height="35" fill="#92400E" />
-                <rect x="270" y="115" width="55" height="35" fill="#92400E" />
-              </g>
-            )}
+            {/* Landmark horizon for the current area, so every stop on the trail is recognisable */}
+            <AreaSkyline areaId={area.id} />
 
             {/* Courtyard Floor */}
             <polygon points="0,240 800,240 800,320 0,320" fill="#3B281E" />
@@ -481,4 +468,119 @@ export const MajlisRenovationView: React.FC<MajlisRenovationViewProps> = ({
       </div>
     </div>
   );
+};
+
+/** Silhouette layer behind the courtyard (viewBox 800×320, horizon at y=240), one per area on the Kingdom trail. */
+const AreaSkyline: React.FC<{ areaId: string }> = ({ areaId }) => {
+  switch (areaId) {
+    case 'jeddah':
+      // Coral-stone tower houses with wooden rawasheen
+      return (
+        <g opacity="0.35">
+          <rect x="260" y="45" width="75" height="195" fill="#451A03" />
+          <rect x="270" y="65" width="55" height="35" fill="#92400E" />
+          <rect x="270" y="115" width="55" height="35" fill="#92400E" />
+          <rect x="345" y="85" width="55" height="155" fill="#451A03" />
+          <rect x="352" y="100" width="40" height="28" fill="#92400E" />
+        </g>
+      );
+    case 'alula':
+      // Rose-red sandstone monoliths (Jabal AlFil on the right)
+      return (
+        <g>
+          <path d="M0,240 L60,110 L130,110 L165,240 L610,240 L645,95 L735,95 L780,240 Z" fill="#7C2D12" opacity="0.45" />
+          <path d="M655,150 Q640,190 650,240 L662,240 Q655,195 670,160 Z" fill="#451A03" opacity="0.5" />
+        </g>
+      );
+    case 'taif':
+      // Green terraced hills dotted with Taif roses
+      return (
+        <g>
+          <path d="M0,240 Q120,150 260,200 T520,175 T800,190 L800,240 Z" fill="#365314" opacity="0.55" />
+          <path d="M0,240 Q160,195 330,222 T800,215 L800,240 Z" fill="#4D7C0F" opacity="0.6" />
+          {[60, 140, 215, 300, 390, 470, 560, 650, 735].map((x, i) => (
+            <circle key={x} cx={x} cy={225 - (i % 3) * 6} r="5" fill="#F472B6" opacity="0.85" />
+          ))}
+        </g>
+      );
+    case 'abha':
+      // Asir mountains, colourful stone houses and the cable car
+      return (
+        <g>
+          <path d="M0,240 L110,90 L210,170 L330,60 L470,180 L590,85 L800,200 L800,240 Z" fill="#44403C" opacity="0.55" />
+          <line x1="330" y1="60" x2="590" y2="85" stroke="#E7E5E4" strokeWidth="1.5" opacity="0.6" />
+          <rect x="448" y="70" width="16" height="12" rx="2" fill="#DC2626" opacity="0.8" />
+          {[
+            { x: 40, h: 46, c: '#DC2626' },
+            { x: 70, h: 60, c: '#2563EB' },
+            { x: 600, h: 54, c: '#EAB308' },
+            { x: 632, h: 40, c: '#16A34A' },
+          ].map((b) => (
+            <g key={b.x} opacity="0.75">
+              <rect x={b.x} y={240 - b.h} width="28" height={b.h} fill="#78716C" />
+              <rect x={b.x} y={240 - b.h} width="28" height="7" fill={b.c} />
+              <rect x={b.x + 9} y={240 - b.h + 16} width="10" height="12" fill={b.c} />
+            </g>
+          ))}
+        </g>
+      );
+    case 'ahsa':
+      // Date-palm oasis with Jabal Al-Qarah behind
+      return (
+        <g>
+          <path d="M80,240 Q120,150 200,160 Q260,140 300,240 Z" fill="#78350F" opacity="0.4" />
+          {[330, 400, 470, 540, 610, 690, 760].map((x, i) => {
+            const top = 150 + (i % 2) * 18;
+            return (
+              <g key={x} opacity="0.6">
+                <path d={`M${x},240 Q${x + 4},${top + 40} ${x + 2},${top}`} stroke="#3F2A14" strokeWidth="5" fill="none" />
+                <path d={`M${x + 2},${top} q-26,4 -40,22 M${x + 2},${top} q26,4 40,22 M${x + 2},${top} q-18,-14 -34,-12 M${x + 2},${top} q18,-14 34,-12`} stroke="#166534" strokeWidth="6" fill="none" strokeLinecap="round" />
+              </g>
+            );
+          })}
+        </g>
+      );
+    case 'riyadh':
+      // Kingdom Centre (bottle-opener arch) and Al Faisaliah (pyramid with globe)
+      return (
+        <g opacity="0.45">
+          <path d="M300,240 L318,50 L346,50 L364,240 Z M322,95 Q332,70 342,95 L340,120 L324,120 Z" fill="#1E293B" fillRule="evenodd" />
+          <path d="M470,240 L500,80 L530,240 Z" fill="#1E293B" />
+          <circle cx="500" cy="112" r="10" fill="#FBBF24" opacity="0.9" />
+          <rect x="390" y="160" width="40" height="80" fill="#334155" />
+          <rect x="560" y="180" width="50" height="60" fill="#334155" />
+          <rect x="230" y="190" width="45" height="50" fill="#334155" />
+        </g>
+      );
+    case 'khobar':
+      // Arabian Gulf corniche: the water tower and a dhow on the sea
+      return (
+        <g>
+          <rect x="0" y="205" width="800" height="35" fill="#0E7490" opacity="0.45" />
+          <path d="M0,215 q20,-6 40,0 t40,0 t40,0 t40,0 t40,0 t40,0 t40,0 t40,0 t40,0 t40,0 t40,0 t40,0 t40,0 t40,0 t40,0 t40,0 t40,0 t40,0 t40,0 t40,0" stroke="#A5F3FC" strokeWidth="1.5" fill="none" opacity="0.5" />
+          <g opacity="0.55">
+            <rect x="606" y="120" width="10" height="90" fill="#E2E8F0" />
+            <ellipse cx="611" cy="112" rx="34" ry="16" fill="#E2E8F0" />
+            <rect x="590" y="96" width="42" height="6" rx="3" fill="#F8FAFC" />
+          </g>
+          <g opacity="0.6">
+            <path d="M120,212 L210,212 L196,226 L134,226 Z" fill="#78350F" />
+            <path d="M165,212 L165,160 L200,205 Z" fill="#FEF3C7" />
+          </g>
+        </g>
+      );
+    default:
+      // Diriyah: At-Turaif mud-brick towers on the ridge
+      return (
+        <g opacity="0.35">
+          <path d="M0,240 L0,200 Q200,175 400,195 T800,190 L800,240 Z" fill="#78350F" />
+          {[480, 540, 610, 690].map((x, i) => (
+            <g key={x}>
+              <rect x={x} y={150 + (i % 2) * 15} width="34" height={90 - (i % 2) * 15} fill="#92400E" />
+              <polygon points={`${x},${150 + (i % 2) * 15} ${x + 8},${140 + (i % 2) * 15} ${x + 17},${150 + (i % 2) * 15} ${x + 26},${140 + (i % 2) * 15} ${x + 34},${150 + (i % 2) * 15}`} fill="#FBF7F0" />
+            </g>
+          ))}
+        </g>
+      );
+  }
 };

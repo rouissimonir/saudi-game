@@ -383,11 +383,11 @@ function STORY_CHAPTERS_PLACEHOLDER(): AreaDef['chapter'] {
 
 export const AREA_COUNT_BEFORE_PRESTIGE = AREAS.length;
 
-export function areaInfo(areaIndex: number): { nameAr: string; nameEn: string; region: MajlisRegion; lap: number } {
+export function areaInfo(areaIndex: number): { id: string; nameAr: string; nameEn: string; region: MajlisRegion; lap: number } {
   const def = AREAS[areaIndex % AREAS.length];
   const lap = Math.floor(areaIndex / AREAS.length);
   const suffix = lap > 0 ? ` ✦${lap + 1}` : '';
-  return { nameAr: def.nameAr + suffix, nameEn: def.nameEn + suffix, region: def.region, lap };
+  return { id: def.id, nameAr: def.nameAr + suffix, nameEn: def.nameEn + suffix, region: def.region, lap };
 }
 
 /** The renovation wings for an area. Costs rise with every area so later areas take longer. */
