@@ -43,10 +43,18 @@ import {
   spinLuckyWheel,
   voteMazayenEntry,
   ChainCategory,
-  MajlisRegion,
   MajlisAmbiance,
   WheelWedge,
   buildMergeParticleBurst,
+  claimDailyLoginReward,
+  completePour,
+  dayKeyFromDate,
+  getActiveSeason,
+  getDailyLoginDay,
+  getTutorialStep,
+  COMBO_WINDOW_MS,
+  type LevelUpReward,
+  type ChainId,
   MergeParticleBurst,
 } from './game/rules';
 import {
@@ -55,7 +63,6 @@ import {
   loadSavedGameState,
   clearSavedGameState,
 } from './utils/soundAndHaptics';
-import { ItemArtwork } from './components/ItemArtwork';
 import { MajlisRenovationView } from './components/MajlisRenovationView';
 import { StoryDialogueModal } from './components/StoryDialogueModal';
 import { ShopAndMadaModal } from './components/ShopAndMadaModal';
@@ -65,6 +72,31 @@ import {
   LeaderboardModal,
 } from './components/CompetitorModalsAndPortraits';
 import { MergeParticleOverlay } from './components/MergeParticleOverlay';
+import { EnergyModal, QuestsModal, WorkshopModal } from './components/ProgressionModals';
+import { BottomNav, GameHud, NavTab } from './components/GameChrome';
+import { DailyLoginModal } from './components/DailyLoginModal';
+import { FinjanPourModal } from './components/FinjanPourModal';
+import { ItemArtwork, preloadItemArt } from './components/ItemArtwork';
+import {
+  advanceArea,
+  applyEnergyRegen,
+  areaInfo,
+  buyEnergyWithCoins,
+  buyEnergyWithGems,
+  buySandTile,
+  claimQuest,
+  claimQuestBonus,
+  ensureDailyQuests,
+  findStoryChapter,
+  isAreaComplete,
+  msUntilNextEnergy,
+  questProgress,
+  sandClearCost,
+  styleChangeCost,
+  upgradeGenerator,
+  xpToReachLevel,
+} from './game/progression';
+import { isVoiceCharacter, speakerCharacter } from './game/voiceLines';
 
 type ShellState = 'title' | 'playing' | 'paused' | 'gameover';
 type ActiveWorkspace = 'merge' | 'majlis';
@@ -108,7 +140,9 @@ export default function App() {
   const [workspace, setWorkspace] = useState<ActiveWorkspace>('merge');
   const [muted, setMuted] = useState<boolean>(false);
   const [hintPair, setHintPair] = useState<[number, number] | null>(null);
-  const [dragFromIndex, setDragFromIndex] = useState<number | null>(null);
+  const [dragGhost, setDragGhost] = useState<{ itemId: string; x: number; y: number; from: number; over: number | null } | null>(null);
+  const dropRef = useRef<((from: number, to: number) => void) | null>(null);
+  const suppressClickRef = useRef(false);
   const [feedbackBanner, setFeedbackBanner] = useState<string | null>(null);
 
   const [shopModalOpen, setShopModalOpen] = useState<boolean>(false);
@@ -120,6 +154,18 @@ export default function App() {
   const [leaderboardSection, setLeaderboardSection] = useState<'leaderboard' | 'mazayen' | 'wheel'>('leaderboard');
 
   const bannerTimeoutRef = useRef<number | null>(null);
+  const [now, setNow] = useState<number>(() => Date.now());
+  const [energyOpen, setEnergyOpen] = useState(false);
+  const [questsOpen, setQuestsOpen] = useState(false);
+  const [workshopOpen, setWorkshopOpen] = useState(false);
+  const [sandPromptIndex, setSandPromptIndex] = useState<number | null>(null);
+  const [dailyLoginDay, setDailyLoginDay] = useState<number | null>(null);
+  const [levelUpToast, setLevelUpToast] = useState<LevelUpReward | null>(null);
+  const [comboLive, setComboLive] = useState(false);
+  const comboTimeoutRef = useRef<number | null>(null);
+  const [pourOpen, setPourOpen] = useState(false);
+  const activeSeason = React.useMemo(() => getActiveSeason(new Date()), []);
+  const dayKey = dayKeyFromDate(new Date(now));
   const burstSeqRef = useRef<number>(1);
   const [mergeBursts, setMergeBursts] = useState<MergeParticleBurst[]>([]);
   const [celebratingCells, setCelebratingCells] = useState<Record<number, boolean>>({});
@@ -153,6 +199,18 @@ export default function App() {
     []
   );
 
+  // Level-up toast and fanfare, plus the live combo meter, after any merge
+  const handleMergeExtras = (res: { levelUp?: LevelUpReward; comboCount?: number }) => {
+    if (res.levelUp) {
+      setLevelUpToast(res.levelUp);
+      soundFX.playLevelUp();
+      window.setTimeout(() => setLevelUpToast(null), 3200);
+    }
+    setComboLive(true);
+    if (comboTimeoutRef.current) window.clearTimeout(comboTimeoutRef.current);
+    comboTimeoutRef.current = window.setTimeout(() => setComboLive(false), COMBO_WINDOW_MS);
+  };
+
   const showFeedback = useCallback((msg: string) => {
     setFeedbackBanner(msg);
     if (bannerTimeoutRef.current) {
@@ -178,16 +236,36 @@ export default function App() {
     saveGameState(gameState);
   }, [gameState]);
 
-  // Passive Energy Regeneration (+1 energy every 15 seconds while below maxEnergy)
+  // Energy regenerates from timestamps (also while the app was closed); quests roll over at midnight
+  useEffect(() => {
+    const tick = () => {
+      const t = Date.now();
+      setNow(t);
+      setGameState((prev) => {
+        const regen = applyEnergyRegen(prev, t);
+        return ensureDailyQuests(regen, dayKeyFromDate(new Date(t)));
+      });
+    };
+    tick();
+    const timer = window.setInterval(tick, 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  // Background music while playing, warm the item-art cache once
+  useEffect(() => {
+    if (shellState === 'playing' && !muted) soundFX.startAmbient();
+    else soundFX.stopAmbient();
+    return () => soundFX.stopAmbient();
+  }, [shellState, muted]);
+  useEffect(() => {
+    preloadItemArt();
+  }, []);
+
+  // Offer the daily login reward once per calendar day when play begins
   useEffect(() => {
     if (shellState !== 'playing') return;
-    const timer = window.setInterval(() => {
-      setGameState((prev) => {
-        if (prev.energy >= prev.maxEnergy) return prev;
-        return { ...prev, energy: prev.energy + 1 };
-      });
-    }, 15000);
-    return () => window.clearInterval(timer);
+    setDailyLoginDay(getDailyLoginDay(gameState, dayKeyFromDate(new Date())));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shellState]);
 
   const handleStartGame = useCallback(() => {
@@ -294,8 +372,7 @@ export default function App() {
             ? 'نفدت الطاقة! افتح عجلة فنجال الصباح أو متجر الديوان لشحن الطاقة.'
             : 'Out of Energy! Spin the Morning Wheel or open Diwan Store for a refill.'
         );
-        setShopInitialTab('shop');
-        setShopModalOpen(true);
+        setEnergyOpen(true);
       } else if (res.reason === 'BOARD_FULL') {
         soundFX.playError();
         showFeedback(
@@ -313,6 +390,7 @@ export default function App() {
         soundFX.triggerHaptic('light');
         setGameState((prev) => ({ ...prev, selectedCellIndex: index }));
       } else if (clickedCell.sandLocked && clickedCell.itemId) {
+        setSandPromptIndex(index);
         const lockedDef = ITEM_CATALOG[clickedCell.itemId];
         showFeedback(
           isAr
@@ -348,6 +426,7 @@ export default function App() {
         megaMerge: moveRes.megaMerge,
         comboCount: moveRes.comboCount,
       });
+      handleMergeExtras(moveRes);
       setGameState(moveRes.state);
       showFeedback(
         isAr
@@ -364,20 +443,10 @@ export default function App() {
     }
   };
 
-  // HTML5 Drag-and-Drop Handlers
-  const handleDragStart = (index: number) => {
-    const cell = gameState.board[index];
-    if (!cell || !cell.itemId || cell.sandLocked) return;
-    setDragFromIndex(index);
-    setGameState((prev) => ({ ...prev, selectedCellIndex: index }));
-  };
-
-  const handleDropOnCell = (targetIndex: number) => {
-    if (dragFromIndex === null || dragFromIndex === targetIndex) {
-      setDragFromIndex(null);
-      return;
-    }
-    const moveRes = mergeOrMoveCells(gameState, dragFromIndex, targetIndex);
+  // Pointer drag (works for touch, pen and mouse; HTML5 drag-and-drop never fires on phones)
+  const handleDropOnCell = (fromIndex: number, targetIndex: number) => {
+    if (fromIndex === targetIndex) return;
+    const moveRes = mergeOrMoveCells(gameState, fromIndex, targetIndex);
     if (moveRes.action === 'MERGED' && moveRes.mergedItemId) {
       const mergedDef = ITEM_CATALOG[moveRes.mergedItemId];
       soundFX.playMerge(mergedDef?.level || 2);
@@ -385,6 +454,7 @@ export default function App() {
         megaMerge: moveRes.megaMerge,
         comboCount: moveRes.comboCount,
       });
+      handleMergeExtras(moveRes);
       setGameState(moveRes.state);
       showFeedback(
         isAr
@@ -395,7 +465,39 @@ export default function App() {
       soundFX.triggerHaptic('light');
       setGameState(moveRes.state);
     }
-    setDragFromIndex(null);
+  };
+  dropRef.current = handleDropOnCell;
+
+  const handleCellPointerDown = (e: React.PointerEvent<HTMLButtonElement>, index: number) => {
+    const cell = gameState.board[index];
+    if (!cell?.itemId || cell.sandLocked || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const itemId = cell.itemId;
+    let started = false;
+    const cellAt = (x: number, y: number): number | null => {
+      const el = document.elementFromPoint(x, y)?.closest('[data-cell-index]');
+      return el ? Number((el as HTMLElement).dataset.cellIndex) : null;
+    };
+    const move = (ev: PointerEvent) => {
+      if (!started && Math.hypot(ev.clientX - startX, ev.clientY - startY) < 8) return;
+      started = true;
+      setDragGhost({ itemId, x: ev.clientX, y: ev.clientY, from: index, over: cellAt(ev.clientX, ev.clientY) });
+    };
+    const end = (ev: PointerEvent) => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', end);
+      window.removeEventListener('pointercancel', end);
+      setDragGhost(null);
+      if (!started || ev.type === 'pointercancel') return;
+      suppressClickRef.current = true;
+      window.setTimeout(() => (suppressClickRef.current = false), 0);
+      const target = cellAt(ev.clientX, ev.clientY);
+      if (target !== null) dropRef.current?.(index, target);
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', end);
+    window.addEventListener('pointercancel', end);
   };
 
   // Auto-Merge / Smart Hint Action
@@ -420,6 +522,7 @@ export default function App() {
         megaMerge: res.megaMerge,
         comboCount: res.comboCount,
       });
+      handleMergeExtras(res);
       setGameState(res.state);
       showFeedback(
         isAr
@@ -586,9 +689,13 @@ export default function App() {
 
   // Fulfill Customer Order
   const handleFulfillOrder = (orderId: string) => {
-    const res = fulfillCustomerOrder(gameState, orderId);
+    const servedOrder = gameState.activeOrders.find((o) => o.id === orderId);
+    const res = fulfillCustomerOrder(gameState, orderId, activeSeason);
     if (res.fulfilled) {
       soundFX.playOrderComplete();
+      if (servedOrder && isVoiceCharacter(servedOrder.customerId)) {
+        soundFX.playVoice(servedOrder.customerId, servedOrder.isVip ? 'vip' : 'served');
+      }
       setGameState(res.state);
       showFeedback(
         res.spawnedChest
@@ -648,16 +755,17 @@ export default function App() {
           : 'Majlis Wing Upgraded! Café prestige and order bonuses increased.'
       );
 
-      const allMaxed = res.state.renovationZones.every((z) => z.unlockedLevel >= 2);
-      if (allMaxed && !res.triggeredStoryId) {
-        setShellState('gameover');
+      if (isAreaComplete(res.state)) {
+        showFeedback(
+          isAr ? 'اكتمل ترميم المنطقة! انطلق إلى المنطقة التالية من شاشة المجلس.' : 'Area restored! Travel to the next area from the Majlis screen.'
+        );
       }
     }
   };
 
   // Claim Story Chapter Reward
   const handleClaimStoryChapter = (chapterId: string) => {
-    const chap = STORY_CHAPTERS.find((c) => c.id === chapterId);
+    const chap = findStoryChapter(chapterId);
     soundFX.playOrderComplete();
     setGameState((prev) => {
       const alreadyClaimed = prev.completedStoryIds.includes(chapterId);
@@ -709,13 +817,96 @@ export default function App() {
     }));
   };
 
+  const handleBuyEnergy = (kind: 'gems' | 'coins') => {
+    const r = kind === 'gems' ? buyEnergyWithGems(gameState) : buyEnergyWithCoins(gameState, dayKey);
+    if (!r.bought) {
+      soundFX.playError();
+      return;
+    }
+    soundFX.playOrderComplete();
+    setGameState(r.state);
+  };
+  const handleClaimQuest = (questId: string) => {
+    const r = claimQuest(gameState, questId);
+    if (r.claimed) {
+      soundFX.playOrderComplete();
+      setGameState(r.state);
+    }
+  };
+  const handleClaimQuestBonus = () => {
+    const r = claimQuestBonus(gameState);
+    if (r.claimed) {
+      soundFX.playLevelUp();
+      setGameState(r.state);
+    }
+  };
+  const handleUpgradeGenerator = (chain: ChainId) => {
+    const r = upgradeGenerator(gameState, chain);
+    if (!r.upgraded) {
+      soundFX.playError();
+      return;
+    }
+    soundFX.playMerge(4);
+    setGameState(r.state);
+  };
+  const handleBuySand = () => {
+    if (sandPromptIndex === null) return;
+    const r = buySandTile(gameState, sandPromptIndex);
+    setSandPromptIndex(null);
+    if (!r.bought) {
+      soundFX.playError();
+      return;
+    }
+    soundFX.playMerge(2);
+    setGameState(r.state);
+  };
+  const handleAdvanceArea = () => {
+    const r = advanceArea(gameState);
+    if (!r.advanced) return;
+    soundFX.playLevelUp();
+    setGameState(r.state);
+    const info = areaInfo(r.state.areaIndex);
+    showFeedback(isAr ? `مرحباً بك في ${info.nameAr}!` : `Welcome to ${info.nameEn}!`);
+  };
+  const handleClaimDailyLogin = () => {
+    const res = claimDailyLoginReward(gameState, dayKeyFromDate(new Date()));
+    setDailyLoginDay(null);
+    if (!res.claimed) return;
+    soundFX.playOrderComplete();
+    setGameState(res.state);
+    showFeedback(isAr ? `استلمت هدية اليوم ${res.day}!` : `Claimed Day ${res.day} reward!`);
+  };
+  const handleFinishPour = (fillPercent: number) => {
+    const res = completePour(gameState, fillPercent);
+    if (!res.poured) return;
+    soundFX.playOrderComplete();
+    setGameState(res.state);
+  };
+  const claimableQuests = questProgress(gameState).filter((r) => r.done && !r.claimed).length;
+  const energyCountdown = msUntilNextEnergy(gameState, now);
+  const levelFloor = xpToReachLevel(gameState.level);
+  const levelProgress = Math.min(1, Math.max(0, (gameState.xp - levelFloor) / (xpToReachLevel(gameState.level + 1) - levelFloor)));
+  const canRenovate =
+    isAreaComplete(gameState) ||
+    gameState.renovationZones.some(
+      (z) => z.unlockedLevel < 2 && gameState.stars >= (z.unlockedLevel === 0 ? z.starCostLevel1 : z.starCostLevel2)
+    );
+
   const selectedCell =
     gameState.selectedCellIndex !== null ? gameState.board[gameState.selectedCellIndex] : null;
   const selectedItemDef =
     selectedCell && selectedCell.itemId ? ITEM_CATALOG[selectedCell.itemId] : null;
 
-  const activeStoryChapter =
-    STORY_CHAPTERS.find((c) => c.id === gameState.activeStoryId) || null;
+  const activeStoryChapter = findStoryChapter(gameState.activeStoryId);
+
+  // The speaker greets the player when a story chapter opens
+  const storyChapterId = activeStoryChapter ? activeStoryChapter.id : null;
+  const storySpeaker = activeStoryChapter ? speakerCharacter(activeStoryChapter.speakerEn) : null;
+  useEffect(() => {
+    if (shellState === 'playing' && storyChapterId && storySpeaker) soundFX.playVoice(storySpeaker, 'greet');
+  }, [storyChapterId, storySpeaker, shellState]);
+
+  const tutorialStep = getTutorialStep(gameState);
 
   // ============================================================================
   // 1. TITLE SCREEN ('title')
@@ -835,237 +1026,129 @@ export default function App() {
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-b from-[#EDE0C8] via-[#F7F0E4] to-[#E5D3B3] text-[#2C1E14] flex flex-col justify-between select-none">
-      {/* Top Sadu Geometric Trim */}
-      <div className="h-1.5 w-full sadu-trim shrink-0" />
-
-      {/* 1. TOP GLOSSY 3D RESOURCE PILL BAR (Gossip Harbor / Travel Town Style) */}
-      <header className="w-full bg-gradient-to-b from-[#5C3A21] to-[#432815] border-b-4 border-[#C68B59] px-2.5 sm:px-5 py-2 shadow-md shrink-0">
-        <div className="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-2">
-          {/* Left: 3D Royal Level Shield + Prestige */}
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-b from-[#38BDF8] to-[#0284C7] border-2 border-[#FDE68A] shadow-[0_3px_0_#0369A1] flex flex-col items-center justify-center text-white leading-none">
-              <span className="text-[8px] font-bold uppercase opacity-90">LV</span>
-              <span className="text-sm font-black tabular-nums">{gameState.level}</span>
-            </div>
-            <div className="hidden sm:block">
-              <div className="text-xs font-extrabold text-[#FFFDF9] leading-tight">
-                {isAr ? 'قهوة ومجلس الدرعية' : 'Qahwa & Majlis'}
-              </div>
-              <div className="text-[10px] font-bold text-[#FDE68A] tabular-nums">
-                {isAr
-                  ? `الهيبة ${gameState.prestigePoints} · الطلبات ${gameState.ordersCompleted}`
-                  : `Prestige ${gameState.prestigePoints} · Orders ${gameState.ordersCompleted}`}
-              </div>
-            </div>
-          </div>
-
-          {/* Center: 4 Glossy Cream Resource Pills with Green (+) Buttons */}
-          <div className="flex items-center gap-1.5 sm:gap-2.5 overflow-x-auto py-0.5">
-            {/* Energy Pill */}
-            <button
-              type="button"
-              onClick={() => {
-                setShopInitialTab('shop');
-                setShopModalOpen(true);
-              }}
-              aria-label={isAr ? 'شحن الطاقة' : 'Refill Energy'}
-              className="hud-pill rounded-full pl-2 pr-1.5 py-1 flex items-center gap-1.5 cursor-pointer hover:scale-[1.02] transition-transform"
-            >
-              <div className="w-6 h-6 rounded-full bg-gradient-to-b from-[#FDE047] to-[#F59E0B] border border-[#B45309] flex items-center justify-center shadow-sm shrink-0">
-                <Zap className="w-3.5 h-3.5 text-[#78350F] fill-[#78350F]" />
-              </div>
-              <span className="text-xs sm:text-sm font-black tabular-nums text-[#3E2723] px-0.5">
-                {Math.round(gameState.energy)}
-              </span>
-              <span className="w-5 h-5 rounded-full btn-3d-green text-white flex items-center justify-center shrink-0">
-                <Plus className="w-3 h-3 stroke-[3]" />
-              </span>
-            </button>
-
-            {/* Gold Riyals (SAR Coins) Pill */}
-            <button
-              type="button"
-              onClick={() => {
-                setShopInitialTab('shop');
-                setShopModalOpen(true);
-              }}
-              aria-label={isAr ? 'رصيد الريالات الذهبية' : 'Gold Riyals Balance'}
-              className="hud-pill rounded-full pl-2 pr-1.5 py-1 flex items-center gap-1.5 cursor-pointer hover:scale-[1.02] transition-transform"
-            >
-              <div className="w-6 h-6 rounded-full bg-gradient-to-b from-[#FBBF24] to-[#D97706] border border-[#92400E] flex items-center justify-center shadow-sm shrink-0">
-                <Coins className="w-3.5 h-3.5 text-[#FFFBEB]" />
-              </div>
-              <span className="text-xs sm:text-sm font-black tabular-nums text-[#3E2723] px-0.5">
-                {Math.round(gameState.coins)}
-              </span>
-              <span className="w-5 h-5 rounded-full btn-3d-green text-white flex items-center justify-center shrink-0">
-                <Plus className="w-3 h-3 stroke-[3]" />
-              </span>
-            </button>
-
-            {/* Royal Gems Pill */}
-            <button
-              type="button"
-              onClick={() => {
-                setShopInitialTab('shop');
-                setShopModalOpen(true);
-              }}
-              aria-label={isAr ? 'رصيد الجواهر' : 'Royal Gems Balance'}
-              className="hud-pill rounded-full pl-2 pr-1.5 py-1 flex items-center gap-1.5 cursor-pointer hover:scale-[1.02] transition-transform"
-            >
-              <div className="w-6 h-6 rounded-full bg-gradient-to-b from-[#38BDF8] to-[#0284C7] border border-[#0369A1] flex items-center justify-center shadow-sm shrink-0">
-                <Gem className="w-3.5 h-3.5 text-white" />
-              </div>
-              <span className="text-xs sm:text-sm font-black tabular-nums text-[#3E2723] px-0.5">
-                {Math.round(gameState.diamonds)}
-              </span>
-              <span className="w-5 h-5 rounded-full btn-3d-green text-white flex items-center justify-center shrink-0">
-                <Plus className="w-3 h-3 stroke-[3]" />
-              </span>
-            </button>
-
-            {/* Renovation Stars Pill */}
-            <button
-              type="button"
-              onClick={() => setWorkspace('majlis')}
-              aria-label={isAr ? 'نجوم إعمار المجلس' : 'Majlis Renovation Stars'}
-              className="hud-pill rounded-full px-2.5 py-1 flex items-center gap-1.5 cursor-pointer hover:scale-[1.02] transition-transform"
-            >
-              <div className="w-6 h-6 rounded-full bg-gradient-to-b from-[#FB923C] to-[#EA580C] border border-[#9A3412] flex items-center justify-center shadow-sm shrink-0">
-                <Star className="w-3.5 h-3.5 text-white fill-white" />
-              </div>
-              <span className="text-xs sm:text-sm font-black tabular-nums text-[#3E2723]">
-                {Math.round(gameState.stars)}
-              </span>
-            </button>
-          </div>
-
-          {/* Right: Compact Glossy Utility Buttons */}
-          <div className="flex items-center gap-1.5">
-            <button
-              type="button"
-              onClick={() => {
-                setLeaderboardSection('wheel');
-                setLeaderboardOpen(true);
-              }}
-              className="relative px-2.5 py-1.5 rounded-xl btn-3d-amber text-[#3E2723] text-xs font-extrabold inline-flex items-center gap-1 cursor-pointer whitespace-nowrap"
-            >
-              <Gift className="w-3.5 h-3.5" />
-              <span className="hidden md:inline">{isAr ? 'عجلة الصباح' : 'Spin'}</span>
-              {gameState.freeSpinsAvailable > 0 && (
-                <span className="w-2.5 h-2.5 rounded-full bg-[#10B981] border border-white" />
-              )}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                setLeaderboardSection('leaderboard');
-                setLeaderboardOpen(true);
-              }}
-              className="px-2.5 py-1.5 rounded-xl bg-[#FFFDF9] hover:bg-[#FEF3C7] border-2 border-[#D4B483] text-[#5C3A21] text-xs font-extrabold inline-flex items-center gap-1 cursor-pointer whitespace-nowrap shadow-sm"
-            >
-              <Trophy className="w-3.5 h-3.5 text-[#D97706]" />
-              <span className="hidden sm:inline">{isAr ? 'ديوان الكرم' : 'Rank'}</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={handleToggleLanguage}
-              aria-label={isAr ? 'تبديل اللغة إلى الإنجليزية' : 'Switch Language to Arabic'}
-              className="h-8 px-2 rounded-xl bg-[#FFFDF9] border-2 border-[#D4B483] text-xs font-extrabold text-[#5C3A21] cursor-pointer shadow-sm"
-            >
-              {isAr ? 'EN' : 'عربي'}
-            </button>
-
-            <button
-              type="button"
-              tabIndex={-1}
-              onClick={handleToggleMute}
-              aria-label={muted ? 'Unmute Audio [M]' : 'Mute Audio [M]'}
-              className="w-8 h-8 rounded-xl bg-[#FFFDF9] border-2 border-[#D4B483] flex items-center justify-center text-[#5C3A21] cursor-pointer shadow-sm"
-            >
-              {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-            </button>
-
-            <button
-              type="button"
-              tabIndex={-1}
-              onClick={handleTogglePause}
-              aria-label="Pause Game [P]"
-              className="w-8 h-8 rounded-xl bg-[#FFFDF9] border-2 border-[#D4B483] flex items-center justify-center text-[#5C3A21] cursor-pointer shadow-sm"
-            >
-              <Pause className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      </header>
+      <GameHud
+        lang={lang}
+        level={gameState.level}
+        levelProgress={levelProgress}
+        energy={gameState.energy}
+        maxEnergy={gameState.maxEnergy}
+        energyCountdownMs={energyCountdown}
+        coins={gameState.coins}
+        gems={gameState.diamonds}
+        muted={muted}
+        freeSpins={gameState.freeSpinsAvailable}
+        onEnergy={() => setEnergyOpen(true)}
+        onCoins={() => setWorkshopOpen(true)}
+        onGems={() => {
+          setShopInitialTab('shop');
+          setShopModalOpen(true);
+        }}
+        onSpin={() => {
+          setLeaderboardSection('wheel');
+          setLeaderboardOpen(true);
+        }}
+        onRank={() => {
+          setLeaderboardSection('leaderboard');
+          setLeaderboardOpen(true);
+        }}
+        onToggleLanguage={handleToggleLanguage}
+        onToggleMute={() => handleToggleMute()}
+        onPause={() => handleTogglePause()}
+      />
 
       {/* 2. MAIN CENTERED STAGE (Clean, Uncluttered Gossip Harbor / Travel Town Layout) */}
-      <main className="flex-1 max-w-4xl w-full mx-auto px-2 sm:px-5 py-1.5 sm:py-2 flex flex-col gap-1.5">
-        {/* Top Segmented Mode Switcher Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-2 max-w-[430px] w-full mx-auto">
-          <div className="inline-flex items-center justify-between w-full gap-1 p-1 rounded-2xl bg-[#E2CFAF] border-2 border-[#C8AF87] shadow-inner">
-            <button
-              type="button"
-              onClick={() => setWorkspace('merge')}
-              className={`flex-1 px-2.5 py-1 rounded-xl text-xs font-extrabold transition-all cursor-pointer whitespace-nowrap ${
-                workspace === 'merge'
-                  ? 'btn-3d-amber text-[#3E2723]'
-                  : 'text-[#5C3A21] hover:bg-white/40'
-              }`}
-            >
-              {isAr ? 'طاولة الدمج (7×7)' : 'Merge (7×7)'}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setWorkspace('majlis')}
-              className={`flex-1 inline-flex items-center justify-center gap-1 px-2.5 py-1 rounded-xl text-xs font-extrabold transition-all cursor-pointer whitespace-nowrap ${
-                workspace === 'majlis'
-                  ? 'btn-3d-green text-white'
-                  : 'text-[#5C3A21] hover:bg-white/40'
-              }`}
-            >
-              <Castle className="w-3.5 h-3.5" />
-              <span>
-                {isAr
-                  ? `قصر الدرعية (${totalRenovated}/8)`
-                  : `Estate (${totalRenovated}/8)`}
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                setLeaderboardSection('mazayen');
-                setLeaderboardOpen(true);
-              }}
-              className="hidden sm:inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-extrabold text-[#78350F] hover:bg-white/40 transition-colors cursor-pointer whitespace-nowrap"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-[#D97706]" />
-              <span>{isAr ? 'مزاين' : 'Mazayen'}</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                setShopInitialTab('shop');
-                setShopModalOpen(true);
-              }}
-              className="px-2.5 py-1 rounded-xl text-xs font-extrabold text-[#047857] hover:bg-white/40 transition-colors cursor-pointer whitespace-nowrap"
-            >
-              {isAr ? 'متجر مدى' : 'Shop'}
-            </button>
-          </div>
-
+      <main className="flex-1 max-w-4xl w-full mx-auto px-2 sm:px-5 pt-1.5 pb-24 flex flex-col gap-1.5">
+        {/* Transient status toasts float over the stage so they never push the board down */}
+        <div className="fixed top-[62px] inset-x-0 z-30 flex flex-col items-center gap-1 px-3 pointer-events-none" aria-live="polite">
+          {levelUpToast && (
+            <div role="status" data-testid="level-up-toast" className="level-up-toast px-4 py-2 rounded-2xl bg-[#10B981] text-white text-sm font-extrabold shadow-lg">
+              {isAr ? `ارتقيت للمستوى ${levelUpToast.toLevel}! +${levelUpToast.gems}💎 +${levelUpToast.energy}⚡` : `Level ${levelUpToast.toLevel}! +${levelUpToast.gems}💎 +${levelUpToast.energy}⚡`}
+            </div>
+          )}
+          {comboLive && gameState.comboCount >= 2 && (
+            <div data-testid="combo-meter" className="combo-meter px-4 py-1 rounded-full bg-gradient-to-r from-[#B45309] to-[#F59E0B] text-[#1C1410] text-xs font-extrabold shadow">
+              {isAr ? `كومبو ×${gameState.comboCount}` : `Combo ×${gameState.comboCount}`}
+              <span className="combo-bar" style={{ animationDuration: `${COMBO_WINDOW_MS}ms` }} key={gameState.lastMergeAt} />
+            </div>
+          )}
           {feedbackBanner && (
-            <div
-              role="status"
-              aria-live="polite"
-              className="w-full text-center px-3 py-1 rounded-full bg-[#3E2723] border border-[#FBBF24] text-[11px] font-bold text-[#FEF3C7] shadow truncate"
-            >
+            <div role="status" className="max-w-[440px] text-center px-3 py-1 rounded-full bg-[#3E2723]/95 border border-[#FBBF24] text-[11px] font-bold text-[#FEF3C7] shadow truncate">
               {feedbackBanner}
+            </div>
+          )}
+          {workspace === 'merge' && tutorialStep === 'merge' && (
+            <div data-testid="tutorial-coach" className="pointer-events-auto max-w-[440px] w-full flex items-start gap-2 rounded-2xl bg-[#ECFDF5] border-2 border-[#10B981] shadow-lg px-3 py-2 text-xs font-bold text-[#065F46]">
+              <span className="flex-1 leading-relaxed">
+                {isAr
+                  ? 'اسحب عنصراً فوق عنصر مطابق (أو انقر الاثنين) لدمجهما. الإطار الأخضر يعني دمجاً ممكناً.'
+                  : 'Drag an item onto a matching one (or tap both) to merge. A green ring means a match.'}
+              </span>
+              <button type="button" onClick={() => setGameState((prev) => ({ ...prev, tutorialDismissed: true }))} className="shrink-0 underline">
+                {isAr ? 'تخطي' : 'Skip'}
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Persistent prompts sit just above the bottom navigation */}
+        <div className="fixed bottom-[64px] inset-x-0 z-30 flex flex-col items-center gap-1.5 px-3 pointer-events-none">
+          {/* B. FLOATING GOLDEN BONUS BUBBLE DEAL (When Active) */}
+          {workspace === 'merge' && gameState.bonusBubble && (
+            <div data-testid="bonus-bubble" className="pointer-events-auto max-w-[440px] level-up-toast w-full rounded-2xl bg-gradient-to-r from-[#FEF3C7] via-[#FDE68A] to-[#FEF3C7] border-2 border-[#D97706] px-3 py-1.5 flex items-center justify-between gap-2 shadow-xl">
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="w-8 h-8 rounded-full bg-white border-2 border-[#0284C7] flex items-center justify-center shrink-0 shadow-sm">
+                  <ItemArtwork itemId={gameState.bonusBubble.itemId} size="sm" />
+                </div>
+                <div className="min-w-0">
+                  <span className="text-[9px] font-black text-[#B45309] uppercase block">
+                    {isAr ? 'فقاعة البركة الذهبية!' : 'BONUS BUBBLE!'}
+                  </span>
+                  <span className="text-xs font-extrabold text-[#2C1E14] truncate block">
+                    {isAr
+                      ? ITEM_CATALOG[gameState.bonusBubble.itemId]?.nameAr
+                      : ITEM_CATALOG[gameState.bonusBubble.itemId]?.nameEn}
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-center gap-1.5 shrink-0">
+                <button
+                  type="button"
+                  onClick={handleUnlockBonusBubble}
+                  className="px-2.5 py-1 rounded-xl bg-[#0284C7] hover:bg-[#0369A1] text-white font-extrabold text-xs inline-flex items-center gap-1 cursor-pointer shadow"
+                >
+                  <Gem className="w-3 h-3" />
+                  <span>{gameState.bonusBubble.gemCost}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setGameState((prev) => ({ ...prev, bonusBubble: null }))}
+                  className="px-2 py-1 rounded-xl bg-[#D6BE9C] hover:bg-[#C8AF87] text-xs font-bold text-[#3E2723] cursor-pointer"
+                >
+                  {isAr ? 'تخطي' : 'Skip'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {sandPromptIndex !== null && gameState.board[sandPromptIndex]?.sandLocked && (
+            <div data-testid="sand-prompt" className="pointer-events-auto max-w-[440px] w-full flex items-center gap-2 rounded-2xl bg-[#FFFDF9] border-2 border-[#D97706] shadow-xl px-3 py-2 text-[#3E2723]">
+              <span className="flex-1 text-xs font-bold">{isAr ? 'أزل الرمال عن هذه الخلية بالريالات؟' : 'Clear the sand from this tile with coins?'}</span>
+              <button type="button" onClick={handleBuySand} disabled={gameState.coins < sandClearCost(gameState)} className="rounded-xl btn-3d-amber text-[#3B2410] text-xs font-extrabold px-3 py-1.5 disabled:opacity-40">
+                {sandClearCost(gameState)} 🪙
+              </button>
+              <button type="button" onClick={() => setSandPromptIndex(null)} className="text-xs font-bold text-[#92400E] px-1">✕</button>
+            </div>
+          )}
+          {workspace === 'merge' && tutorialStep === 'serve' && (
+            <div data-testid="tutorial-coach" className="pointer-events-auto max-w-[440px] w-full flex items-start gap-2 rounded-2xl bg-[#ECFDF5] border-2 border-[#10B981] shadow-lg px-3 py-2 text-xs font-bold text-[#065F46]">
+              <span className="flex-1 leading-relaxed">
+                {isAr
+                  ? 'ممتاز! جهّز العناصر ذات علامة ✓ ثم اضغط «تقديم» في بطاقة الضيف.'
+                  : 'Nice! Gather the items marked ✓, then press Serve on the guest card.'}
+              </span>
+              <button type="button" onClick={() => setGameState((prev) => ({ ...prev, tutorialDismissed: true }))} className="shrink-0 underline">
+                {isAr ? 'تخطي' : 'Skip'}
+              </button>
             </div>
           )}
         </div>
@@ -1079,10 +1162,11 @@ export default function App() {
             ambiance={gameState.ambiance}
             completedStoryIds={gameState.completedStoryIds}
             onUpgradeZone={handleUpgradeZone}
-            onChangeRegion={(region: MajlisRegion) => {
-              soundFX.triggerHaptic('light');
-              setGameState((prev) => ({ ...prev, activeRegion: region }));
-            }}
+            areaIndex={gameState.areaIndex}
+            areaComplete={isAreaComplete(gameState)}
+            styleCost={styleChangeCost(gameState)}
+            coins={gameState.coins}
+            onAdvanceArea={handleAdvanceArea}
             onChangeAmbiance={(ambiance: MajlisAmbiance) => {
               soundFX.playMerge(3);
               setGameState((prev) => ({ ...prev, ambiance }));
@@ -1200,44 +1284,6 @@ export default function App() {
                 );
               })}
             </section>
-
-            {/* B. FLOATING GOLDEN BONUS BUBBLE DEAL (When Active) */}
-            {gameState.bonusBubble && (
-              <div className="w-full rounded-2xl bg-gradient-to-r from-[#FEF3C7] via-[#FDE68A] to-[#FEF3C7] border-2 border-[#D97706] px-3 py-1.5 flex items-center justify-between gap-2 shadow-md">
-                <div className="flex items-center gap-2 min-w-0">
-                  <div className="w-8 h-8 rounded-full bg-white border-2 border-[#0284C7] flex items-center justify-center shrink-0 shadow-sm">
-                    <ItemArtwork itemId={gameState.bonusBubble.itemId} size="sm" />
-                  </div>
-                  <div className="min-w-0">
-                    <span className="text-[9px] font-black text-[#B45309] uppercase block">
-                      {isAr ? 'فقاعة البركة الذهبية!' : 'BONUS BUBBLE!'}
-                    </span>
-                    <span className="text-xs font-extrabold text-[#2C1E14] truncate block">
-                      {isAr
-                        ? ITEM_CATALOG[gameState.bonusBubble.itemId]?.nameAr
-                        : ITEM_CATALOG[gameState.bonusBubble.itemId]?.nameEn}
-                    </span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <button
-                    type="button"
-                    onClick={handleUnlockBonusBubble}
-                    className="px-2.5 py-1 rounded-xl bg-[#0284C7] hover:bg-[#0369A1] text-white font-extrabold text-xs inline-flex items-center gap-1 cursor-pointer shadow"
-                  >
-                    <Gem className="w-3 h-3" />
-                    <span>{gameState.bonusBubble.gemCost}</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setGameState((prev) => ({ ...prev, bonusBubble: null }))}
-                    className="px-2 py-1 rounded-xl bg-[#D6BE9C] hover:bg-[#C8AF87] text-xs font-bold text-[#3E2723] cursor-pointer"
-                  >
-                    {isAr ? 'تخطي' : 'Skip'}
-                  </button>
-                </div>
-              </div>
-            )}
 
             {/* C. CARVED NAJDI WOOD & SUN-LIT IVORY 7×7 MERGE BOARD */}
             <div className="w-full rounded-3xl board-wood-frame p-2 sm:p-2.5 border-2 border-[#563216]">
@@ -1368,12 +1414,17 @@ export default function App() {
                         key={cell.index}
                         type="button"
                         aria-label={accessibleLabel}
-                        draggable={Boolean(cell.itemId && !cell.sandLocked)}
-                        onDragStart={() => handleDragStart(cell.index)}
-                        onDragOver={(e) => e.preventDefault()}
-                        onDrop={() => handleDropOnCell(cell.index)}
-                        onClick={() => handleCellClick(cell.index)}
-                        className={`relative aspect-square rounded-xl flex flex-col items-center justify-center transition-transform cursor-pointer select-none ${tileSurfaceClass} ${
+                        data-cell-index={cell.index}
+                        onPointerDown={(e) => handleCellPointerDown(e, cell.index)}
+                        onClick={() => {
+                          if (suppressClickRef.current) return;
+                          handleCellClick(cell.index);
+                        }}
+                        className={`relative aspect-square rounded-xl flex flex-col items-center justify-center transition-transform cursor-pointer select-none touch-none ${tileSurfaceClass} ${
+                          dragGhost?.from === cell.index ? 'opacity-40' : ''
+                        } ${
+                          dragGhost && dragGhost.over === cell.index && dragGhost.from !== cell.index ? 'ring-3 ring-[#FDE047] scale-[1.06] z-10' : ''
+                        } ${
                           isSelected
                             ? 'ring-3 ring-[#F59E0B] scale-[1.05] z-10'
                             : ''
@@ -1428,10 +1479,35 @@ export default function App() {
                   })}
                 </div>
                 <MergeParticleOverlay bursts={mergeBursts} lang={lang} />
+                {dragGhost && (
+                  <div
+                    aria-hidden="true"
+                    data-testid="drag-ghost"
+                    className="fixed z-50 pointer-events-none w-16 h-16 -translate-x-1/2 -translate-y-[70%] drop-shadow-[0_8px_10px_rgba(0,0,0,0.45)] scale-110"
+                    style={{ left: dragGhost.x, top: dragGhost.y }}
+                  >
+                    <ItemArtwork itemId={dragGhost.itemId} size="md" />
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* D. BOTTOM INSPECTOR & 4-SLOT SADU PANTRY TRAY (Clean Single-Row/Card Dock Below Board) */}
+{(gameState.pourTokens > 0 || activeSeason) && (
+              <div className="w-full flex gap-1.5">
+                {activeSeason && (
+                  <div data-testid="season-banner" className="flex-1 min-w-0 truncate rounded-2xl bg-gradient-to-r from-[#065F46] to-[#047857] border border-[#34D399] px-3 py-1.5 text-[11px] font-bold text-[#D1FAE5]">
+                    {isAr ? activeSeason.nameAr : activeSeason.nameEn} · {isAr ? activeSeason.descAr : activeSeason.descEn}
+                  </div>
+                )}
+                {gameState.pourTokens > 0 && (
+                  <button type="button" data-testid="pour-challenge-button" onClick={() => setPourOpen(true)} className="shrink-0 rounded-2xl btn-3d-amber px-3 py-1.5 text-[11px] font-extrabold text-[#3B2410]">
+                    ☕ {isAr ? 'تحدي ربع الفنجال' : "Rub'a challenge"} ({gameState.pourTokens})
+                  </button>
+                )}
+              </div>
+            )}
+
+                        {/* D. BOTTOM INSPECTOR & 4-SLOT SADU PANTRY TRAY (Clean Single-Row/Card Dock Below Board) */}
             <section
               aria-label={isAr ? 'تفاصيل العنصر وخزانة المؤونة' : 'Item Inspector & Sadu Pantry'}
               className="w-full rounded-2xl bg-[#FFFDF9] border-2 border-[#C8AF87] p-3 shadow-md flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3"
@@ -1548,6 +1624,49 @@ export default function App() {
       </main>
 
       {/* Modals: Story Chapter Dialogue, Mada/Apple Pay Shop, Chain Evolution Tree, KSA Leaderboard/Mazayen/Wheel, and Pause / Victory Modal */}
+      <BottomNav
+        lang={lang}
+        active={workspace === 'majlis' ? 'majlis' : 'merge'}
+        stars={gameState.stars}
+        canRenovate={canRenovate}
+        questBadge={claimableQuests}
+        onSelect={(tab: NavTab) => {
+          soundFX.triggerHaptic('light');
+          if (tab === 'merge' || tab === 'majlis') setWorkspace(tab);
+          else if (tab === 'quests') setQuestsOpen(true);
+          else if (tab === 'workshop') setWorkshopOpen(true);
+          else {
+            setShopInitialTab('shop');
+            setShopModalOpen(true);
+          }
+        }}
+      />
+
+      {energyOpen && (
+        <EnergyModal
+          lang={lang}
+          state={gameState}
+          now={now}
+          dayKey={dayKey}
+          onClose={() => setEnergyOpen(false)}
+          onBuyWithGems={() => handleBuyEnergy('gems')}
+          onBuyWithCoins={() => handleBuyEnergy('coins')}
+          onOpenShop={() => {
+            setEnergyOpen(false);
+            setShopInitialTab('shop');
+            setShopModalOpen(true);
+          }}
+        />
+      )}
+      {questsOpen && (
+        <QuestsModal lang={lang} state={gameState} onClose={() => setQuestsOpen(false)} onClaim={handleClaimQuest} onClaimBonus={handleClaimQuestBonus} />
+      )}
+      {workshopOpen && (
+        <WorkshopModal lang={lang} state={gameState} onClose={() => setWorkshopOpen(false)} onUpgrade={handleUpgradeGenerator} />
+      )}
+      <DailyLoginModal lang={lang} day={gameState.activeStoryId ? null : dailyLoginDay} onClaim={handleClaimDailyLogin} />
+      <FinjanPourModal lang={lang} isOpen={pourOpen} tokens={gameState.pourTokens} onFinish={handleFinishPour} onClose={() => setPourOpen(false)} />
+
       <StoryDialogueModal
         lang={lang}
         chapter={activeStoryChapter}

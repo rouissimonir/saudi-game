@@ -69,7 +69,7 @@
 ### B2. Merge Feel & Progression (v4)
 1. **Timed Combo Chain (`كومبو`):** merges within 6 seconds of each other build a combo; from the 3rd merge each merge pays bonus SAR (capped at 20) and extra XP. A draining combo meter shows the remaining window.
 2. **Mega Merge (`دمج ثلاثي`):** when a third identical item touches the merge tile it is absorbed and the result jumps one extra level.
-3. **Level-Up Rewards:** every 100 XP grants `+5💎` per level gained and refills Energy to max, with a celebratory toast.
+3. **Level-Up Rewards:** each level grants `+5💎` and tops Energy up by 15 (not a full refill), with a celebratory toast. The XP curve steepens: reaching level *n* needs `100(n-1) + 30(n-1)(n-2)` XP.
 4. **Merge Burst FX:** a golden burst on every merge (larger for Lv.4+, green for Mega Merge); honours `prefers-reduced-motion`.
 
 5. **7-Day Daily Login Streak (`غبقة اليوم`):** one reward per calendar day (Energy, SAR, Gems, Scissors, Joker, a free wheel spin, and a Gilded chest on Day 7). Missing a day resets the streak; the cycle repeats after Day 7. If the board is full on Day 7 the chest converts to 180 SAR.
@@ -82,14 +82,25 @@
 11. **Generated music:** `tools/audio/make_music.py` renders a seamless 60 s Hijaz oud loop (`ambient.mp3`) plus `order_complete.mp3` and `level_up.mp3` stingers into `public/assets/audio/` (physically-modelled oud, darbuka, reverb; numeric checks in `verify_music.py`). The game loops the file gaplessly via WebAudio and falls back to the synthesized oud and chimes if a file is missing, so any file can be replaced by a human recording.
 12. **Character voice lines:** 32 dialect lines for the six characters (`src/game/voiceLines.ts`), spoken when an order is served and when a story chapter opens. Recorded with ElevenLabs Saudi-accent voices into `public/assets/audio/voice/<id>.mp3` (verified word-for-word by speech-to-text, loudness-matched; not yet listened to by a human). Playback uses the file, else the device's Arabic text-to-speech tuned per character, else silence; music ducks while a character speaks. `tools/voice/generate_elevenlabs.py` regenerates the files (see `docs/ASSETS.md`, section 4) and `docs/VOICE_LINES.md` is a recording sheet for a human actor.
 
+### B3. Endless Economy & Phone-First UI (v5)
+The engine lives in `src/game/progression.ts` (pure, seeded RNG in `state.rngSeed`, tested in `progression.test.ts`).
+1. **Endless areas:** after Diriyah the player travels through Jeddah, AlUla, Taif, Abha, Al-Ahsa, Riyadh and Al-Khobar, each with 4 wings, 3 styles and its own story chapter, then repeats as prestige laps (✦2, ✦3…). Wing star costs rise per area. Restoring every wing shows a **Travel now** card in the Majlis tab (`+25💎 +40⚡`); the Kingdom trail shows finished, current and locked areas.
+2. **Generated orders:** served orders are replaced by a new guest whose item levels follow progress (`orderLevelBand`), with stars = value / 18 and occasional VIPs (+1 level, ×2 SAR, +2⭐).
+3. **Energy pressure:** 1⚡ per minute, also while closed (timestamp-based). Running out opens the Energy sheet: 50⚡ for 20💎, or 30⚡ for SAR at a price that rises by 300 per purchase each day.
+4. **Coin sinks:** Generator Workshop (5 levels, +7% lucky-spawn chance each, 250→3200 SAR), clearing sand tiles (40×n SAR), and changing a wing style (50×area SAR).
+5. **Daily quests:** three per day of different kinds plus a royal chest for finishing all three.
+6. **Phone-first layout:** a single-row HUD (level ring, energy with countdown, SAR, gems, menu), a fixed bottom navigation (Board, Majlis, Quests, Workshop, Shop), floating toasts that never push the board down, and pointer-based drag with a ghost item that works on touch screens. On a 390×664 viewport the whole 7×7 board is visible above the navigation.
+7. **Save migration:** older saves are filled in from a fresh state so new fields never break existing players (`saveMigration.test.ts`).
+8. **Economy simulator:** `npx tsx tools/sim/playtest.ts [areas] [runs]` plays the real rules with a greedy bot. Current pacing per area (minutes of active play): about 4, 19, 27, 59, 152, 353, 667, 294.
+
 ---
 
 ### C. Meta-Renovation, Kingdom Map, LiveOps & Saudi Monetization
 1. **Interactive Architectural Diorama (`MajlisRenovationView.tsx`):**
    - 4 upgradable architectural wings (**Najdi Mud-Brick Archway**, **Sadu Majlis & Brass Hearth**, **Specialty V60 & Espresso Bar**, **Courtyard Fountain & Ghabga Lanterns**), each with 2 upgrade tiers and **3 selectable Khaleeji interior design styles**.
    - Upgrading wings increases the permanent **SAR Coin Bonus per Order** and triggers serialized bilingual story chapters (`StoryDialogueModal.tsx`).
-2. **Multi-Location Kingdom Map (`خريطة مجالس المملكة`):**
-   - Switch between **Historic Diriyah (`الدرعية التاريخية`)**, **Historic Jeddah Al-Balad (`جدة التاريخية - البلد`)** with Hijazi Rawasheen latticework, and **AlUla Sandstone Oasis (`واحة العلا الصخرية`)** with rose-red desert monoliths.
+2. **Kingdom Trail (`رحلة المملكة`):**
+   - The diorama follows the current area's region: **Historic Diriyah (`الدرعية التاريخية`)**, **Jeddah Al-Balad (`جدة التاريخية - البلد`)** with Hijazi Rawasheen latticework, or **AlUla (`واحة العلا`)** with rose-red monoliths. See B3 for the full eight-area journey.
 3. **Dynamic Courtyard Weather & Ambiance Toggle (`أجواء الحوش`):**
    - Toggle between **Golden Afternoon (`عصاري نجد`)**, **Lantern Night (`ليالي الفوانيس`)**, and **Courtyard Rain (`مطر الحوش`)** with live SVG rain streaks and procedural Oud chimes.
 4. **"Diwan Al-Karam" Saudi Prestige Leaderboard (`صدارة ديوان الكرم`):**

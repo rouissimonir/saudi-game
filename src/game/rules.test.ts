@@ -178,14 +178,15 @@ test('a non-adjacent third item does not trigger mega merge', () => {
   assert.equal(res.state.board[40].itemId, 'qahwa_1');
 });
 
-test('crossing an XP threshold grants gems and refills energy exactly once', () => {
+test('crossing an XP threshold grants gems and an energy top-up exactly once', () => {
   let state = withItems(emptyBoardState(), { 24: 'qahwa_5', 25: 'qahwa_5' });
   state = { ...state, xp: 95, level: 1, energy: 3, diamonds: 10 };
   const res = mergeOrMoveCells(state, 24, 25, 9000);
   assert.ok(res.levelUp);
   assert.equal(res.levelUp!.toLevel, res.state.level);
   assert.equal(res.state.diamonds, 10 + res.levelUp!.gems);
-  assert.equal(res.state.energy, state.maxEnergy);
+  assert.equal(res.state.energy, state.energy + res.levelUp!.energy);
+  assert.ok(res.levelUp!.energy < state.maxEnergy, 'a level-up tops energy up, it does not refill it');
   const again = withItems({ ...res.state, board: res.state.board.map((c) => ({ ...c, itemId: null })) }, { 24: 'qahwa_1', 25: 'qahwa_1' });
   const res2 = mergeOrMoveCells(again, 24, 25, 9100);
   assert.equal(res2.levelUp, undefined);

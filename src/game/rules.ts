@@ -1,3 +1,13 @@
+import {
+  advanceArea as _advanceArea,
+  generateOrder,
+  generatorLuckyChance,
+  levelFromXp,
+  LEVEL_UP_ENERGY,
+  LEVEL_UP_GEMS,
+  styleChangeCost,
+} from './progression';
+
 export type Language = 'ar' | 'en';
 
 export type ChainId = 'qahwa' | 'barista' | 'sweets' | 'oud' | 'chest';
@@ -209,6 +219,21 @@ export interface GameState {
   lastLoginDay: string;
   tutorialDismissed: boolean;
   pourTokens: number;
+  /** Which renovation area the player is in (0 = Diriyah). Endless. */
+  areaIndex: number;
+  rngSeed: number;
+  generatorLevels: Record<ChainId, number>;
+  totalSpawns: number;
+  wingUpgrades: number;
+  sandTilesBought: number;
+  coinEnergyToday: { dayKey: string; count: number } | null;
+  lastEnergyTick: number;
+  dailyQuests: {
+    dayKey: string;
+    baseline: Record<'merge' | 'spawn' | 'order' | 'renovate', number>;
+    claimed: string[];
+    bonusClaimed: boolean;
+  } | null;
   lastMergedItemId: string | null;
 }
 
@@ -1087,6 +1112,15 @@ export function createInitialGameState(): GameState {
     lastLoginDay: '',
     tutorialDismissed: false,
     pourTokens: 0,
+    areaIndex: 0,
+    rngSeed: 20261025,
+    generatorLevels: { qahwa: 1, barista: 1, sweets: 1, oud: 1, chest: 1 },
+    totalSpawns: 0,
+    wingUpgrades: 0,
+    sandTilesBought: 0,
+    coinEnergyToday: null,
+    lastEnergyTick: 0,
+    dailyQuests: null,
     lastMergedItemId: null,
   };
 }
@@ -1486,7 +1520,7 @@ export function spawnFromGenerator(
   }
 
   const roll = deterministicRoll !== undefined ? deterministicRoll : Math.random();
-  const luckyThreshold = state.vipPassActive ? 0.65 : 0.82;
+  const luckyThreshold = 1 - generatorLuckyChance(state, genDef.spawnsChain);
   const chainList = CHAIN_PROGRESSION[genDef.spawnsChain];
 
   // Base index from multiplier: 1x -> idx 0 (Lv.1), 2x -> idx 1 (Lv.2), 4x -> idx 2 (Lv.3)
@@ -1511,6 +1545,7 @@ export function spawnFromGenerator(
       energy: state.energy - energyCost,
       selectedCellIndex: emptyIdx,
       discoveredItemIds: discovered,
+      totalSpawns: (state.totalSpawns ?? 0) + 1,
     },
     spawnedCellIndex: emptyIdx,
     spawnedItemId,
@@ -1532,7 +1567,7 @@ export function getComboBonusCoins(combo: number): number {
 }
 
 export function getLevelFromXp(xp: number): number {
-  return Math.floor(xp / 100) + 1;
+  return levelFromXp(xp);
 }
 
 function getAdjacentMatchIndex(board: BoardCell[], targetIndex: number, excludeIndex: number, itemId: string): number | null {
@@ -1602,8 +1637,8 @@ export function mergeOrMoveCells(
       levelUp = {
         fromLevel: state.level,
         toLevel: newLevel,
-        gems: 5 * (newLevel - state.level),
-        energy: state.maxEnergy,
+        gems: LEVEL_UP_GEMS * (newLevel - state.level),
+        energy: LEVEL_UP_ENERGY * (newLevel - state.level),
       };
     }
 
@@ -1638,7 +1673,7 @@ export function mergeOrMoveCells(
         level: newLevel,
         coins: state.coins + bonusCoins,
         diamonds: state.diamonds + (levelUp ? levelUp.gems : 0),
-        energy: levelUp ? Math.max(state.energy, levelUp.energy) : state.energy,
+        energy: levelUp ? state.energy + levelUp.energy : state.energy,
         comboCount,
         lastMergeAt: now,
         totalMerges: state.totalMerges + 1,
@@ -1775,13 +1810,9 @@ export function fulfillCustomerOrder(
     spawnedChest = true;
   }
 
-  const nextTemplateIdx = (state.ordersCompleted + 3) % ORDER_TEMPLATES.length;
-  const replacementOrder: CustomerOrder = {
-    ...ORDER_TEMPLATES[nextTemplateIdx],
-    id: `ord_${state.ordersCompleted + 4}_${nextTemplateIdx}`,
-  };
-
-  const nextOrders = state.activeOrders.map((o) => (o.id === orderId ? replacementOrder : o));
+  const remaining = { ...state, activeOrders: state.activeOrders.filter((o) => o.id !== orderId) };
+  const generated = generateOrder(remaining);
+  const nextOrders = state.activeOrders.map((o) => (o.id === orderId ? generated.order : o));
   const newXp = state.xp + order.rewardXp;
   const vipGemBonus = order.isVip ? 10 : 0;
 
@@ -1789,11 +1820,12 @@ export function fulfillCustomerOrder(
     state: {
       ...state,
       board: nextBoard,
-      coins: state.coins + Math.round((order.rewardCoins + prestigeBonus) * (season ? season.coinMultiplier : 1)),
+      coins: state.coins + Math.round((order.rewardCoins + prestigeBonus + 8 * (state.areaIndex ?? 0)) * (season ? season.coinMultiplier : 1)),
+      rngSeed: generated.seed,
       stars: state.stars + order.rewardStars,
       diamonds: state.diamonds + vipGemBonus,
       xp: newXp,
-      level: Math.floor(newXp / 100) + 1,
+      level: getLevelFromXp(newXp),
       ordersCompleted: state.ordersCompleted + 1,
       prestigePoints:
         state.prestigePoints + Math.round((order.isVip ? 55 : 35) * (season ? season.prestigeMultiplier : 1)),
@@ -1815,9 +1847,12 @@ export function upgradeRenovationZone(
   if (!zone) return { state, upgraded: false, triggeredStoryId: null };
 
   if (styleIndex !== undefined && zone.unlockedLevel > 0 && zone.selectedStyle !== styleIndex) {
+    const cost = styleChangeCost(state);
+    if (state.coins < cost) return { state, upgraded: false, triggeredStoryId: null };
     return {
       state: {
         ...state,
+        coins: state.coins - cost,
         renovationZones: state.renovationZones.map((z) =>
           z.id === zoneId ? { ...z, selectedStyle: styleIndex } : z
         ),
@@ -1837,7 +1872,7 @@ export function upgradeRenovationZone(
   }
 
   const nextLevel = zone.unlockedLevel + 1;
-  const storyChap = STORY_CHAPTERS[zone.storyChapterIndex];
+  const storyChap = zone.storyChapterIndex >= 0 ? STORY_CHAPTERS[zone.storyChapterIndex] : undefined;
   const triggeredStoryId =
     storyChap && !state.completedStoryIds.includes(storyChap.id) ? storyChap.id : null;
 
@@ -1846,9 +1881,10 @@ export function upgradeRenovationZone(
       ...state,
       stars: state.stars - cost,
       xp: state.xp + 40,
-      level: Math.floor((state.xp + 40) / 100) + 1,
+      level: getLevelFromXp(state.xp + 40),
       prestigePoints: state.prestigePoints + 60,
       pourTokens: state.pourTokens + 1,
+      wingUpgrades: (state.wingUpgrades ?? 0) + 1,
       liveOpsPoints: state.liveOpsPoints + 25,
       activeStoryId: triggeredStoryId || state.activeStoryId,
       renovationZones: state.renovationZones.map((z) =>
@@ -2269,3 +2305,6 @@ export function buildMergeParticleBurst(
   };
 }
 
+
+/** Move to the next renovation area when the current one is complete (see progression.ts). */
+export const advanceArea = _advanceArea;

@@ -1,4 +1,4 @@
-import { GameState } from '../game/rules';
+import { GameState, createInitialGameState } from '../game/rules';
 import { VoiceCharacter, VoiceEvent, VoiceProfile, pickVoiceLine, voiceFileUrl } from '../game/voiceLines';
 
 const STORAGE_KEY = 'qahwa_majlis_merge_save_v3';
@@ -418,8 +418,12 @@ export function loadSavedGameState(): GameState | null {
     if (!raw) return null;
     const parsed = JSON.parse(raw) as GameState;
     if (parsed && Array.isArray(parsed.board) && parsed.board.length === 49) {
+      // Saves from older builds lack newer fields (rngSeed, generatorLevels, dailyQuests...): fill them from a fresh state.
+      const defaults = createInitialGameState();
       return {
+        ...defaults,
         ...parsed,
+        generatorLevels: { ...defaults.generatorLevels, ...parsed.generatorLevels },
         lastMergeAt: parsed.lastMergeAt ?? 0,
         comboCount: parsed.comboCount ?? 0,
         loginStreak: parsed.loginStreak ?? 0,
