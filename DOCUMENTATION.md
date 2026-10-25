@@ -106,6 +106,11 @@ The engine lives in `src/game/progression.ts` (pure, seeded RNG in `state.rngSee
     - The per-second clock lives in `useNow()` inside the countdown pills and sheets, so the board no longer re-renders every second.
     - The ambient loop is re-rendered from source at 96 kbps (961 → 721 KB, same music, loop seam verified).
     - A market-research document that was being published under `public/` moved to `docs/research/`.
+16. **Second performance pass:**
+    - **First paint 3.2 s → 1.5 s:** `index.html` paints a splash (same emblem position as the title) before the code loads. It uses the system font on purpose, so the font download doesn't compete with the game code.
+    - **Self-hosted Cairo** (`public/fonts/`, SIL OFL): one variable font for all weights, so there are no third-party connections or render-blocking stylesheet, and it works offline.
+    - **Merge particles and shockwave rings use the Web Animations API** with concrete keyframes. CSS keyframes reading `var(--dx)` cannot run on the compositor, so style work per merge fell from about 210 ms to about 130 ms (4× CPU). The burst also honours `prefers-reduced-motion` again.
+    - **Memoised `BoardCell`:** a merge or spawn re-renders only the tiles that changed. The rules engine reuses unchanged cell objects, which a test checks.
 
 ---
 

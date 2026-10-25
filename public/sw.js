@@ -1,10 +1,10 @@
 // Offline support. Pages: network-first. Other files: served from cache and refreshed in the background
 // (stale-while-revalidate), so replaced art or audio at the same URL reaches players on their next launch.
-const CACHE = 'qahwa-v2';
+const CACHE = 'qahwa-v3';
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE).then((c) => c.addAll(['./', './index.html', './manifest.webmanifest', './icons/icon-192.png']))
+    caches.open(CACHE).then((c) => c.addAll(['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './fonts/cairo-arabic.woff2', './fonts/cairo-latin.woff2']))
   );
   self.skipWaiting();
 });
@@ -31,7 +31,7 @@ self.addEventListener('message', (event) => {
 });
 
 function putIfOk(req, res) {
-  if (res.ok || res.type === 'opaque') {
+  if (res.ok) {
     const copy = res.clone();
     caches.open(CACHE).then((c) => c.put(req, copy));
   }
@@ -42,9 +42,7 @@ self.addEventListener('fetch', (event) => {
   const req = event.request;
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
-  const sameOrigin = url.origin === self.location.origin;
-  const isFont = url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com';
-  if (!sameOrigin && !isFont) return;
+  if (url.origin !== self.location.origin) return;
 
   if (req.mode === 'navigate') {
     event.respondWith(

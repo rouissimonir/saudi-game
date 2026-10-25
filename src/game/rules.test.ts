@@ -371,3 +371,18 @@ test('buildMergeParticleBurst scales particle count, shockwave rings, and celebr
   assert.equal(masterpiece.ringCount, 3);
 });
 
+
+test('spawning and merging reuse unchanged board cell objects (lets the board skip re-rendering them)', () => {
+  const s0 = createInitialGameState();
+  const gen = s0.board.findIndex((c) => c.itemId === 'gen_qahwa');
+  const spawned = spawnFromGenerator({ ...s0, rngSeed: 7 }, gen);
+  const changed = spawned.state.board.filter((c, i) => c !== s0.board[i]).length;
+  assert.ok(changed >= 1 && changed <= 2, `spawn replaced ${changed} cells`);
+  const a = spawned.state.board.findIndex((c) => c.itemId === 'qahwa_1' && !c.sandLocked);
+  const b = spawned.state.board.findIndex((c, i) => i !== a && c.itemId === 'qahwa_1' && !c.sandLocked);
+  if (a >= 0 && b >= 0) {
+    const merged = mergeOrMoveCells(spawned.state, a, b);
+    const mChanged = merged.state.board.filter((c, i) => c !== spawned.state.board[i]).length;
+    assert.ok(mChanged <= 3, `merge replaced ${mChanged} cells`);
+  }
+});
