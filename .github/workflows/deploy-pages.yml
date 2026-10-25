@@ -20,8 +20,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-      - run: npm ci
+      # The repository has no lockfile, so install from package.json (npm ci and npm caching both need one).
+      - run: npm install --no-audit --no-fund
       - run: npm test
       - run: npm run build
       - name: Publish dist/ to the gh-pages branch
