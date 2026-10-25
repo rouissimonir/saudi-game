@@ -1,5 +1,5 @@
 import React from 'react';
-import { Star, Check, CloudRain, Moon, Sun, MapPin } from 'lucide-react';
+import { Star, Check, CloudRain, Moon, Sun, MapPin, Lock, Plane, Coins, Gem, Zap } from 'lucide-react';
 import {
   Language,
   MajlisAmbiance,
@@ -7,6 +7,7 @@ import {
   RenovationZone,
   STORY_CHAPTERS,
 } from '../game/rules';
+import { AREA_COUNT_BEFORE_PRESTIGE, AREA_REWARD, areaInfo } from '../game/progression';
 
 interface MajlisRenovationViewProps {
   lang: Language;
@@ -15,8 +16,12 @@ interface MajlisRenovationViewProps {
   activeRegion: MajlisRegion;
   ambiance: MajlisAmbiance;
   completedStoryIds: string[];
+  areaIndex: number;
+  areaComplete: boolean;
+  styleCost: number;
+  coins: number;
   onUpgradeZone: (zoneId: string, styleIndex?: number) => void;
-  onChangeRegion: (region: MajlisRegion) => void;
+  onAdvanceArea: () => void;
   onChangeAmbiance: (ambiance: MajlisAmbiance) => void;
   onOpenStory: (storyId: string) => void;
 }
@@ -27,45 +32,32 @@ export const MajlisRenovationView: React.FC<MajlisRenovationViewProps> = ({
   stars,
   activeRegion,
   ambiance,
+  areaIndex,
+  areaComplete,
+  styleCost,
+  coins,
   onUpgradeZone,
-  onChangeRegion,
+  onAdvanceArea,
   onChangeAmbiance,
   onOpenStory,
 }) => {
   const isAr = lang === 'ar';
 
-  const archZone = zones.find((z) => z.id === 'zone_arch')!;
-  const saduZone = zones.find((z) => z.id === 'zone_sadu')!;
-  const barZone = zones.find((z) => z.id === 'zone_bar')!;
-  const courtZone = zones.find((z) => z.id === 'zone_courtyard')!;
+  // Later areas use generated wing ids, so fall back to wing order for the diorama slots.
+  const archZone = zones.find((z) => z.id === 'zone_arch') ?? zones[0];
+  const saduZone = zones.find((z) => z.id === 'zone_sadu') ?? zones[1] ?? zones[0];
+  const barZone = zones.find((z) => z.id === 'zone_bar') ?? zones[2] ?? zones[0];
+  const courtZone = zones.find((z) => z.id === 'zone_courtyard') ?? zones[3] ?? zones[0];
+  const swatch = (z: RenovationZone, fallback = '#8B5A2B') => z.styles[z.selectedStyle]?.swatch ?? fallback;
+
+  const area = areaInfo(areaIndex);
+  const nextArea = areaInfo(areaIndex + 1);
+  const lapStart = area.lap * AREA_COUNT_BEFORE_PRESTIGE;
+  const journey = Array.from({ length: AREA_COUNT_BEFORE_PRESTIGE }, (_, i) => ({ index: lapStart + i, ...areaInfo(lapStart + i) }));
 
   const totalLevels = zones.reduce((acc, z) => acc + z.unlockedLevel, 0);
   const maxLevels = zones.length * 2;
   const prestigePercent = Math.round((totalLevels / maxLevels) * 100);
-
-  const regions: { id: MajlisRegion; nameAr: string; nameEn: string; subAr: string; subEn: string }[] = [
-    {
-      id: 'diriyah',
-      nameAr: 'الدرعية التاريخية',
-      nameEn: 'Historic Diriyah',
-      subAr: 'عمارة الطين النجدية والشرفات',
-      subEn: 'Najdi Mud-Brick & Crenellations',
-    },
-    {
-      id: 'jeddah',
-      nameAr: 'جدة التاريخية (البلد)',
-      nameEn: 'Jeddah Al-Balad',
-      subAr: 'الرواشين الحجازية وخشب التك',
-      subEn: 'Hijazi Rawasheen Latticework',
-    },
-    {
-      id: 'alula',
-      nameAr: 'واحة العلا الصخرية',
-      nameEn: 'AlUla Sandstone Oasis',
-      subAr: 'جبال الحجر الوردي والنخيل',
-      subEn: 'Rose-Red Monoliths & Palms',
-    },
-  ];
 
   const ambiances: { id: MajlisAmbiance; labelAr: string; labelEn: string; icon: React.ReactNode }[] = [
     {
@@ -99,27 +91,30 @@ export const MajlisRenovationView: React.FC<MajlisRenovationViewProps> = ({
     <div className="flex flex-col gap-4">
       {/* Multi-Location Kingdom Map & Weather Ambiance Bar */}
       <div className="rounded-2xl border border-[#D99B26]/35 bg-[#241812] p-3 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
-        {/* 3 Saudi Heritage Regions */}
-        <div className="flex items-center gap-2 overflow-x-auto">
+        {/* Restoration journey across the Kingdom: finished, current and locked areas */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5" data-testid="area-journey">
           <span className="text-xs font-bold text-[#E9C46A] inline-flex items-center gap-1 shrink-0 px-1">
             <MapPin className="w-3.5 h-3.5 text-[#FBBF24]" />
-            {isAr ? 'خريطة مجالس المملكة:' : 'Kingdom Map:'}
+            {isAr ? 'رحلة المملكة:' : 'Kingdom trail:'}
           </span>
-          {regions.map((r) => {
-            const active = activeRegion === r.id;
+          {journey.map((stop) => {
+            const done = stop.index < areaIndex;
+            const current = stop.index === areaIndex;
             return (
-              <button
-                key={r.id}
-                type="button"
-                onClick={() => onChangeRegion(r.id)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap border ${
-                  active
+              <span
+                key={stop.index}
+                aria-current={current ? 'step' : undefined}
+                className={`px-2.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap border inline-flex items-center gap-1 ${
+                  current
                     ? 'bg-[#D97724] text-white border-[#FBBF24] shadow'
-                    : 'bg-[#1C1410] text-[#D4A373] border-white/10 hover:text-white'
+                    : done
+                    ? 'bg-[#14532D]/60 text-[#BBF7D0] border-[#34D399]/40'
+                    : 'bg-[#1C1410] text-[#D4A373]/60 border-white/10'
                 }`}
               >
-                {isAr ? r.nameAr : r.nameEn}
-              </button>
+                {done ? <Check className="w-3 h-3" /> : !current && <Lock className="w-3 h-3" />}
+                {isAr ? stop.nameAr : stop.nameEn}
+              </span>
             );
           })}
         </div>
@@ -155,18 +150,8 @@ export const MajlisRenovationView: React.FC<MajlisRenovationViewProps> = ({
         {/* Top Prestige Bar */}
         <div className="flex items-center justify-between px-4 py-2.5 bg-[#241812]/95 border-b border-[#D99B26]/20">
           <div>
-            <h2 className="text-sm sm:text-base font-bold text-[#FBF7F0]">
-              {activeRegion === 'diriyah'
-                ? isAr
-                  ? 'قصر ومجلس الدرعية للقهوة المختصة'
-                  : 'Diriyah Heritage Majlis & Roastery'
-                : activeRegion === 'jeddah'
-                ? isAr
-                  ? 'مقهى رواشين جدة التاريخية (البلد)'
-                  : 'Al-Balad Hijazi Rawasheen Café (Jeddah)'
-                : isAr
-                ? 'ديوانية صخور العلا والواحة الملكية'
-                : 'AlUla Sandstone Canyon Lounge'}
+            <h2 className="text-sm sm:text-base font-bold text-[#FBF7F0]" data-testid="area-name">
+              {isAr ? `${area.nameAr} · المنطقة ${areaIndex + 1}` : `${area.nameEn} · Area ${areaIndex + 1}`}
             </h2>
             <p className="text-xs text-[#D4A373]">
               {isAr
@@ -226,7 +211,7 @@ export const MajlisRenovationView: React.FC<MajlisRenovationViewProps> = ({
                 y="70"
                 width="210"
                 height="170"
-                fill={archZone.styles[archZone.selectedStyle].swatch}
+                fill={swatch(archZone)}
                 stroke="#2A180D"
                 strokeWidth="3"
               />
@@ -266,7 +251,7 @@ export const MajlisRenovationView: React.FC<MajlisRenovationViewProps> = ({
                 width="240"
                 height="55"
                 rx="6"
-                fill={saduZone.unlockedLevel > 0 ? saduZone.styles[saduZone.selectedStyle].swatch : '#334155'}
+                fill={saduZone.unlockedLevel > 0 ? swatch(saduZone) : '#334155'}
                 stroke="#2A180D"
                 strokeWidth="2.5"
               />
@@ -291,7 +276,7 @@ export const MajlisRenovationView: React.FC<MajlisRenovationViewProps> = ({
                 height="120"
                 rx="8"
                 fill="#241812"
-                stroke={barZone.unlockedLevel > 0 ? barZone.styles[barZone.selectedStyle].swatch : '#475569'}
+                stroke={barZone.unlockedLevel > 0 ? swatch(barZone) : '#475569'}
                 strokeWidth="3"
               />
               <rect
@@ -300,7 +285,7 @@ export const MajlisRenovationView: React.FC<MajlisRenovationViewProps> = ({
                 width="235"
                 height="55"
                 rx="4"
-                fill={barZone.unlockedLevel > 0 ? barZone.styles[barZone.selectedStyle].swatch : '#475569'}
+                fill={barZone.unlockedLevel > 0 ? swatch(barZone) : '#475569'}
                 stroke="#1C1410"
                 strokeWidth="2"
               />
@@ -330,7 +315,7 @@ export const MajlisRenovationView: React.FC<MajlisRenovationViewProps> = ({
                 cy="282"
                 rx="68"
                 ry="22"
-                fill={courtZone.unlockedLevel > 0 ? courtZone.styles[courtZone.selectedStyle].swatch : '#334155'}
+                fill={courtZone.unlockedLevel > 0 ? swatch(courtZone) : '#334155'}
                 stroke="#FBBF24"
                 strokeWidth="3"
               />
@@ -362,6 +347,24 @@ export const MajlisRenovationView: React.FC<MajlisRenovationViewProps> = ({
           </svg>
         </div>
       </div>
+
+      {areaComplete && (
+        <div data-testid="advance-area" className="rounded-2xl border-2 border-[#34D399] bg-gradient-to-r from-[#064E3B] to-[#065F46] p-4 flex flex-col sm:flex-row items-center gap-3 shadow-xl">
+          <div className="flex-1 text-center sm:text-start">
+            <p className="text-xs font-bold text-[#A7F3D0]">{isAr ? `اكتمل ترميم ${area.nameAr}!` : `${area.nameEn} is fully restored!`}</p>
+            <p className="text-base font-black text-white">{isAr ? `انطلق إلى ${nextArea.nameAr}` : `Travel to ${nextArea.nameEn}`}</p>
+            <p className="text-xs font-bold text-[#FDE68A] inline-flex items-center gap-2 mt-0.5">
+              <span className="inline-flex items-center gap-0.5">+{AREA_REWARD.gems}<Gem className="w-3.5 h-3.5" /></span>
+              <span className="inline-flex items-center gap-0.5">+{AREA_REWARD.energy}<Zap className="w-3.5 h-3.5 fill-current" /></span>
+              <span>{isAr ? '+ فصل جديد من القصة' : '+ a new story chapter'}</span>
+            </p>
+          </div>
+          <button type="button" onClick={onAdvanceArea} className="rounded-2xl btn-3d-green text-white font-extrabold px-5 py-3 inline-flex items-center gap-2 animate-pulse">
+            <Plane className="w-5 h-5" />
+            {isAr ? 'سافر الآن' : 'Travel now'}
+          </button>
+        </div>
+      )}
 
       {/* 4 Architectural Renovation Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
@@ -426,6 +429,12 @@ export const MajlisRenovationView: React.FC<MajlisRenovationViewProps> = ({
                             style={{ backgroundColor: st.swatch }}
                           />
                           <span className="truncate">{isAr ? st.nameAr : st.nameEn}</span>
+                          {!active && zone.unlockedLevel > 0 && (
+                            <span className={`ms-auto shrink-0 inline-flex items-center gap-0.5 text-[10px] ${coins >= styleCost ? 'text-[#FBBF24]' : 'text-white/35'}`}>
+                              {styleCost}
+                              <Coins className="w-2.5 h-2.5" />
+                            </span>
+                          )}
                         </button>
                       );
                     })}
