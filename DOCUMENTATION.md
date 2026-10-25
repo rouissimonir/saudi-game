@@ -98,6 +98,14 @@ The engine lives in `src/game/progression.ts` (pure, seeded RNG in `state.rngSee
 12. **Rotating festivals (`src/game/events.ts`):** a new three-day festival every three local days (Khawlani Coffee Festival ☕, Date Harvest 🌴, Lantern Nights 🏮, Specialty Coffee Week 🫖). Merges earn the result level in points (double for the featured chain) and every order +10. An eight-step milestone track (30 → 1000 points) pays coins, energy, gems, scissors and jokers. The bar under the HUD shows progress, claimable rewards and the time left; progress resets with each new festival.
 13. **Save transfer:** HUD menu → Transfer progress shows a gzip-compressed code (`QM1.…`, about 4–5k characters) to copy or share, and loads a pasted code after a confirmation (`src/utils/saveTransfer.ts`). This moves progress between phones without an account until a real cloud save exists.
 14. **Small phones:** the HUD shrinks and abbreviates large numbers below 360 px, and board toolbar labels collapse to icons, so nothing scrolls sideways at 320 px.
+15. **Performance pass:** measured on an iPhone 13 profile with fast-3G throttling and a 4× slower CPU, before → after: title screen 4.7 s → 3.3 s, board 6.1 s → 4.4 s, largest paint 4.4 s → 3.2 s, idle script time 175 → 71 ms per 10 s.
+    - Board icons and portraits are WebP (1,441 KB → 192 KB; `tools/art/to_webp.py` converts new Blender renders).
+    - Item art preloads after the page is idle instead of competing with startup.
+    - Only the Cairo font is requested (with the 900 weight the UI uses) instead of four families.
+    - The Majlis, shop, chains/leaderboard, pour and transfer screens are separate chunks fetched when idle (main chunk 70.6 → 57.4 KB gzipped).
+    - The per-second clock lives in `useNow()` inside the countdown pills and sheets, so the board no longer re-renders every second.
+    - The ambient loop is re-rendered from source at 96 kbps (961 → 721 KB, same music, loop seam verified).
+    - A market-research document that was being published under `public/` moved to `docs/research/`.
 
 ---
 

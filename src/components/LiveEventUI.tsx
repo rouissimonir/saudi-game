@@ -1,6 +1,7 @@
 import React from 'react';
 import { Check, Clock, Coins, Gem, Gift, Lock, Scissors, Sparkles, X, Zap } from 'lucide-react';
 import { GameState, Language } from '../game/rules';
+import { useNow } from '../utils/useNow';
 import { EVENT_MILESTONES, EVENT_ORDER_POINTS, EventReward, activeLiveEvent, claimableMilestones, eventProgress } from '../game/events';
 
 function formatEndsIn(ms: number, isAr: boolean): string {
@@ -24,8 +25,9 @@ function RewardChips({ reward }: { reward: EventReward }) {
 }
 
 /** Slim festival strip under the HUD: token, name, countdown and progress to the next milestone. */
-export const LiveEventBar: React.FC<{ lang: Language; state: GameState; now: number; onOpen: () => void }> = ({ lang, state, now, onOpen }) => {
+export const LiveEventBar: React.FC<{ lang: Language; state: GameState; onOpen: () => void }> = ({ lang, state, onOpen }) => {
   const isAr = lang === 'ar';
+  const now = useNow(30_000); // the bar shows hours and minutes
   const ev = activeLiveEvent(now);
   const p = eventProgress(state, now);
   const ready = claimableMilestones(state, now).length;
@@ -64,11 +66,11 @@ export const LiveEventBar: React.FC<{ lang: Language; state: GameState; now: num
 export const LiveEventModal: React.FC<{
   lang: Language;
   state: GameState;
-  now: number;
   onClose: () => void;
   onClaim: (index: number) => void;
-}> = ({ lang, state, now, onClose, onClaim }) => {
+}> = ({ lang, state, onClose, onClaim }) => {
   const isAr = lang === 'ar';
+  const now = useNow(30_000);
   const ev = activeLiveEvent(now);
   const p = eventProgress(state, now);
   return (

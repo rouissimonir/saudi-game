@@ -2,13 +2,22 @@ import React, { useState } from 'react';
 import { ITEM_CATALOG } from '../game/rules';
 import { assetUrl } from '../utils/assetUrl';
 
-/** Warm the browser cache so merge results never flash blank. */
+/**
+ * Warm the browser cache so merge results never flash blank. Runs once the page is idle after load,
+ * so the icons never compete with the code and fonts the first screen needs.
+ */
 export function preloadItemArt(): void {
   if (typeof Image === 'undefined') return;
-  Object.keys(ITEM_CATALOG).forEach((id) => {
-    const img = new Image();
-    img.src = assetUrl(`assets/art/items/${id}.png`);
-  });
+  const run = () =>
+    Object.keys(ITEM_CATALOG).forEach((id) => {
+      const img = new Image();
+      img.decoding = 'async';
+      img.src = assetUrl(`assets/art/items/${id}.webp`);
+    });
+  const whenIdle = () =>
+    typeof window.requestIdleCallback === 'function' ? window.requestIdleCallback(run, { timeout: 3000 }) : window.setTimeout(run, 1500);
+  if (document.readyState === 'complete') whenIdle();
+  else window.addEventListener('load', whenIdle, { once: true });
 }
 
 interface ItemArtworkProps {
@@ -18,7 +27,7 @@ interface ItemArtworkProps {
 
 export const ItemArtwork: React.FC<ItemArtworkProps> = ({ itemId, size = 'md' }) => {
   const def = ITEM_CATALOG[itemId];
-  // Blender-rendered icon in public/assets/art/items/<itemId>.png; falls back to the built-in SVG if missing
+  // Blender-rendered icon in public/assets/art/items/<itemId>.webp; falls back to the built-in SVG if missing
   const [failedId, setFailedId] = useState<string | null>(null);
   const imgFailed = failedId === itemId;
   if (!def) return null;
@@ -30,9 +39,10 @@ export const ItemArtwork: React.FC<ItemArtworkProps> = ({ itemId, size = 'md' })
     <div className={`relative flex items-center justify-center ${sizeClass} select-none pointer-events-none`}>
       {!imgFailed && (
         <img
-          src={assetUrl(`assets/art/items/${itemId}.png`)}
+          src={assetUrl(`assets/art/items/${itemId}.webp`)}
           alt=""
           width={256}
+          decoding="async"
           height={256}
           draggable={false}
           onError={() => setFailedId(itemId)}

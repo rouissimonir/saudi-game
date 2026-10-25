@@ -1,7 +1,7 @@
 import React from 'react';
 import { Gem, Zap } from 'lucide-react';
 import { Language, StoryChapter } from '../game/rules';
-import { CustomerPortrait } from './CompetitorModalsAndPortraits';
+import { CustomerPortrait } from './CustomerPortrait';
 import { speakerCharacter } from '../game/voiceLines';
 
 function speakerKey(chapter: StoryChapter): string | null {

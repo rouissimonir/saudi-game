@@ -3,9 +3,9 @@
 
 @layer base {
   :root {
-    --font-sans: 'Cairo', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-    --font-display: 'Cairo', 'Fraunces', Georgia, serif;
-    --font-mono: 'JetBrains Mono', 'Cairo', 'Plus Jakarta Sans', monospace;
+    --font-sans: 'Cairo', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-display: 'Cairo', Georgia, serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
   }
 
   body {

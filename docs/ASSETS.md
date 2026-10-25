@@ -6,8 +6,8 @@
 | --- | --- | --- |
 | Hero 3D renders (dallah, finjan, V60, mabkhara, dates, chest, beans) | Generated with Blender, 512x512 transparent PNG | `public/assets/art/*.png` |
 | Title-screen emblem | Uses `dallah.png` | `src/App.tsx` |
-| The 30 merge-board item icons | Generated with Blender, 256x256 transparent PNG, shown by `ItemArtwork` (old SVG kept as fallback) | `public/assets/art/items/<itemId>.png` |
-| Character portraits (Noura, Faisal, Tariq, Lama, Sultan, Jury) | Stylized 3D busts rendered with Blender, 256px transparent PNG; shown in the order strip and story dialogue (SVG kept as fallback) | `public/assets/art/characters/<name>.png` |
+| The 30 merge-board item icons | Generated with Blender, 256x256 transparent WebP (converted from the PNG renders by `tools/art/to_webp.py`), shown by `ItemArtwork` (old SVG kept as fallback) | `public/assets/art/items/<itemId>.webp` |
+| Character portraits (Noura, Faisal, Tariq, Lama, Sultan, Jury) | Stylized 3D busts rendered with Blender, 256px transparent WebP; shown in the order strip and story dialogue (SVG kept as fallback) | `public/assets/art/characters/<name>.webp` |
 | Sound effects | Merge, spawn and error sounds still synthesized in code; order-complete and level-up use generated stingers (synth fallback) | `src/utils/soundAndHaptics.ts`, `public/assets/audio/` |
 | Background music | Generated 60 s seamless Hijaz oud loop (`ambient.mp3`); replace with your own file any time | `public/assets/audio/ambient.mp3` |
 | Voice lines | 32 recorded lines, 6 characters (ElevenLabs) | `public/assets/audio/voice/` |
@@ -46,15 +46,16 @@ Limits: these are clean stylized 3D props, not painterly game-art. Some are simp
 ## 2. Drop-in rules for art you provide
 
 - **Format:** PNG with transparent background, 512x512 (square, object centered with ~8% padding). WebP is fine if you tell me.
-- **Item icons** (already filled with Blender renders; replace any you like): one file per item id, `public/assets/art/items/<itemId>.png`.
+- **Item icons** (already filled with Blender renders; replace any you like): one file per item id, `public/assets/art/items/<itemId>.webp`.
   - Generators: `gen_qahwa`, `gen_barista`, `gen_sweets`, `gen_oud`
   - Chains (levels 1 to 6): `qahwa_1`..`qahwa_6`, `barista_1`..`barista_6`, `sweets_1`..`sweets_6`, `oud_1`..`oud_6`
   - Chests: `chest_1`, `chest_2`
   - Item names for each level are in `DOCUMENTATION.md` section 2.A.
-- **Characters:** `public/assets/art/characters/<name>.png`, square bust portrait with a transparent background, centred with the face in the upper half (they are cropped to a circle): `noura`, `faisal`, `tariq`, `lama`, `sultan`, `ghabga` (the jury).
+- **Characters:** `public/assets/art/characters/<name>.webp`, square bust portrait with a transparent background, centred with the face in the upper half (they are cropped to a circle): `noura`, `faisal`, `tariq`, `lama`, `sultan`, `ghabga` (the jury).
 - Items in the same chain should share one light direction and one palette so the evolution reads at a glance.
-- **Items need no code change:** `ItemArtwork` loads `public/assets/art/items/<itemId>.png` automatically, so replacing a file replaces the icon. If a file is missing the game falls back to the old SVG for that item only.
-- **Characters need no code change either:** `CustomerPortrait` loads `public/assets/art/characters/<name>.png` (names: `noura`, `faisal`, `tariq`, `lama`, `sultan`, `ghabga`) and falls back to the SVG if a file is missing. The circle backdrop colours are in `PORTRAIT_BACKDROP` in `CompetitorModalsAndPortraits.tsx`.
+- **Format:** render or drop in PNGs, then run `python3 tools/art/to_webp.py` to convert them to WebP (about 87% smaller) and remove the PNGs.
+- **Items need no code change:** `ItemArtwork` loads `public/assets/art/items/<itemId>.webp` automatically, so replacing a file replaces the icon. If a file is missing the game falls back to the old SVG for that item only.
+- **Characters need no code change either:** `CustomerPortrait` loads `public/assets/art/characters/<name>.webp` (names: `noura`, `faisal`, `tariq`, `lama`, `sultan`, `ghabga`) and falls back to the SVG if a file is missing. The circle backdrop colours are in `PORTRAIT_BACKDROP` in `CompetitorModalsAndPortraits.tsx`.
 
 ## 3. Music and sound: what to ask for
 
