@@ -1,0 +1,9 @@
+{
+  // Cloudflare Workers static-assets deploy for the Vite build (index.html + fasih.html).
+  // Cloudflare build settings: build command `npm run build`, deploy command `npx wrangler deploy`.
+  "name": "saudi-game",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./dist"
+  }
+}
