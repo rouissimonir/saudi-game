@@ -117,6 +117,23 @@ The engine lives in `src/game/progression.ts` (pure, seeded RNG in `state.rngSee
     - Idle script time went from 49 to 5 ms per 10 s, and JS per merge from 92 to 22 ms.
     - A 17-step smoke test (title, story, login, tap and drag merges, sell, quests, workshop, shop, wheel, chains, energy, festival, pour, Majlis restore, pause, language, Fasih page) passes on both runtimes. To go back to React, delete the five `react*` aliases.
 18. **Data Saver audio:** when the browser reports Data Saver or a 2G-class connection, the game plays the synthesized oud loop and never downloads the 721 KB music file. Otherwise the music is fetched once the page is idle after Play, after the short sound effects.
+19. **Animated story scenes (Hollywood Merge style), phase 1: the opening prologue.**
+    - **What it is:** new players see a short animated scene when they tap Play. Layla comes home to Diriyah at dusk, Grandma Noura shows her the crumbling Majlis, and the developer Rashid offers to buy it. The player chooses a firm answer (+5 gems) or a polite one (+100 SAR), and Noura hands over grandfather's dallah, which flies into the board as the tutorial starts.
+    - **How it plays:**
+      - Characters are Blender half-body figures with expressions.
+      - They slide in, breathe, bob while talking and dim when not speaking.
+      - Lines type into a speech bubble, and six key lines are voiced.
+      - The camera pans, zooms or shakes, with cinematic letterbox bars, and Skip is always available.
+      - Chapter 1 later echoes the choice with one extra line from Noura.
+    - **Code:**
+      - `src/story/` (types, a pure `engine.ts` reducer, `scenes/prologue.ts`, `flags.ts`).
+      - `src/components/story/ScenePlayer.tsx` and its CSS, loaded on demand.
+      - Save fields `seenScenes` and `storyFlags`. Saves from before this feature count the prologue as seen.
+    - **Testing and replay:** the HUD menu has **Replay story**, and `?scene=prologue` forces the scene on the next Play.
+    - **Art:** `tools/blender/make_story_cast.py` renders Layla, Noura and Rashid with 3–4 expressions each, and `tools/blender/make_scenes.py` renders the backdrops (dusk street, courtyard, dallah close-up) with foreground layers for parallax. Everything is WebP via `tools/art/to_webp.py`: 424 KB in total, preloaded on the title for new players.
+    - **Voice:** Layla is "Nora S – Saudi Natural & Calm", Rashid is "Faisal alotaibi – Warm Saudi Voice", and Noura keeps her voice. The files live in `public/assets/audio/story/`, and each was checked word for word with speech-to-text.
+    - **Cost to returning players:** none measurable (first paint and title-ready match `main`). The scene chunk is 4.4 KB gzipped plus 4 KB of CSS, and it shows no long tasks while animating at 4× CPU.
+    - **Phase 2 (after phone testing):** turn every chapter and area arrival into a scene, add milestone mini-scenes, and give the other characters half-body expression sets.
 
 ---
 

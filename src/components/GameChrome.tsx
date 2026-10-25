@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowRightLeft, Castle, Coins, Gem, Gift, Grid3x3, Hammer, Languages, Menu, Pause, ScrollText, ShoppingBag, Star, Trophy, Volume2, VolumeX, X, Zap } from 'lucide-react';
+import { ArrowRightLeft, BookOpen, Castle, Coins, Gem, Gift, Grid3x3, Hammer, Languages, Menu, Pause, ScrollText, ShoppingBag, Star, Trophy, Volume2, VolumeX, X, Zap } from 'lucide-react';
 import { Language } from '../game/rules';
 import { formatCountdown } from './ProgressionModals';
 import { useNow } from '../utils/useNow';
@@ -34,6 +34,7 @@ export const GameHud: React.FC<{
   onToggleMute: () => void;
   onPause: () => void;
   onTransfer: () => void;
+  onReplayStory: () => void;
   /** Optional strip under the resource row (the live festival bar). */
   below?: React.ReactNode;
   /** Transient toasts that float just under the header, whatever its height. */
@@ -98,6 +99,7 @@ export const GameHud: React.FC<{
             { icon: <Trophy className="w-4 h-4 text-[#D97706]" />, label: isAr ? 'ديوان الكرم' : 'Leaderboard', on: p.onRank },
             { icon: <Languages className="w-4 h-4" />, label: isAr ? 'English' : 'العربية', on: p.onToggleLanguage },
             { icon: p.muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />, label: p.muted ? (isAr ? 'تشغيل الصوت' : 'Sound on') : isAr ? 'كتم الصوت' : 'Mute', on: p.onToggleMute },
+            { icon: <BookOpen className="w-4 h-4" />, label: isAr ? 'إعادة مشاهدة القصة' : 'Replay story', on: p.onReplayStory },
             { icon: <ArrowRightLeft className="w-4 h-4" />, label: isAr ? 'نقل التقدم لجهاز آخر' : 'Transfer progress', on: p.onTransfer },
             { icon: <Pause className="w-4 h-4" />, label: isAr ? 'إيقاف مؤقت' : 'Pause', on: p.onPause },
           ].map((row) => (

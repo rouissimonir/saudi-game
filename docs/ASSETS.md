@@ -65,6 +65,19 @@ Limits: these are clean stylized 3D props, not painterly game-art. Some are simp
 - **Search terms:** "oud taqsim", "maqam hijaz", "khaleeji instrumental", "arabic lounge", "majlis ambience".
 - **Optional later:** merge chimes per level (currently synthesized in code; I can wire in files).
 
+## 3b. Story-scene art and voice
+
+- **Characters:** `public/assets/art/story/<character>_<expression>.webp`, 768×1024 waist-up renders with a transparent background.
+  - Layla, Noura, Rashid: `neutral`, `happy`, `surprised`, plus `worried` or `angry`.
+  - Rendered by `tools/blender/make_story_cast.py`, which reuses the bust heads in `make_characters.py`. Expressions are set through `EXPR`, and the busts are unchanged.
+  - A character or expression without a render falls back to its neutral pose or bust.
+- **Backdrops:** `bg_<scene>.webp` plus an optional transparent `bg_<scene>_fg.webp` for parallax, 1080×1920, rendered by `tools/blender/make_scenes.py`.
+- **Regenerating:**
+  - Install Blender's Python module (`pip install bpy==5.2.3`).
+  - Run `SAMPLES=48 python3 tools/blender/make_story_cast.py -- public/assets/art/story`, then `make_scenes.py` with the same output path.
+  - Convert with `python3 tools/art/to_webp.py`.
+- **Voice:** `public/assets/audio/story/pro_*.mp3`, ElevenLabs `eleven_v4` (first take), trimmed and loudness-matched with ffmpeg. The casting is in `tools/voice/voices.json`. The lines still need a native-speaker listen, like the rest of the voice work.
+
 ## 4. Voice lines
 
 **Status: recorded.** All 32 lines (about 1,070 Arabic characters, written in Saudi dialect: Najdi for Noura, Tariq and Sultan, Hijazi for Faisal, Riyadh youth for Lama, formal Arabic for the jury) are generated with ElevenLabs and stored in `public/assets/audio/voice/<id>.mp3` (ids like `noura_served_2`, 2.4 to 4.5 s, mono mp3, about 1.4 MB in total). The text is in `src/game/voiceLines.ts`. A character speaks when you serve one of their orders (normal or VIP line) and when their story chapter opens. Music ducks while they talk, and Mute silences voices too.

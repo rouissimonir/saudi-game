@@ -17,6 +17,9 @@ export function normalizeSave(raw: unknown): GameState | null {
     tutorialDismissed: parsed.tutorialDismissed ?? (parsed.totalMerges ?? 0) > 0,
     // Saves from before the collection book: everything already found counts as claimed (no retroactive windfall).
     claimedDiscoveryIds: parsed.claimedDiscoveryIds ?? [...discovered],
+    // Players from before the story scenes keep playing where they were instead of being sent through the prologue.
+    seenScenes: parsed.seenScenes ?? ['prologue'],
+    storyFlags: { ...parsed.storyFlags },
     selectedCellIndex: null,
   };
 }

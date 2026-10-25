@@ -55,19 +55,36 @@ def head(skin_color, ear=True):
     return h
 
 
+# Facial expression for the story-scene renders (make_story_cast.py sets it); the busts use the default.
+EXPR = {'expr': 'neutral', 'tilt_bias': 0.0}
+# eye height, brow lift, brow tilt (positive = inner ends up, negative = inner ends down), extra smile (negative = frown)
+EXPRESSIONS = {
+    'neutral': (0.17, 0.0, 0.0, 0.0),
+    'happy': (0.12, 0.04, 0.06, 0.12),
+    'surprised': (0.22, 0.13, 0.08, 0.0),
+    'worried': (0.17, 0.05, 0.42, -0.3),
+    'angry': (0.14, -0.06, -0.36, -0.36),
+}
+
+
 def face(brow=0.1, brow_color=(0.05, 0.03, 0.02), lips=None, blush=True, lashes=False, smile=0.24):
     eye = BLACK_GLOSS()
+    eye_h, lift, tilt, extra_smile = EXPRESSIONS[EXPR['expr']]
     for sx in (-1, 1):
-        sphere((sx * 0.37, -0.86, 0.1), (0.12, 0.07, 0.17), eye, seg=20)
+        sphere((sx * 0.37, -0.86, 0.1), (0.12, 0.07, eye_h), eye, seg=20)
         sphere((sx * 0.34, -0.91, 0.17), (0.04, 0.025, 0.045), mat('catch', (1, 1, 1), 0.0, 0.3, emission=(1, 1, 1)), seg=10)
-        b = sphere((sx * 0.37, -0.84, 0.4), (0.19, 0.05, 0.045 + brow * 0.2), mat('brow', brow_color, 0.0, 0.8), seg=14)
-        b.rotation_euler = (0, sx * -0.12, 0)
+        b = sphere((sx * 0.37, -0.84, 0.4 + lift), (0.19, 0.05, 0.045 + brow * 0.2), mat('brow', brow_color, 0.0, 0.8), seg=14)
+        b.rotation_euler = (0, sx * (-0.12 + tilt + EXPR['tilt_bias']), 0)
         if lashes:
             curve_tube([(sx * 0.2, -0.9, 0.27), (sx * 0.38, -0.92, 0.3), (sx * 0.55, -0.88, 0.22)], 0.018, BLACK_GLOSS())
         if blush:
             sphere((sx * 0.55, -0.8, -0.2), (0.15, 0.03, 0.09), mat('blush', (0.92, 0.45, 0.40), 0.0, 0.8), seg=12)
     mouth = lips or mat('mouth', (0.45, 0.14, 0.12), 0.0, 0.5)
-    curve_tube([(-0.2, -0.9, -0.38), (0.0, -0.95, -0.38 - smile * 0.5), (0.2, -0.9, -0.38)], 0.032 if not lips else 0.05, mouth)
+    if EXPR['expr'] == 'surprised':  # small open "o"
+        sphere((0, -0.9, -0.42), (0.11, 0.06, 0.13), mat('mouth_open', (0.25, 0.06, 0.05), 0.0, 0.6), seg=16)
+        return
+    sm = smile + extra_smile
+    curve_tube([(-0.2, -0.9, -0.38), (0.0, -0.95, -0.38 - sm * 0.5), (0.2, -0.9, -0.38)], 0.032 if not lips else 0.05, mouth)
 
 
 def shoulders(color, wide=1.6, z=-1.75, trim=None):

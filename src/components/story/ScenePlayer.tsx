@@ -1,0 +1,244 @@
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Coins, FastForward, Gem, Zap } from 'lucide-react';
+import { Language } from '../../game/rules';
+import { advance, choose, currentBeat, ScenePlay, skip, startScene } from '../../story/engine';
+import { SCENES } from '../../story/scenes';
+import { CAST_NAMES, CastId, Expression, Scene, StagePos } from '../../story/types';
+import { assetUrl } from '../../utils/assetUrl';
+import './ScenePlayer.css';
+
+/** Rendered expressions per character (tools/blender/make_story_cast.py); anything else falls back to neutral. */
+const EXPRESSIONS: Partial<Record<CastId, Expression[]>> = {
+  layla: ['neutral', 'happy', 'surprised', 'worried'],
+  noura: ['neutral', 'happy', 'surprised', 'worried'],
+  rashid: ['neutral', 'angry', 'surprised'],
+};
+/** Backdrops that also have a transparent foreground layer for parallax (tools/blender/make_scenes.py). */
+const FG_LAYERS = new Set(['street', 'courtyard']);
+const NAME_COLORS: Partial<Record<CastId, string>> = { layla: '#047857', noura: '#9F1239', rashid: '#334155' };
+const TYPE_MS = 26;
+
+function actorSrc(id: CastId, expr: Expression): string {
+  const rendered = EXPRESSIONS[id];
+  if (!rendered) return assetUrl(`assets/art/characters/${id}.webp`); // characters without story renders yet use their bust
+  return assetUrl(`assets/art/story/${id}_${rendered.includes(expr) ? expr : 'neutral'}.webp`);
+}
+const bgSrc = (key: string, layer: '' | '_fg' = '') => assetUrl(`assets/art/story/bg_${key}${layer}.webp`);
+
+/** Warm the cache with every image a scene uses, so beats never pop in blank. */
+export function preloadScene(sceneId: string): void {
+  const scene = SCENES[sceneId];
+  if (!scene || typeof Image === 'undefined') return;
+  const urls = new Set<string>([assetUrl('assets/art/story/dallah.webp')]);
+  for (const b of scene.beats) {
+    urls.add(bgSrc(b.bg));
+    if (FG_LAYERS.has(b.bg)) urls.add(bgSrc(b.bg, '_fg'));
+    for (const c of b.cast) urls.add(actorSrc(c.id, c.expr));
+  }
+  urls.forEach((u) => {
+    const img = new Image();
+    img.decoding = 'async';
+    img.src = u;
+  });
+}
+
+const prefersReducedMotion = () => typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
+/** Audio and haptics come from the app, so this chunk does not pull in the sound manager (and the rules it imports). */
+export interface SceneSound {
+  playLine: (id: string) => void;
+  stopLine: () => void;
+  haptic: (strength: 'light' | 'medium') => void;
+  chime: () => void;
+}
+
+interface ScenePlayerProps {
+  sceneId: string;
+  lang: Language;
+  sound: SceneSound;
+  onFinish: (play: ScenePlay) => void;
+}
+
+/**
+ * Full-screen animated story scene: cinematic letterbox, backdrop with camera moves and parallax, characters that
+ * enter, breathe, bob while talking and change expression, a typewriter speech bubble, two-option choices and Skip.
+ * Tap anywhere: finish the line, then go to the next beat.
+ */
+export const ScenePlayer: React.FC<ScenePlayerProps> = ({ sceneId, lang, sound, onFinish }) => {
+  const scene: Scene = SCENES[sceneId];
+  const isAr = lang === 'ar';
+  const reduced = useMemo(prefersReducedMotion, []);
+  const [play, setPlay] = useState<ScenePlay>(() => startScene(scene));
+  const [typed, setTyped] = useState(0);
+  const [finale, setFinale] = useState(false);
+  const finishedRef = useRef(false);
+  const beat = currentBeat(scene, play);
+  const text = beat ? Array.from(isAr ? beat.textAr : beat.textEn) : [];
+  const typing = typed < text.length;
+
+  const finish = useCallback(
+    (p: ScenePlay) => {
+      if (finishedRef.current) return;
+      finishedRef.current = true;
+      sound.stopLine();
+      onFinish(p);
+    },
+    [onFinish, sound]
+  );
+
+  // Each new beat: restart the typewriter and speak its line.
+  useEffect(() => {
+    if (!beat) return;
+    setTyped(reduced ? Number.MAX_SAFE_INTEGER : 0);
+    if (beat.voice) sound.playLine(beat.voice);
+    else sound.stopLine();
+  }, [beat?.id]);
+
+  useEffect(() => {
+    if (!typing) return;
+    const t = window.setTimeout(() => setTyped((n) => n + 1), TYPE_MS);
+    return () => window.clearTimeout(t);
+  }, [typed, typing]);
+
+  useEffect(() => () => sound.stopLine(), []);
+
+  const next = useCallback(() => {
+    if (!beat || finale) return;
+    if (typing) {
+      setTyped(text.length);
+      return;
+    }
+    if (beat.choice) return;
+    const n = advance(scene, play);
+    if (!n.done) {
+      sound.haptic('light');
+      setPlay(n);
+      return;
+    }
+    if (beat.effect === 'dallah-to-board' && !reduced) {
+      setFinale(true);
+      sound.chime();
+      window.setTimeout(() => finish(n), 1100);
+    } else {
+      finish(n);
+    }
+  }, [beat, finale, typing, text.length, scene, play, reduced, finish, sound]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        next();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [next]);
+
+  if (!beat && !finale) return null;
+  const shown = beat ?? scene.beats[scene.beats.length - 1];
+  const side = (pos: StagePos): StagePos => (isAr && pos !== 'center' ? (pos === 'left' ? 'right' : 'left') : pos);
+  const camera = shown.camera ?? 'none';
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={isAr ? scene.titleAr : scene.titleEn}
+      data-testid="scene-player"
+      className={`fixed inset-0 z-[60] bg-black flex justify-center select-none ${finale ? 'scene-finale' : ''}`}
+      onClick={next}
+    >
+      <div className="relative h-full w-full max-w-[520px] overflow-hidden">
+        {/* Backdrop: keyed by background + camera so each new shot restarts its move */}
+        <div key={`${shown.bg}-${camera}-${shown.id}`} className="absolute inset-0">
+          <img src={bgSrc(shown.bg)} alt="" decoding="async" className={`absolute inset-0 w-full h-full object-cover scene-cam cam-${camera}`} />
+          {FG_LAYERS.has(shown.bg) && (
+            <img src={bgSrc(shown.bg, '_fg')} alt="" decoding="async" className={`absolute inset-0 w-full h-full object-cover scene-cam cam-${camera} cam-fg`} />
+          )}
+        </div>
+
+        {/* Cast */}
+        {shown.cast.map((a) => {
+          const pos = side(a.pos);
+          const talking = shown.speaker === a.id;
+          return (
+            <div key={a.id} data-testid={`actor-${a.id}`} className={`scene-actor scene-actor-${pos} enter-from-${pos === 'center' ? 'bottom' : pos}`}>
+              <div className={`scene-actor-body ${talking && typing ? 'actor-talk' : ''} ${shown.speaker && !talking ? 'actor-dim' : ''}`}>
+                <img key={`${a.id}-${a.expr}`} src={actorSrc(a.id, a.expr)} alt={isAr ? CAST_NAMES[a.id].ar : CAST_NAMES[a.id].en} className="scene-actor-img" draggable={false} />
+              </div>
+            </div>
+          );
+        })}
+
+        {/* Letterbox */}
+        <div className="scene-bar scene-bar-top" />
+        <div className="scene-bar scene-bar-bottom" />
+
+        <button
+          type="button"
+          data-testid="scene-skip"
+          onClick={(e) => {
+            e.stopPropagation();
+            finish(skip(scene, play));
+          }}
+          className="absolute top-3 end-3 z-20 inline-flex items-center gap-1.5 rounded-full bg-black/45 border border-white/30 px-3 py-1.5 text-xs font-bold text-white backdrop-blur-sm"
+        >
+          {isAr ? 'تخطي' : 'Skip'}
+          <FastForward className="w-3.5 h-3.5 rtl:-scale-x-100" />
+        </button>
+
+        {/* Choices */}
+        {beat?.choice && !typing && (
+          <div className="absolute inset-x-4 bottom-[calc(9vh+9.5rem)] z-20 flex flex-col gap-2.5" data-testid="scene-choices">
+            {beat.choice.map((o, i) => (
+              <button
+                key={o.id}
+                type="button"
+                data-testid={`scene-choice-${o.id}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  sound.haptic('medium');
+                  setPlay(choose(scene, play, o.id));
+                }}
+                className={`scene-choice w-full rounded-2xl px-4 py-3 text-start text-sm font-extrabold shadow-xl border-2 flex items-center justify-between gap-3 ${
+                  i === 0 ? 'bg-gradient-to-r from-[#B45309] to-[#D97706] border-[#FDE68A] text-white' : 'bg-gradient-to-r from-[#065F46] to-[#047857] border-[#A7F3D0] text-white'
+                }`}
+                style={{ animationDelay: `${i * 80}ms` }}
+              >
+                <span>{isAr ? o.textAr : o.textEn}</span>
+                {o.reward && (
+                  <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-black/25 px-2 py-0.5 text-[11px]">
+                    {o.reward.gems ? <>+{o.reward.gems}<Gem className="w-3 h-3" /></> : null}
+                    {o.reward.coins ? <>+{o.reward.coins}<Coins className="w-3 h-3" /></> : null}
+                    {o.reward.energy ? <>+{o.reward.energy}<Zap className="w-3 h-3" /></> : null}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Speech bubble */}
+        {beat && (
+          <div key={beat.id} className="absolute inset-x-3 bottom-[9vh] z-10 scene-bubble" aria-live="polite">
+            {beat.speaker && (
+              <div className="absolute -top-3.5 start-5 rounded-full px-3 py-0.5 text-xs font-extrabold text-white shadow" style={{ background: NAME_COLORS[beat.speaker] ?? '#78350F' }}>
+                {isAr ? CAST_NAMES[beat.speaker].ar : CAST_NAMES[beat.speaker].en}
+              </div>
+            )}
+            <div className={`rounded-3xl border-2 border-[#D97706] bg-[#FFFDF9]/95 shadow-2xl px-5 pt-5 pb-4 min-h-[8.5rem] ${beat.speaker ? '' : 'text-center'}`}>
+              <p className={`text-[15px] leading-relaxed text-[#3E2723] ${beat.speaker ? 'font-bold' : 'font-extrabold italic text-[#92400E]'}`} data-testid="scene-text">
+                {text.slice(0, typed).join('')}
+                <span className="invisible">{text.slice(typed).join('')}</span>
+              </p>
+              {!typing && !beat.choice && <span className="scene-next-hint absolute bottom-3 end-5 text-[#D97706] text-lg">▾</span>}
+            </div>
+          </div>
+        )}
+
+        {finale && <img src={assetUrl('assets/art/story/dallah.webp')} alt="" className="scene-dallah-fly" />}
+      </div>
+    </div>
+  );
+};

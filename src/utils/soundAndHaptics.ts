@@ -99,6 +99,40 @@ class SoundAndHapticsManager {
     });
   }
 
+  private storySource: AudioBufferSourceNode | null = null;
+
+  /** Voiced story-scene line (public/assets/audio/story/<id>.mp3). Stops the previous line; silent if the file is missing. */
+  public playStoryLine(id: string) {
+    this.stopStoryLine();
+    if (this.muted || typeof window === 'undefined') return;
+    void this.loadBuffer(assetUrl(`assets/audio/story/${id}.mp3`)).then((buf) => {
+      const ctx = this.ensureContext();
+      if (!buf || !ctx || this.muted) return;
+      this.stopStoryLine();
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      src.connect(ctx.destination);
+      this.setDuck(true);
+      src.onended = () => {
+        if (this.storySource === src) this.storySource = null;
+        this.setDuck(false);
+      };
+      src.start();
+      this.storySource = src;
+    });
+  }
+
+  public stopStoryLine() {
+    if (!this.storySource) return;
+    try {
+      this.storySource.stop();
+    } catch {
+      // already stopped
+    }
+    this.storySource = null;
+    this.setDuck(false);
+  }
+
   private speakArabic(text: string, profile: VoiceProfile) {
     if (typeof window === 'undefined' || !('speechSynthesis' in window) || typeof SpeechSynthesisUtterance === 'undefined') return;
     const synth = window.speechSynthesis;

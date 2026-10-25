@@ -11,6 +11,13 @@ const { chromium, devices } = require('playwright');
   const closeDialogs = async () => { for (let i = 0; i < 4 && await pg.locator('[role=dialog]').count(); i++) { const d = pg.locator('[role=dialog]').last(); const c = d.getByRole('button', { name: /close|إغلاق|✕|استلم|claim|متابعة|continue|لاحق/i }).first(); if (await c.count()) await c.tap(); else await d.locator('button').first().tap(); await pg.waitForTimeout(250); } };
   await step('title renders', async () => { await pg.goto(base); await pg.getByRole('button', { name: /start|ابدأ|play|العب/i }).first().waitFor({ timeout: 8000 }); });
   await step('start game', async () => { await pg.getByRole('button', { name: /start|ابدأ|play|العب/i }).first().tap(); await pg.waitForTimeout(700); });
+  await step('opening prologue plays, then skip', async () => {
+    await pg.locator('[data-testid=scene-player]').waitFor({ timeout: 8000 });
+    for (let i = 0; i < 3; i++) { await pg.mouse.click(195, 300); await pg.waitForTimeout(250); }
+    await pg.locator('[data-testid=scene-skip]').tap();
+    await pg.locator('[data-testid=merge-board-grid]').waitFor({ timeout: 4000 });
+    if (await pg.locator('[data-testid=scene-player]').count()) throw new Error('scene still open');
+  });
   await step('daily login claim', async () => { const c = pg.getByRole('button', { name: /استلم هديتي|claim/i }).first(); if (await c.count()) { await c.tap(); await pg.waitForTimeout(300); } });
   await closeDialogs();
   const cells = pg.locator('[data-cell-index]');

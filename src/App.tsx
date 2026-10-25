@@ -66,6 +66,8 @@ import {
 import { StoryDialogueModal } from './components/StoryDialogueModal';
 import { CustomerPortrait } from './components/CustomerPortrait';
 import { BoardCell } from './components/BoardCell';
+import { applySceneResult, ScenePlay } from './story/engine';
+import { withStoryFlags } from './story/flags';
 import { MergeParticleOverlay } from './components/MergeParticleOverlay';
 import { EnergyModal, QuestsModal, WorkshopModal } from './components/ProgressionModals';
 import { BottomNav, GameHud, NavTab } from './components/GameChrome';
@@ -81,14 +83,22 @@ const loadShop = () => import('./components/ShopAndMadaModal');
 const loadChainAndLeaderboard = () => import('./components/ChainAndLeaderboardModals');
 const loadPour = () => import('./components/FinjanPourModal');
 const loadTransfer = () => import('./components/SaveTransferModal');
+const loadScenePlayer = () => import('./components/story/ScenePlayer');
 const MajlisRenovationView = lazy(() => loadMajlis().then((m) => ({ default: m.MajlisRenovationView })));
 const ShopAndMadaModal = lazy(() => loadShop().then((m) => ({ default: m.ShopAndMadaModal })));
 const ChainTreeModal = lazy(() => loadChainAndLeaderboard().then((m) => ({ default: m.ChainTreeModal })));
 const LeaderboardModal = lazy(() => loadChainAndLeaderboard().then((m) => ({ default: m.LeaderboardModal })));
 const FinjanPourModal = lazy(() => loadPour().then((m) => ({ default: m.FinjanPourModal })));
 const SaveTransferModal = lazy(() => loadTransfer().then((m) => ({ default: m.SaveTransferModal })));
+const ScenePlayer = lazy(() => loadScenePlayer().then((m) => ({ default: m.ScenePlayer })));
+const SCENE_SOUND = {
+  playLine: (id: string) => soundFX.playStoryLine(id),
+  stopLine: () => soundFX.stopStoryLine(),
+  haptic: (strength: 'light' | 'medium') => soundFX.triggerHaptic(strength),
+  chime: () => soundFX.playOrderComplete(),
+};
 function prefetchScreens(): void {
-  const run = () => [loadMajlis, loadShop, loadChainAndLeaderboard, loadPour, loadTransfer].forEach((load) => load().catch(() => {}));
+  const run = () => [loadMajlis, loadShop, loadChainAndLeaderboard, loadPour, loadTransfer, loadScenePlayer].forEach((load) => load().catch(() => {}));
   if (typeof window.requestIdleCallback === 'function') window.requestIdleCallback(run, { timeout: 4000 });
   else window.setTimeout(run, 2000);
 }
@@ -171,6 +181,11 @@ export default function App() {
   const [leaderboardSection, setLeaderboardSection] = useState<'leaderboard' | 'mazayen' | 'wheel'>('leaderboard');
 
   const bannerTimeoutRef = useRef<number | null>(null);
+  const [activeScene, setActiveScene] = useState<string | null>(null);
+  // ?scene=prologue replays a story scene on the next Play (handy for testing on a phone)
+  const forcedSceneRef = useRef<string | null>(
+    typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('scene') : null
+  );
   const [transferOpen, setTransferOpen] = useState(false);
   const [eventOpen, setEventOpen] = useState(false);
   const [energyOpen, setEnergyOpen] = useState(false);
@@ -287,11 +302,35 @@ export default function App() {
   }, []);
 
   // Offer the daily login reward once per calendar day when play begins
+  // New players see the opening prologue first; the daily reward waits until the scene ends.
   useEffect(() => {
     if (shellState !== 'playing') return;
+    const pending = forcedSceneRef.current ?? (gameState.seenScenes.includes('prologue') ? null : 'prologue');
+    if (pending) {
+      forcedSceneRef.current = null;
+      setActiveScene(pending);
+      return;
+    }
     setDailyLoginDay(getDailyLoginDay(gameState, dayKeyFromDate(new Date())));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shellState]);
+
+  // Warm the prologue's art while a new player is still on the title screen.
+  useEffect(() => {
+    if (shellState !== 'title' || (gameState.seenScenes.includes('prologue') && !forcedSceneRef.current)) return;
+    void loadScenePlayer().then((m) => m.preloadScene(forcedSceneRef.current ?? 'prologue'));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shellState]);
+
+  const handleSceneFinish = useCallback(
+    (play: ScenePlay) => {
+      setActiveScene(null);
+      const next = applySceneResult(gameState, play);
+      setGameState(next);
+      setDailyLoginDay(getDailyLoginDay(next, dayKeyFromDate(new Date())));
+    },
+    [gameState]
+  );
 
   const handleStartGame = useCallback(() => {
     setShellState('playing');
@@ -953,7 +992,7 @@ export default function App() {
   const selectedItemDef =
     selectedCell && selectedCell.itemId ? ITEM_CATALOG[selectedCell.itemId] : null;
 
-  const activeStoryChapter = findStoryChapter(gameState.activeStoryId);
+  const activeStoryChapter = withStoryFlags(findStoryChapter(gameState.activeStoryId), gameState.storyFlags);
 
   // The speaker greets the player when a story chapter opens
   const storyChapterId = activeStoryChapter ? activeStoryChapter.id : null;
@@ -1111,6 +1150,7 @@ export default function App() {
         onToggleMute={() => handleToggleMute()}
         onPause={() => handleTogglePause()}
         onTransfer={() => setTransferOpen(true)}
+        onReplayStory={() => setActiveScene('prologue')}
         overlay={
           <>
             {levelUpToast && (
@@ -1615,6 +1655,12 @@ export default function App() {
           }
         }}
       />
+
+      {activeScene && (
+        <Suspense fallback={<div className="fixed inset-0 z-[60] bg-black" />}>
+          <ScenePlayer sceneId={activeScene} lang={lang} sound={SCENE_SOUND} onFinish={handleSceneFinish} />
+        </Suspense>
+      )}
 
       {transferOpen && (
         <Suspense fallback={null}>
