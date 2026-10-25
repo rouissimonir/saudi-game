@@ -7,12 +7,9 @@ import { CAST_NAMES, CastId, Expression, Scene, StagePos } from '../../story/typ
 import { assetUrl } from '../../utils/assetUrl';
 import './ScenePlayer.css';
 
-/**
- * Rendered expressions per character; anything else falls back to neutral. Layla is painted (docs/ASSETS.md, 3c;
- * her angry face is still to come), the others are Blender renders from tools/blender/make_story_cast.py.
- */
+/** Painted expressions per character (docs/ASSETS.md, section 3c); anything else falls back to neutral. */
 const EXPRESSIONS: Partial<Record<CastId, Expression[]>> = {
-  layla: ['neutral', 'happy', 'surprised', 'worried'],
+  layla: ['neutral', 'happy', 'surprised', 'worried', 'angry'],
   noura: ['neutral', 'happy', 'surprised', 'worried'],
   rashid: ['neutral', 'angry', 'surprised'],
 };

@@ -78,7 +78,7 @@ Limits: these are clean stylized 3D props, not painterly game-art. Some are simp
   - Convert with `python3 tools/art/to_webp.py`.
 - **Voice:** every beat has a clip, `public/assets/audio/story/pro_*.mp3`, ElevenLabs `eleven_v4` (first take), trimmed and loudness-matched with ffmpeg. The casting is in `tools/voice/voices.json`; the narrator (`pro_narr_*`) reuses the jury's Ahmed MSA voice. A unit test fails if a beat has no voice or its file is missing. The lines still need a native-speaker listen, like the rest of the voice work.
 
-### 3c. Illustrated story portraits (in progress; replaces the Blender half-bodies)
+### 3c. Painted story portraits (replace the Blender half-bodies)
 
 The story cast moves to semi-realistic painted 2D portraits, closer to Hollywood Merge. Each one is generated with an image model, using the Blender renders above as the reference, so face, headwear and colours stay the same across expressions.
 
@@ -106,9 +106,11 @@ The story cast moves to semi-realistic painted 2D portraits, closer to Hollywood
   4. Cut out the flat backdrop and size to 768x1024: `python3 tools/art/cutout_portrait.py in.png public/assets/art/story/<name>.png`.
   5. Convert with `python3 tools/art/to_webp.py` (about 47 KB each).
 - **Cost:** each image is about 1,830 ElevenLabs credits (about $0.37 at the time of writing).
-- **Status:**
-  - Layla: neutral, happy, surprised and worried are painted. Angry is not yet painted, so the firm answer shows painted neutral for now.
-  - Noura and Rashid: still Blender.
+- **Status:** all prologue portraits are painted.
+  - Layla's first four expressions came through the ElevenLabs pipeline above.
+  - Layla's angry face and all of Noura and Rashid came from Codex image generation, using `docs/PORTRAIT_PROMPTS.md`, with painted Layla as the style reference.
+  - The generated sources are kept in `tools/art/portrait_inbox/`.
+  - The Blender half-bodies remain reproducible from `tools/blender/make_story_cast.py`, but are no longer used.
 - **Files:**
   - Same names as today, `public/assets/art/story/<character>_<expression>.webp`. The only code change is the per-character expression list in `ScenePlayer.tsx`.
   - The Blender renders stay reproducible from `tools/blender/make_story_cast.py` as the fallback and reference.
