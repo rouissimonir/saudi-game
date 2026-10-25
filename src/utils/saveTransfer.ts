@@ -1,4 +1,5 @@
-import { GameState, createInitialGameState } from '../game/rules';
+import { GameState } from '../game/rules';
+import { normalizeSave } from '../game/normalizeSave';
 
 /** Versioned prefix so future formats can be told apart. */
 const PREFIX = 'QM1.';
@@ -32,9 +33,7 @@ export async function importSaveCode(code: string): Promise<GameState | null> {
   if (!trimmed.startsWith(PREFIX)) return null;
   try {
     const bytes = await pipe(fromBase64Url(trimmed.slice(PREFIX.length)), new DecompressionStream('gzip'));
-    const parsed = JSON.parse(new TextDecoder().decode(bytes)) as GameState;
-    if (!parsed || !Array.isArray(parsed.board) || parsed.board.length !== 49 || typeof parsed.coins !== 'number') return null;
-    return { ...createInitialGameState(), ...parsed, selectedCellIndex: null };
+    return normalizeSave(JSON.parse(new TextDecoder().decode(bytes)));
   } catch {
     return null;
   }

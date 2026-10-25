@@ -34,6 +34,8 @@ export const GameHud: React.FC<{
   onTransfer: () => void;
   /** Optional strip under the resource row (the live festival bar). */
   below?: React.ReactNode;
+  /** Transient toasts that float just under the header, whatever its height. */
+  overlay?: React.ReactNode;
 }> = (p) => {
   const isAr = p.lang === 'ar';
   const [menuOpen, setMenuOpen] = useState(false);
@@ -82,6 +84,9 @@ export const GameHud: React.FC<{
         </button>
       </div>
       {p.below}
+      <div className="absolute top-full inset-x-0 mt-1 flex flex-col items-center gap-1 px-3 pointer-events-none" aria-live="polite">
+        {p.overlay}
+      </div>
 
       {menuOpen && (
         <div className="absolute end-2 top-full mt-1 w-56 rounded-2xl bg-[#FFFDF9] border-2 border-[#D97706] shadow-2xl p-2 grid gap-1 text-[#3E2723]" data-testid="hud-menu">

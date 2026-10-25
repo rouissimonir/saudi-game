@@ -1,5 +1,6 @@
-// Offline support: pages are network-first (so updates arrive), everything else is cache-first.
-const CACHE = 'qahwa-v1';
+// Offline support. Pages: network-first. Other files: served from cache and refreshed in the background
+// (stale-while-revalidate), so replaced art or audio at the same URL reaches players on their next launch.
+const CACHE = 'qahwa-v2';
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -14,6 +15,29 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+// The page sends the files it loaded before this worker took control; cache each one separately so a single
+// missing file cannot stop the rest (and the JS bundle) from being stored.
+self.addEventListener('message', (event) => {
+  if (event.data?.type !== 'cache-urls' || !Array.isArray(event.data.urls)) return;
+  event.waitUntil(
+    caches.open(CACHE).then((c) =>
+      Promise.allSettled(
+        event.data.urls
+          .filter((u) => typeof u === 'string' && new URL(u).origin === self.location.origin)
+          .map((u) => fetch(u).then((res) => (res.ok ? c.put(u, res) : undefined)))
+      )
+    )
+  );
+});
+
+function putIfOk(req, res) {
+  if (res.ok || res.type === 'opaque') {
+    const copy = res.clone();
+    caches.open(CACHE).then((c) => c.put(req, copy));
+  }
+  return res;
+}
+
 self.addEventListener('fetch', (event) => {
   const req = event.request;
   if (req.method !== 'GET') return;
@@ -26,9 +50,8 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(req)
         .then((res) => {
-          const copy = res.clone();
-          caches.open(CACHE).then((c) => c.put(req, copy));
-          return res;
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return putIfOk(req, res);
         })
         .catch(() => caches.match(req).then((hit) => hit || caches.match('./index.html')))
     );
@@ -36,26 +59,13 @@ self.addEventListener('fetch', (event) => {
   }
 
   event.respondWith(
-    caches.match(req).then(
-      (hit) =>
-        hit ||
-        fetch(req).then((res) => {
-          if (res.ok || res.type === 'opaque') {
-            const copy = res.clone();
-            caches.open(CACHE).then((c) => c.put(req, copy));
-          }
-          return res;
-        })
-    )
-  );
-});
-
-self.addEventListener('notificationclick', (event) => {
-  event.notification.close();
-  event.waitUntil(
-    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
-      for (const c of list) if ('focus' in c) return c.focus();
-      return self.clients.openWindow('./');
+    caches.match(req).then((hit) => {
+      const network = fetch(req).then((res) => putIfOk(req, res));
+      if (hit) {
+        event.waitUntil(network.catch(() => {}));
+        return hit;
+      }
+      return network;
     })
   );
 });

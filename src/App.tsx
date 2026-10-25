@@ -1092,42 +1092,43 @@ export default function App() {
         onToggleMute={() => handleToggleMute()}
         onPause={() => handleTogglePause()}
         onTransfer={() => setTransferOpen(true)}
+        overlay={
+          <>
+            {levelUpToast && (
+              <div role="status" data-testid="level-up-toast" className="level-up-toast px-4 py-2 rounded-2xl bg-[#10B981] text-white text-sm font-extrabold shadow-lg">
+                {isAr ? `ارتقيت للمستوى ${levelUpToast.toLevel}! +${levelUpToast.gems}💎 +${levelUpToast.energy}⚡` : `Level ${levelUpToast.toLevel}! +${levelUpToast.gems}💎 +${levelUpToast.energy}⚡`}
+              </div>
+            )}
+            {comboLive && gameState.comboCount >= 2 && (
+              <div data-testid="combo-meter" className="combo-meter px-4 py-1 rounded-full bg-gradient-to-r from-[#B45309] to-[#F59E0B] text-[#1C1410] text-xs font-extrabold shadow">
+                {isAr ? `كومبو ×${gameState.comboCount}` : `Combo ×${gameState.comboCount}`}
+                <span className="combo-bar" style={{ animationDuration: `${COMBO_WINDOW_MS}ms` }} key={gameState.lastMergeAt} />
+              </div>
+            )}
+            {feedbackBanner && (
+              <div role="status" className="max-w-[440px] text-center px-3 py-1 rounded-full bg-[#3E2723]/95 border border-[#FBBF24] text-[11px] font-bold text-[#FEF3C7] shadow truncate">
+                {feedbackBanner}
+              </div>
+            )}
+            {workspace === 'merge' && tutorialStep === 'merge' && (
+              <div data-testid="tutorial-coach" className="pointer-events-auto max-w-[440px] w-full flex items-start gap-2 rounded-2xl bg-[#ECFDF5] border-2 border-[#10B981] shadow-lg px-3 py-2 text-xs font-bold text-[#065F46]">
+                <span className="flex-1 leading-relaxed">
+                  {isAr
+                    ? 'اسحب عنصراً فوق عنصر مطابق (أو انقر الاثنين) لدمجهما. الإطار الأخضر يعني دمجاً ممكناً.'
+                    : 'Drag an item onto a matching one (or tap both) to merge. A green ring means a match.'}
+                </span>
+                <button type="button" onClick={() => setGameState((prev) => ({ ...prev, tutorialDismissed: true }))} className="shrink-0 underline">
+                  {isAr ? 'تخطي' : 'Skip'}
+                </button>
+              </div>
+            )}
+          </>
+        }
         below={<LiveEventBar lang={lang} state={gameState} now={now} onOpen={() => setEventOpen(true)} />}
       />
 
       {/* 2. MAIN CENTERED STAGE (Clean, Uncluttered Gossip Harbor / Travel Town Layout) */}
       <main className="flex-1 max-w-4xl w-full mx-auto px-2 sm:px-5 pt-1.5 pb-24 flex flex-col gap-1.5">
-        {/* Transient status toasts float over the stage so they never push the board down */}
-        <div className="fixed top-[92px] inset-x-0 z-30 flex flex-col items-center gap-1 px-3 pointer-events-none" aria-live="polite">
-          {levelUpToast && (
-            <div role="status" data-testid="level-up-toast" className="level-up-toast px-4 py-2 rounded-2xl bg-[#10B981] text-white text-sm font-extrabold shadow-lg">
-              {isAr ? `ارتقيت للمستوى ${levelUpToast.toLevel}! +${levelUpToast.gems}💎 +${levelUpToast.energy}⚡` : `Level ${levelUpToast.toLevel}! +${levelUpToast.gems}💎 +${levelUpToast.energy}⚡`}
-            </div>
-          )}
-          {comboLive && gameState.comboCount >= 2 && (
-            <div data-testid="combo-meter" className="combo-meter px-4 py-1 rounded-full bg-gradient-to-r from-[#B45309] to-[#F59E0B] text-[#1C1410] text-xs font-extrabold shadow">
-              {isAr ? `كومبو ×${gameState.comboCount}` : `Combo ×${gameState.comboCount}`}
-              <span className="combo-bar" style={{ animationDuration: `${COMBO_WINDOW_MS}ms` }} key={gameState.lastMergeAt} />
-            </div>
-          )}
-          {feedbackBanner && (
-            <div role="status" className="max-w-[440px] text-center px-3 py-1 rounded-full bg-[#3E2723]/95 border border-[#FBBF24] text-[11px] font-bold text-[#FEF3C7] shadow truncate">
-              {feedbackBanner}
-            </div>
-          )}
-          {workspace === 'merge' && tutorialStep === 'merge' && (
-            <div data-testid="tutorial-coach" className="pointer-events-auto max-w-[440px] w-full flex items-start gap-2 rounded-2xl bg-[#ECFDF5] border-2 border-[#10B981] shadow-lg px-3 py-2 text-xs font-bold text-[#065F46]">
-              <span className="flex-1 leading-relaxed">
-                {isAr
-                  ? 'اسحب عنصراً فوق عنصر مطابق (أو انقر الاثنين) لدمجهما. الإطار الأخضر يعني دمجاً ممكناً.'
-                  : 'Drag an item onto a matching one (or tap both) to merge. A green ring means a match.'}
-              </span>
-              <button type="button" onClick={() => setGameState((prev) => ({ ...prev, tutorialDismissed: true }))} className="shrink-0 underline">
-                {isAr ? 'تخطي' : 'Skip'}
-              </button>
-            </div>
-          )}
-        </div>
 
         {/* Persistent prompts sit just above the bottom navigation */}
         <div className="fixed bottom-[64px] inset-x-0 z-30 flex flex-col items-center gap-1.5 px-3 pointer-events-none">
@@ -1697,6 +1698,7 @@ export default function App() {
           state={gameState}
           onClose={() => setTransferOpen(false)}
           onImport={(imported) => {
+            discoveryCountRef.current = unclaimedDiscoveries(imported).length;
             setGameState(imported);
             setTransferOpen(false);
             soundFX.playLevelUp();
