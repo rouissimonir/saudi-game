@@ -28,6 +28,14 @@ function goTo(play: ScenePlay, scene: Scene, index: number): ScenePlay {
   return index >= scene.beats.length ? { ...play, done: true } : { ...play, beatIndex: index };
 }
 
+/** Beats that can follow the current one (both branches at a choice), so their voice clips can load ahead. */
+export function upcomingBeats(scene: Scene, play: ScenePlay): Beat[] {
+  const beat = currentBeat(scene, play);
+  if (!beat) return [];
+  const ids = beat.choice ? beat.choice.map((o) => o.next) : [beat.next ?? scene.beats[play.beatIndex + 1]?.id];
+  return ids.flatMap((id) => scene.beats.find((b) => b.id === id) ?? []);
+}
+
 /** Next beat; a beat with a choice waits for `choose`. */
 export function advance(scene: Scene, play: ScenePlay): ScenePlay {
   const beat = currentBeat(scene, play);

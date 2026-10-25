@@ -68,5 +68,5 @@
       "voice_name": "Faisal alotaibi - Warm Saudi Voice"
     }
   },
-  "_comment_story": "Story-scene lines (public/assets/audio/story/pro_*.mp3) were generated through the ElevenLabs connector with eleven_v4, first take, then trimmed and loudness-matched with ffmpeg (loudnorm I=-18.5, TP=-2, mono 64 kbps)."
+  "_comment_story": "Story-scene lines (public/assets/audio/story/pro_*.mp3) were generated through the ElevenLabs connector with eleven_v4, first take, then trimmed and loudness-matched with ffmpeg (loudnorm I=-18.5, TP=-2, mono 64 kbps). Narration (pro_narr_*) uses the ghabga voice."
 }

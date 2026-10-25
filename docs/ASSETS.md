@@ -76,7 +76,7 @@ Limits: these are clean stylized 3D props, not painterly game-art. Some are simp
   - Install Blender's Python module (`pip install bpy==5.2.3`).
   - Run `SAMPLES=48 python3 tools/blender/make_story_cast.py -- public/assets/art/story`, then `make_scenes.py` with the same output path.
   - Convert with `python3 tools/art/to_webp.py`.
-- **Voice:** `public/assets/audio/story/pro_*.mp3`, ElevenLabs `eleven_v4` (first take), trimmed and loudness-matched with ffmpeg. The casting is in `tools/voice/voices.json`. The lines still need a native-speaker listen, like the rest of the voice work.
+- **Voice:** every beat has a clip, `public/assets/audio/story/pro_*.mp3`, ElevenLabs `eleven_v4` (first take), trimmed and loudness-matched with ffmpeg. The casting is in `tools/voice/voices.json`; the narrator (`pro_narr_*`) reuses the jury's Ahmed MSA voice. A unit test fails if a beat has no voice or its file is missing. The lines still need a native-speaker listen, like the rest of the voice work.
 
 ## 4. Voice lines
 
