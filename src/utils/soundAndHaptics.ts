@@ -129,7 +129,7 @@ class SoundAndHapticsManager {
   /** Warm the cache so the first stinger plays without a delay. */
   public preloadAudioFiles() {
     if (this.muted) return;
-    [AMBIENT_URL, ORDER_COMPLETE_URL, LEVEL_UP_URL].forEach((u) => void this.loadBuffer(u));
+    [ORDER_COMPLETE_URL, LEVEL_UP_URL].forEach((u) => void this.loadBuffer(u));
   }
 
   private playFile(url: string, volume: number, onMissing: () => void) {
@@ -157,6 +157,28 @@ class SoundAndHapticsManager {
   public startAmbient() {
     this.ambientWanted = true;
     if (this.muted || typeof window === 'undefined') return;
+    if (this.ambientSource || this.ambientTimer !== null || this.ambientScheduled) return;
+    this.preloadAudioFiles();
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) window.speechSynthesis.getVoices();
+    // Data Saver or a 2G-class connection: play the synthesized oud loop and skip the 700 KB music file.
+    if (prefersLightAudio()) {
+      this.startAmbientSynth();
+      return;
+    }
+    // The music must download fully before it can loop gaplessly, so fetch it once the page is idle:
+    // on a slow connection the board art, screens and stingers arrive first, the music a moment later.
+    this.ambientScheduled = true;
+    const begin = () => {
+      this.ambientScheduled = false;
+      if (this.ambientWanted && !this.muted) this.loadAndLoopAmbient();
+    };
+    if (typeof window.requestIdleCallback === 'function') window.requestIdleCallback(begin, { timeout: 2500 });
+    else window.setTimeout(begin, 1200);
+  }
+
+  private ambientScheduled = false;
+
+  private loadAndLoopAmbient() {
     if (this.ambientSource || this.ambientTimer !== null) return;
     void this.loadBuffer(AMBIENT_URL).then((buf) => {
       if (!this.ambientWanted || this.muted || this.ambientSource || this.ambientTimer !== null) return;
@@ -176,8 +198,6 @@ class SoundAndHapticsManager {
       this.ambientSource = src;
       this.ambientGain = gain;
     });
-    this.preloadAudioFiles();
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) window.speechSynthesis.getVoices();
   }
 
   private startAmbientSynth() {
@@ -402,6 +422,12 @@ class SoundAndHapticsManager {
     osc.start(now);
     osc.stop(now + 0.15);
   }
+}
+
+/** True when the player asked to save data or is on a very slow connection (Network Information API, where supported). */
+function prefersLightAudio(): boolean {
+  const conn = (navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } }).connection;
+  return Boolean(conn && (conn.saveData || conn.effectiveType === 'slow-2g' || conn.effectiveType === '2g'));
 }
 
 export const soundFX = new SoundAndHapticsManager();
