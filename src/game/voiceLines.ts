@@ -3,6 +3,7 @@
  * for the device's Arabic text-to-speech. Recorded files at /assets/audio/voice/<id>.mp3 override synthesis.
  * Dialect wording needs native review before launch.
  */
+import { assetUrl } from '../utils/assetUrl';
 
 export type VoiceCharacter = 'noura' | 'faisal' | 'tariq' | 'lama' | 'sultan' | 'ghabga';
 export type VoiceEvent = 'greet' | 'served' | 'vip';
@@ -110,7 +111,7 @@ export function voiceLineId(character: VoiceCharacter, event: VoiceEvent, index:
 }
 
 export function voiceFileUrl(id: string): string {
-  return `/assets/audio/voice/${id}.mp3`;
+  return assetUrl(`assets/audio/voice/${id}.mp3`);
 }
 
 /** Round-robin through a character's lines so repeats are spread out; `counter` is the caller's running count. */

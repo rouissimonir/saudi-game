@@ -14,6 +14,7 @@ import {
   RenovationZone,
   StoryChapter,
   STORY_CHAPTERS,
+  createInitialGameState,
   findNearestEmptyCell,
 } from './rules';
 
@@ -684,6 +685,44 @@ export function claimQuestBonus(state: GameState): { state: GameState; claimed: 
       diamonds: state.diamonds + QUEST_BONUS.gems,
       energy: state.energy + QUEST_BONUS.energy,
       dailyQuests: { ...state.dailyQuests, bonusClaimed: true },
+    },
+    claimed: true,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Collection book: the first discovery of every item pays a one-time reward
+// ---------------------------------------------------------------------------
+
+let starterDiscoveries: Set<string> | null = null;
+function isStarterDiscovery(itemId: string): boolean {
+  // Lazy: rules.ts and this module import each other, so nothing from rules may run at load time.
+  starterDiscoveries ??= new Set(createInitialGameState().discoveredItemIds);
+  return starterDiscoveries.has(itemId);
+}
+
+export function discoveryReward(itemId: string): { coins: number; gems: number } | null {
+  const def = ITEM_CATALOG[itemId];
+  if (!def || def.isGenerator || isStarterDiscovery(itemId)) return null;
+  return { coins: 10 * def.level, gems: def.level >= 3 ? def.level - 2 : 0 };
+}
+
+export function unclaimedDiscoveries(state: GameState): string[] {
+  const claimed = new Set(state.claimedDiscoveryIds ?? []);
+  return state.discoveredItemIds.filter((id) => !claimed.has(id) && discoveryReward(id) !== null);
+}
+
+export function claimDiscovery(state: GameState, itemId: string): { state: GameState; claimed: boolean } {
+  const reward = discoveryReward(itemId);
+  if (!reward || !state.discoveredItemIds.includes(itemId) || (state.claimedDiscoveryIds ?? []).includes(itemId)) {
+    return { state, claimed: false };
+  }
+  return {
+    state: {
+      ...state,
+      coins: state.coins + reward.coins,
+      diamonds: state.diamonds + reward.gems,
+      claimedDiscoveryIds: [...(state.claimedDiscoveryIds ?? []), itemId],
     },
     claimed: true,
   };

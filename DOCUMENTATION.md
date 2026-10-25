@@ -92,6 +92,9 @@ The engine lives in `src/game/progression.ts` (pure, seeded RNG in `state.rngSee
 6. **Phone-first layout:** a single-row HUD (level ring, energy with countdown, SAR, gems, menu), a fixed bottom navigation (Board, Majlis, Quests, Workshop, Shop), floating toasts that never push the board down, and pointer-based drag with a ghost item that works on touch screens. On a 390×664 viewport the whole 7×7 board is visible above the navigation.
 7. **Save migration:** older saves are filled in from a fresh state so new fields never break existing players (`saveMigration.test.ts`).
 8. **Economy simulator:** `npx tsx tools/sim/playtest.ts [areas] [runs]` plays the real rules with a greedy bot. Current pacing per area (minutes of active play): about 4, 19, 27, 59, 152, 353, 667, 294.
+9. **Collection book:** the first time an item appears it can be claimed in the Chains guide for 10 SAR × level, plus gems from Lv.3 (`discoveryReward`). Badges on the Chains button and chain tabs show unclaimed finds; starting items and generators pay nothing.
+10. **Installable and offline (PWA):** `public/manifest.webmanifest`, icons in `public/icons/` (rendered from the Blender dallah) and `public/sw.js` (network-first pages, cache-first assets). The build uses a relative base, so the same `dist/` runs from a domain root, a subpath such as GitHub Pages, or a Capacitor shell; files in `public/` are referenced through `assetUrl()`.
+11. **Hosting:** `.github/workflows/deploy-pages.yml` tests, builds and publishes `dist/` to the `gh-pages` branch on every push to `main`. One-time setup: repository Settings → Pages → Source "Deploy from a branch" → `gh-pages` / root. The game is then at `https://<owner>.github.io/<repo>/`.
 
 ---
 

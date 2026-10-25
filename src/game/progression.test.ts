@@ -147,3 +147,18 @@ test('regen leaves the state object untouched between ticks so the game is not r
   const partial = { ...createInitialGameState(), energy: 50, lastEnergyTick: t0 };
   assert.equal(P.applyEnergyRegen(partial, t0 + 1000), partial);
 });
+
+test('collection book pays once per new discovery and never for starting items or generators', () => {
+  const s0 = createInitialGameState();
+  assert.equal(P.unclaimedDiscoveries(s0).length, 0, 'starting items are not claimable');
+  assert.equal(P.discoveryReward('gen_qahwa'), null);
+  const s1 = { ...s0, discoveredItemIds: [...s0.discoveredItemIds, 'qahwa_3', 'qahwa_4'] };
+  assert.deepEqual(P.unclaimedDiscoveries(s1), ['qahwa_3', 'qahwa_4']);
+  const r = P.claimDiscovery(s1, 'qahwa_4');
+  assert.ok(r.claimed);
+  assert.equal(r.state.coins, s1.coins + 40);
+  assert.equal(r.state.diamonds, s1.diamonds + 2);
+  assert.deepEqual(P.unclaimedDiscoveries(r.state), ['qahwa_3']);
+  assert.equal(P.claimDiscovery(r.state, 'qahwa_4').claimed, false, 'no double claim');
+  assert.equal(P.claimDiscovery(r.state, 'qahwa_7').claimed, false, 'undiscovered items cannot be claimed');
+});

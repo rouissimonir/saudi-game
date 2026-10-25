@@ -84,6 +84,7 @@ import {
   buyEnergyWithCoins,
   buyEnergyWithGems,
   buySandTile,
+  claimDiscovery,
   claimQuest,
   claimQuestBonus,
   ensureDailyQuests,
@@ -93,6 +94,7 @@ import {
   questProgress,
   sandClearCost,
   styleChangeCost,
+  unclaimedDiscoveries,
   upgradeGenerator,
   xpToReachLevel,
 } from './game/progression';
@@ -860,6 +862,13 @@ export default function App() {
     soundFX.playMerge(2);
     setGameState(r.state);
   };
+  const handleClaimDiscovery = (itemId: string) => {
+    const r = claimDiscovery(gameState, itemId);
+    if (!r.claimed) return;
+    soundFX.playOrderComplete();
+    soundFX.triggerHaptic('medium');
+    setGameState(r.state);
+  };
   const handleAdvanceArea = () => {
     const r = advanceArea(gameState);
     if (!r.advanced) return;
@@ -884,6 +893,14 @@ export default function App() {
   };
   const claimableQuests = questProgress(gameState).filter((r) => r.done && !r.claimed).length;
   const energyCountdown = msUntilNextEnergy(gameState, now);
+  const newDiscoveries = unclaimedDiscoveries(gameState);
+  const discoveryCountRef = useRef(newDiscoveries.length);
+  useEffect(() => {
+    if (newDiscoveries.length > discoveryCountRef.current) {
+      showFeedback(isAr ? '🎁 اكتشاف جديد! استلم مكافأته من «دليل السلاسل».' : '🎁 New discovery! Claim its reward in Chains.');
+    }
+    discoveryCountRef.current = newDiscoveries.length;
+  }, [newDiscoveries.length, isAr, showFeedback]);
   const levelFloor = xpToReachLevel(gameState.level);
   const levelProgress = Math.min(1, Math.max(0, (gameState.xp - levelFloor) / (xpToReachLevel(gameState.level + 1) - levelFloor)));
   const canRenovate =
@@ -1302,8 +1319,11 @@ export default function App() {
                   <button
                     type="button"
                     onClick={() => {
+                      const firstNew = newDiscoveries.length ? ITEM_CATALOG[newDiscoveries[0]]?.chain : null;
                       setChainModalCategory(
-                        selectedItemDef && selectedItemDef.chain !== 'generator'
+                        firstNew && firstNew !== 'generator'
+                          ? firstNew
+                          : selectedItemDef && selectedItemDef.chain !== 'generator'
                           ? selectedItemDef.chain
                           : 'qahwa'
                       );
@@ -1313,6 +1333,11 @@ export default function App() {
                   >
                     <Info className="w-3 h-3 text-[#D97706]" />
                     <span>{isAr ? 'دليل السلاسل' : 'Chains'}</span>
+                    {newDiscoveries.length > 0 && (
+                      <span data-testid="discovery-badge" className="min-w-[16px] h-4 px-1 rounded-full bg-[#EF4444] text-white text-[10px] font-black flex items-center justify-center">
+                        {newDiscoveries.length}
+                      </span>
+                    )}
                   </button>
                 </div>
 
@@ -1678,6 +1703,8 @@ export default function App() {
         isOpen={chainModalOpen}
         initialChain={chainModalCategory}
         discoveredItemIds={gameState.discoveredItemIds}
+        claimableItemIds={newDiscoveries}
+        onClaimDiscovery={handleClaimDiscovery}
         onClose={() => setChainModalOpen(false)}
       />
 
