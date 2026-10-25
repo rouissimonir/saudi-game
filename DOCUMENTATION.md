@@ -122,7 +122,7 @@ The engine lives in `src/game/progression.ts` (pure, seeded RNG in `state.rngSee
     - **How it plays:**
       - Characters are Blender half-body figures with expressions.
       - They slide in, breathe, bob while talking and dim when not speaking.
-      - Lines type into a speech bubble, and six key lines are voiced.
+      - Lines type into a speech bubble, and every line is voiced (14 clips, 12 per playthrough). The two scene-setting lines use a narrator, and the player's chosen answer is spoken aloud by Layla.
       - The camera pans, zooms or shakes, with cinematic letterbox bars, and Skip is always available.
       - Chapter 1 later echoes the choice with one extra line from Noura.
     - **Code:**

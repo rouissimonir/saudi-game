@@ -17,6 +17,7 @@ export const PROLOGUE: Scene = {
       cast: [],
       textAr: 'الدرعية… عند الغروب.',
       textEn: 'Diriyah, at sunset.',
+      voice: 'pro_narr_1',
     },
     {
       id: 'layla_home',
@@ -49,6 +50,7 @@ export const PROLOGUE: Scene = {
       speaker: 'noura',
       textAr: 'بس يا بنتي… مجلس جدّك ما عاد مثل أول. تعالي شوفي.',
       textEn: "But my girl… your grandfather's Majlis isn't what it was. Come and see.",
+      voice: 'pro_noura_4',
     },
     {
       id: 'ruin',
@@ -58,6 +60,7 @@ export const PROLOGUE: Scene = {
       speaker: 'layla',
       textAr: 'يا الله! الجدران متشققة… والنافورة ناشفة!',
       textEn: 'Oh no! The walls are cracked… and the fountain is dry!',
+      voice: 'pro_layla_3',
     },
     {
       id: 'rashid_offer',
@@ -79,9 +82,9 @@ export const PROLOGUE: Scene = {
         { id: 'layla', pos: 'left', expr: 'neutral' },
         { id: 'rashid', pos: 'right', expr: 'neutral' },
       ],
-      speaker: 'layla',
       textAr: 'كيف تردّين على راشد؟',
       textEn: 'How will you answer Rashid?',
+      voice: 'pro_narr_2',
       choice: [
         {
           id: 'firm',
@@ -89,7 +92,7 @@ export const PROLOGUE: Scene = {
           textEn: "My grandfather's legacy is not for sale!",
           flag: ['rivalry', 'firm'],
           reward: { gems: 5 },
-          next: 'rashid_firm',
+          next: 'say_firm',
         },
         {
           id: 'polite',
@@ -97,9 +100,35 @@ export const PROLOGUE: Scene = {
           textEn: "Thank you, but the Majlis isn't for sale.",
           flag: ['rivalry', 'polite'],
           reward: { coins: 100 },
-          next: 'rashid_polite',
+          next: 'say_polite',
         },
       ],
+    },
+    {
+      id: 'say_firm',
+      bg: 'courtyard',
+      cast: [
+        { id: 'layla', pos: 'left', expr: 'angry' },
+        { id: 'rashid', pos: 'right', expr: 'neutral' },
+      ],
+      speaker: 'layla',
+      textAr: 'إرث جدّي ما ينباع!',
+      textEn: "My grandfather's legacy is not for sale!",
+      voice: 'pro_layla_firm',
+      next: 'rashid_firm',
+    },
+    {
+      id: 'say_polite',
+      bg: 'courtyard',
+      cast: [
+        { id: 'layla', pos: 'left', expr: 'happy' },
+        { id: 'rashid', pos: 'right', expr: 'neutral' },
+      ],
+      speaker: 'layla',
+      textAr: 'مشكور، بس المجلس مو للبيع.',
+      textEn: "Thank you, but the Majlis isn't for sale.",
+      voice: 'pro_layla_polite',
+      next: 'rashid_polite',
     },
     {
       id: 'rashid_firm',
@@ -112,6 +141,7 @@ export const PROLOGUE: Scene = {
       speaker: 'rashid',
       textAr: 'هه! نشوف وش يقول المجلس البلدي.',
       textEn: "Ha! We'll see what the council has to say.",
+      voice: 'pro_rashid_2',
       next: 'will',
     },
     {
@@ -124,6 +154,7 @@ export const PROLOGUE: Scene = {
       speaker: 'rashid',
       textAr: 'أدب ما توقعته… بس لا تنسين: صبري طويل.',
       textEn: 'Politer than I expected… but remember: I am a patient man.',
+      voice: 'pro_rashid_3',
     },
     {
       id: 'will',

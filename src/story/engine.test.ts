@@ -115,3 +115,12 @@ test('chapter 1 remembers the prologue choice with one extra line; other chapter
   assert.equal(withStoryFlags(ch1, {}), ch1);
   assert.equal(withStoryFlags(STORY_CHAPTERS[1], { rivalry: 'firm' }), STORY_CHAPTERS[1]);
 });
+
+test('every prologue line is voiced and its audio file exists', async () => {
+  const { existsSync } = await import('node:fs');
+  const { PROLOGUE } = await import('./scenes/prologue');
+  for (const b of PROLOGUE.beats) {
+    assert.ok(b.voice, `beat "${b.id}" has no voice clip`);
+    assert.ok(existsSync(`public/assets/audio/story/${b.voice}.mp3`), `missing public/assets/audio/story/${b.voice}.mp3`);
+  }
+});

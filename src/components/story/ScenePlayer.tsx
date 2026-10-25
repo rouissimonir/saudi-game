@@ -9,7 +9,7 @@ import './ScenePlayer.css';
 
 /** Rendered expressions per character (tools/blender/make_story_cast.py); anything else falls back to neutral. */
 const EXPRESSIONS: Partial<Record<CastId, Expression[]>> = {
-  layla: ['neutral', 'happy', 'surprised', 'worried'],
+  layla: ['neutral', 'happy', 'surprised', 'worried', 'angry'],
   noura: ['neutral', 'happy', 'surprised', 'worried'],
   rashid: ['neutral', 'angry', 'surprised'],
 };

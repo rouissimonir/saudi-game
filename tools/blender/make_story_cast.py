@@ -69,7 +69,7 @@ def rashid():  # rival developer: white ghutra + agal, neat goatee, charcoal bis
 BROW_BIAS = {'layla': 0.16, 'noura': 0.08}
 
 CAST = {
-    'layla': (layla, ['neutral', 'happy', 'surprised', 'worried']),
+    'layla': (layla, ['neutral', 'happy', 'surprised', 'worried', 'angry']),
     'noura': (noura, ['neutral', 'happy', 'surprised', 'worried']),
     'rashid': (rashid, ['neutral', 'angry', 'surprised']),
 }
