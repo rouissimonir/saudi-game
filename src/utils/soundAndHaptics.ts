@@ -1,4 +1,5 @@
 import { GameState, createInitialGameState } from '../game/rules';
+import { assetUrl } from './assetUrl';
 import { VoiceCharacter, VoiceEvent, VoiceProfile, pickVoiceLine, voiceFileUrl } from '../game/voiceLines';
 
 const STORAGE_KEY = 'qahwa_majlis_merge_save_v3';
@@ -9,9 +10,9 @@ export const HIJAZ_SCALE_HZ = [293.66, 311.13, 369.99, 392.0, 440.0, 466.16, 554
 /** Looping oud phrase as indices into HIJAZ_SCALE_HZ; -1 is a rest. Ends on the tonic. */
 export const AMBIENT_PHRASE = [0, 2, 3, 2, 1, 0, -1, 4, 3, 2, 3, 5, 4, 3, 2, 1, 0, -1, 0, 1, 2, 3, 4, 7, 5, 4, 3, 2, 1, 0, -1, -1];
 const AMBIENT_STEP_MS = 520;
-const AMBIENT_URL = '/assets/audio/ambient.mp3';
-const ORDER_COMPLETE_URL = '/assets/audio/order_complete.mp3';
-const LEVEL_UP_URL = '/assets/audio/level_up.mp3';
+const AMBIENT_URL = assetUrl('assets/audio/ambient.mp3');
+const ORDER_COMPLETE_URL = assetUrl('assets/audio/order_complete.mp3');
+const LEVEL_UP_URL = assetUrl('assets/audio/level_up.mp3');
 
 class SoundAndHapticsManager {
   private ctx: AudioContext | null = null;

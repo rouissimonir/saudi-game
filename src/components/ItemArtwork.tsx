@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { ITEM_CATALOG } from '../game/rules';
+import { assetUrl } from '../utils/assetUrl';
 
 /** Warm the browser cache so merge results never flash blank. */
 export function preloadItemArt(): void {
   if (typeof Image === 'undefined') return;
   Object.keys(ITEM_CATALOG).forEach((id) => {
     const img = new Image();
-    img.src = `/assets/art/items/${id}.png`;
+    img.src = assetUrl(`assets/art/items/${id}.png`);
   });
 }
 
@@ -29,7 +30,7 @@ export const ItemArtwork: React.FC<ItemArtworkProps> = ({ itemId, size = 'md' })
     <div className={`relative flex items-center justify-center ${sizeClass} select-none pointer-events-none`}>
       {!imgFailed && (
         <img
-          src={`/assets/art/items/${itemId}.png`}
+          src={assetUrl(`assets/art/items/${itemId}.png`)}
           alt=""
           width={256}
           height={256}

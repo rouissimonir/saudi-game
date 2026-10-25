@@ -210,6 +210,8 @@ export interface GameState {
   activeOrders: CustomerOrder[];
   renovationZones: RenovationZone[];
   discoveredItemIds: string[];
+  /** Discoveries whose collection reward has been claimed (starting items count as claimed). */
+  claimedDiscoveryIds: string[];
   completedStoryIds: string[];
   activeStoryId: string | null;
   liveOpsPoints: number;
@@ -1103,6 +1105,7 @@ export function createInitialGameState(): GameState {
       'oud_1',
       'chest_1',
     ],
+    claimedDiscoveryIds: [],
     completedStoryIds: [],
     activeStoryId: null,
     liveOpsPoints: 15,

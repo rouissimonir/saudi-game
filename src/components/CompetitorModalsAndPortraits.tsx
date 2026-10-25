@@ -21,7 +21,9 @@ import {
   LUCKY_WHEEL_WEDGES,
   WheelWedge,
 } from '../game/rules';
+import { discoveryReward } from '../game/progression';
 import { ItemArtwork } from './ItemArtwork';
+import { assetUrl } from '../utils/assetUrl';
 
 /**
  * Illustrated Khaleeji Character Portraits for the Gossip Harbor / Travel Town Customer Order Strip
@@ -51,7 +53,7 @@ export const CustomerPortrait: React.FC<{
     >
       {useImage && (
         <img
-          src={`/assets/art/characters/${avatarKey}.png`}
+          src={assetUrl(`assets/art/characters/${avatarKey}.png`)}
           alt=""
           width={256}
           height={256}
@@ -156,8 +158,10 @@ export const ChainTreeModal: React.FC<{
   isOpen: boolean;
   initialChain: ChainCategory;
   discoveredItemIds: string[];
+  claimableItemIds?: string[];
+  onClaimDiscovery?: (itemId: string) => void;
   onClose: () => void;
-}> = ({ lang, isOpen, initialChain, discoveredItemIds, onClose }) => {
+}> = ({ lang, isOpen, initialChain, discoveredItemIds, claimableItemIds = [], onClaimDiscovery, onClose }) => {
   const [selectedChain, setSelectedChain] = useState<ChainCategory>(initialChain);
 
   React.useEffect(() => {
@@ -218,7 +222,7 @@ export const ChainTreeModal: React.FC<{
         <div className="h-2 w-full sadu-trim" />
 
         {/* Header */}
-        <div className="p-4 sm:p-5 border-b border-white/10 flex items-center justify-between bg-[#2B1D14]">
+        <div className="p-4 sm:p-5 border-b border-white/10 flex items-center justify-between bg-[#2B1D14] shrink-0">
           <div>
             <span className="text-xs font-bold uppercase tracking-wider text-[#FBBF24] block">
               {isAr ? 'دليل تطور السلاسل الأربع والصناديق' : 'MERGE EVOLUTION TREE (4 CHAINS + CHESTS)'}
@@ -238,7 +242,7 @@ export const ChainTreeModal: React.FC<{
         </div>
 
         {/* Chain Switcher Tabs */}
-        <div className="px-4 pt-3 flex gap-1.5 overflow-x-auto bg-[#1B120E]">
+        <div className="px-4 pt-3 flex gap-1.5 overflow-x-auto bg-[#1B120E] shrink-0">
           {chains.map((c) => (
             <button
               key={c.id}
@@ -251,6 +255,9 @@ export const ChainTreeModal: React.FC<{
               }`}
             >
               {isAr ? c.titleAr : c.titleEn}
+              {claimableItemIds.some((id) => ITEM_CATALOG[id]?.chain === c.id) && (
+                <span className="ms-1.5 inline-block w-2 h-2 rounded-full bg-[#EF4444] align-middle" />
+              )}
             </button>
           ))}
         </div>
@@ -319,6 +326,21 @@ export const ChainTreeModal: React.FC<{
                   <div className="text-[11px] text-[#D4A373] tabular-nums mt-0.5">
                     {isAr ? `قيمة البيع: ${item.sellValue} ر.س` : `Sell: ${item.sellValue} SAR`}
                   </div>
+
+                  {claimableItemIds.includes(item.id) && onClaimDiscovery && (() => {
+                    const reward = discoveryReward(item.id);
+                    return (
+                      <button
+                        type="button"
+                        data-testid={`claim-discovery-${item.id}`}
+                        onClick={() => onClaimDiscovery(item.id)}
+                        className="mt-2 w-full rounded-lg btn-3d-green text-white text-[11px] font-extrabold py-1.5 inline-flex items-center justify-center gap-1 animate-pulse"
+                      >
+                        <Gift className="w-3.5 h-3.5" />
+                        {isAr ? 'اكتشاف جديد!' : 'New find!'} +{reward?.coins}🪙{reward?.gems ? ` +${reward.gems}💎` : ''}
+                      </button>
+                    );
+                  })()}
 
                   {idx < chainItems.length - 1 && (
                     <div className="mt-2 inline-flex items-center gap-1 text-[10px] text-[#FBBF24] font-semibold">
@@ -428,7 +450,7 @@ export const LeaderboardModal: React.FC<{
         <div className="h-2 w-full sadu-trim" />
 
         {/* Header */}
-        <div className="p-4 sm:p-5 border-b border-white/10 flex items-center justify-between bg-[#2B1D14]">
+        <div className="p-4 sm:p-5 border-b border-white/10 flex items-center justify-between bg-[#2B1D14] shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="w-10 h-10 rounded-xl bg-[#FBBF24]/20 border border-[#FBBF24] flex items-center justify-center text-[#FBBF24]">
               <Trophy className="w-5 h-5" />

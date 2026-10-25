@@ -5,6 +5,8 @@ import {defineConfig} from 'vite';
 
 export default defineConfig(() => {
   return {
+    // Relative base: the same build runs from a domain root, a subpath (GitHub Pages) or a Capacitor shell.
+    base: './',
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
