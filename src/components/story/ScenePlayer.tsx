@@ -18,19 +18,25 @@ const EXPRESSIONS: Partial<Record<CastId, Expression[]>> = {
  * (docs/BACKGROUND_PROMPTS.md) are a single layer; the Blender ones in tools/blender/make_scenes.py had one.
  */
 const FG_LAYERS = new Set<string>();
-const NAME_COLORS: Partial<Record<CastId, string>> = { layla: '#047857', noura: '#9F1239', rashid: '#334155' };
+const NAME_COLORS: Partial<Record<CastId, string>> = {
+  layla: '#047857', noura: '#9F1239', rashid: '#334155', faisal: '#0F766E', tariq: '#57534E', lama: '#BE185D', sultan: '#92400E',
+};
 const TYPE_MS = 26;
+
+/** Characters with an illustrated expression set (public/assets/art/characters/illustrated), used until they are painted. */
+const ILLUSTRATED = new Set<CastId>(['faisal', 'tariq', 'lama', 'sultan']);
 
 function actorSrc(id: CastId, expr: Expression): string {
   const rendered = EXPRESSIONS[id];
-  if (!rendered) return assetUrl(`assets/art/characters/${id}.webp`); // characters without story renders yet use their bust
-  return assetUrl(`assets/art/story/${id}_${rendered.includes(expr) ? expr : 'neutral'}.webp`);
+  if (rendered) return assetUrl(`assets/art/story/${id}_${rendered.includes(expr) ? expr : 'neutral'}.webp`);
+  if (ILLUSTRATED.has(id)) return assetUrl(`assets/art/characters/illustrated/${id}_${expr}.webp`);
+  return assetUrl(`assets/art/characters/${id}.webp`);
 }
 const bgSrc = (key: string, layer: '' | '_fg' = '') => assetUrl(`assets/art/story/bg_${key}${layer}.webp`);
 
 /** Warm the cache with every image a scene uses, so beats never pop in blank, plus the first line's voice. */
-export function preloadScene(sceneId: string): void {
-  const scene = SCENES[sceneId];
+export function preloadScene(sceneOrId: string | Scene): void {
+  const scene = typeof sceneOrId === 'string' ? SCENES[sceneOrId] : sceneOrId;
   if (!scene || typeof Image === 'undefined') return;
   const urls = new Set<string>([assetUrl('assets/art/story/dallah.webp')]);
   for (const b of scene.beats) {
@@ -60,6 +66,8 @@ export interface SceneSound {
 
 interface ScenePlayerProps {
   sceneId: string;
+  /** A scene built at runtime (story chapters); otherwise `sceneId` is looked up in SCENES. */
+  scene?: Scene;
   lang: Language;
   sound: SceneSound;
   onFinish: (play: ScenePlay) => void;
@@ -70,8 +78,8 @@ interface ScenePlayerProps {
  * enter, breathe, bob while talking and change expression, a typewriter speech bubble, two-option choices and Skip.
  * Tap anywhere: finish the line, then go to the next beat.
  */
-export const ScenePlayer: React.FC<ScenePlayerProps> = ({ sceneId, lang, sound, onFinish }) => {
-  const scene: Scene = SCENES[sceneId];
+export const ScenePlayer: React.FC<ScenePlayerProps> = ({ sceneId, scene: given, lang, sound, onFinish }) => {
+  const scene: Scene = given ?? SCENES[sceneId];
   const isAr = lang === 'ar';
   const reduced = useMemo(prefersReducedMotion, []);
   const [play, setPlay] = useState<ScenePlay>(() => startScene(scene));

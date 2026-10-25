@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useEffect, useState, useCallback, useRef } from 'react';
+import React, { Suspense, lazy, useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import {
   Star,
   Check,
@@ -63,11 +63,11 @@ import {
   loadSavedGameState,
   clearSavedGameState,
 } from './utils/soundAndHaptics';
-import { StoryDialogueModal } from './components/StoryDialogueModal';
 import { CustomerPortrait } from './components/CustomerPortrait';
 import { BoardCell } from './components/BoardCell';
 import { applySceneResult, ScenePlay } from './story/engine';
 import { withStoryFlags } from './story/flags';
+import { chapterScene } from './story/chapterScene';
 import { MergeParticleOverlay } from './components/MergeParticleOverlay';
 import { EnergyModal, QuestsModal, WorkshopModal } from './components/ProgressionModals';
 import { BottomNav, GameHud, NavTab } from './components/GameChrome';
@@ -1002,6 +1002,16 @@ export default function App() {
     if (shellState === 'playing' && storyChapterId && storySpeaker) soundFX.playVoice(storySpeaker, 'greet');
   }, [storyChapterId, storySpeaker, shellState]);
 
+  // Story chapters play as animated scenes; the chapter reward is paid when the scene ends (or is skipped).
+  const chapterSceneData = useMemo(
+    () => (activeStoryChapter && shellState === 'playing' ? chapterScene(activeStoryChapter, storySpeaker) : null),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [storyChapterId, shellState]
+  );
+  const handleChapterSceneFinish = () => {
+    if (storyChapterId) handleClaimStoryChapter(storyChapterId);
+  };
+
   const tutorialStep = getTutorialStep(gameState);
 
   // ============================================================================
@@ -1711,11 +1721,18 @@ export default function App() {
         </Suspense>
       )}
 
-      <StoryDialogueModal
-        lang={lang}
-        chapter={activeStoryChapter}
-        onClose={handleClaimStoryChapter}
-      />
+      {chapterSceneData && !activeScene && (
+        <Suspense fallback={null}>
+          <ScenePlayer
+            key={chapterSceneData.id}
+            sceneId={chapterSceneData.id}
+            scene={chapterSceneData}
+            lang={lang}
+            sound={SCENE_SOUND}
+            onFinish={handleChapterSceneFinish}
+          />
+        </Suspense>
+      )}
 
       {chainModalOpen && (
         <Suspense fallback={null}>
