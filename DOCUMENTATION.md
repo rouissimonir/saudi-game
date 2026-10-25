@@ -116,6 +116,7 @@ The engine lives in `src/game/progression.ts` (pure, seeded RNG in `state.rngSee
     - Title ready went from 3.2 s to 2.2 s, largest paint from 3.15 s to 2.0 s, and the board from 4.05 s to 2.7 s.
     - Idle script time went from 49 to 5 ms per 10 s, and JS per merge from 92 to 22 ms.
     - A 17-step smoke test (title, story, login, tap and drag merges, sell, quests, workshop, shop, wheel, chains, energy, festival, pour, Majlis restore, pause, language, Fasih page) passes on both runtimes. To go back to React, delete the five `react*` aliases.
+18. **Data Saver audio:** when the browser reports Data Saver or a 2G-class connection, the game plays the synthesized oud loop and never downloads the 721 KB music file. Otherwise the music is fetched once the page is idle after Play, after the short sound effects.
 
 ---
 
