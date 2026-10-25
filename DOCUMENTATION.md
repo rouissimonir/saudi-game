@@ -125,6 +125,10 @@ The engine lives in `src/game/progression.ts` (pure, seeded RNG in `state.rngSee
       - Lines type into a speech bubble, and every line is voiced (14 clips, 12 per playthrough). The two scene-setting lines use a narrator, and the player's chosen answer is spoken aloud by Layla.
       - The camera pans, zooms or shakes, with cinematic letterbox bars, and Skip is always available.
       - Chapter 1 later echoes the choice with one extra line from Noura.
+    - **Every story chapter is a scene too:** the 4 Diriyah chapters and one per area, 11 in all.
+      - `src/story/chapterScene.ts` turns each chapter into a narrated title card, the speaker's lines opposite Layla (expressions follow the mood of each line), and a closing reply from Layla.
+      - The chapter reward is paid when the scene ends or is skipped.
+      - Faisal, Tariq, Lama and Sultan use the illustrated busts until their painted portraits arrive (batch 2 in `docs/PORTRAIT_PROMPTS.md`).
     - **Code:**
       - `src/story/` (types, a pure `engine.ts` reducer, `scenes/prologue.ts`, `flags.ts`).
       - `src/components/story/ScenePlayer.tsx` and its CSS, loaded on demand.
@@ -140,7 +144,7 @@ The engine lives in `src/game/progression.ts` (pure, seeded RNG in `state.rngSee
 ### C. Meta-Renovation, Kingdom Map, LiveOps & Saudi Monetization
 1. **Interactive Architectural Diorama (`MajlisRenovationView.tsx`):**
    - 4 upgradable architectural wings (**Najdi Mud-Brick Archway**, **Sadu Majlis & Brass Hearth**, **Specialty V60 & Espresso Bar**, **Courtyard Fountain & Ghabga Lanterns**), each with 2 upgrade tiers and **3 selectable Khaleeji interior design styles**.
-   - Upgrading wings increases the permanent **SAR Coin Bonus per Order** and triggers serialized bilingual story chapters (`StoryDialogueModal.tsx`).
+   - Upgrading wings increases the permanent **SAR Coin Bonus per Order** and triggers serialized bilingual story chapters, played as animated scenes (`src/story/chapterScene.ts`).
 2. **Kingdom Trail (`رحلة المملكة`):**
    - The diorama follows the current area's region: **Historic Diriyah (`الدرعية التاريخية`)**, **Jeddah Al-Balad (`جدة التاريخية - البلد`)** with Hijazi Rawasheen latticework, or **AlUla (`واحة العلا`)** with rose-red monoliths. See B3 for the full eight-area journey.
 3. **Dynamic Courtyard Weather & Ambiance Toggle (`أجواء الحوش`):**
@@ -178,7 +182,6 @@ The engine lives in `src/game/progression.ts` (pure, seeded RNG in `state.rngSee
         ├── ItemArtwork.tsx                   # 30 bespoke SVG illustrations (4 generators, 24 chain items, 2 treasure chests)
         ├── CompetitorModalsAndPortraits.tsx  # Illustrated Khaleeji character portraits, 4-Chain Evolution Tree, KSA Leaderboard, Mazayen & Spin Wheel
         ├── MajlisRenovationView.tsx          # Interactive architectural SVG diorama, Kingdom Map (Diriyah/Jeddah/AlUla) & Weather Ambiance
-        ├── StoryDialogueModal.tsx            # Serialized bilingual Khaleeji narrative chapters & reward claims
         └── ShopAndMadaModal.tsx              # Saudi Mada / Apple Pay / STC Bank store, Ramadan Ghabga LiveOps pass, Almanac & Capacitor guide
 ```
 

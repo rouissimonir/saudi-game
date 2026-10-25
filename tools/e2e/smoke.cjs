@@ -8,7 +8,7 @@ const { chromium, devices } = require('playwright');
   const pg = await ctx.newPage();
   const errs = []; pg.on('pageerror', e => errs.push('pageerror: ' + e.message)); pg.on('console', m => m.type() === 'error' && errs.push('console: ' + m.text()));
   const log = []; const step = async (name, fn) => { try { await fn(); log.push('ok   ' + name); } catch (e) { log.push('FAIL ' + name + ' — ' + e.message.split('\n')[0]); } };
-  const closeDialogs = async () => { for (let i = 0; i < 4 && await pg.locator('[role=dialog]').count(); i++) { const d = pg.locator('[role=dialog]').last(); const c = d.getByRole('button', { name: /close|إغلاق|✕|استلم|claim|متابعة|continue|لاحق/i }).first(); if (await c.count()) await c.tap(); else await d.locator('button').first().tap(); await pg.waitForTimeout(250); } };
+  const closeDialogs = async () => { for (let i = 0; i < 4 && await pg.locator('[role=dialog]').count(); i++) { const d = pg.locator('[role=dialog]').last(); const c = d.getByRole('button', { name: /close|إغلاق|✕|استلم|claim|متابعة|continue|لاحق|skip|تخطي/i }).first(); if (await c.count()) await c.tap(); else await d.locator('button').first().tap(); await pg.waitForTimeout(250); } };
   await step('title renders', async () => { await pg.goto(base); await pg.getByRole('button', { name: /start|ابدأ|play|العب/i }).first().waitFor({ timeout: 8000 }); });
   await step('start game', async () => { await pg.getByRole('button', { name: /start|ابدأ|play|العب/i }).first().tap(); await pg.waitForTimeout(700); });
   await step('opening prologue plays, then skip', async () => {
