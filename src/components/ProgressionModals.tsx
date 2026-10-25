@@ -1,6 +1,7 @@
 import React from 'react';
 import { Coins, Gem, Gift, Hammer, Check, Zap, X, ScrollText, Clock } from 'lucide-react';
-import { ChainId, GameState, ITEM_CATALOG, Language } from '../game/rules';
+import { ChainId, GameState, ITEM_CATALOG, Language, dayKeyFromDate } from '../game/rules';
+import { useNow } from '../utils/useNow';
 import {
   ENERGY_COIN_PACK,
   ENERGY_GEM_PACK,
@@ -44,14 +45,14 @@ function Sheet({ title, icon, onClose, children, testId }: { title: string; icon
 export const EnergyModal: React.FC<{
   lang: Language;
   state: GameState;
-  now: number;
-  dayKey: string;
   onClose: () => void;
   onBuyWithGems: () => void;
   onBuyWithCoins: () => void;
   onOpenShop: () => void;
-}> = ({ lang, state, now, dayKey, onClose, onBuyWithGems, onBuyWithCoins, onOpenShop }) => {
+}> = ({ lang, state, onClose, onBuyWithGems, onBuyWithCoins, onOpenShop }) => {
   const isAr = lang === 'ar';
+  const now = useNow();
+  const dayKey = dayKeyFromDate(new Date(now));
   const next = msUntilNextEnergy(state, now);
   const coinPrice = coinEnergyPrice(state, dayKey);
   const full = state.energy >= state.maxEnergy;

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { Suspense, lazy, useEffect, useState, useCallback, useRef } from 'react';
 import {
   Star,
   Check,
@@ -63,23 +63,34 @@ import {
   loadSavedGameState,
   clearSavedGameState,
 } from './utils/soundAndHaptics';
-import { MajlisRenovationView } from './components/MajlisRenovationView';
 import { StoryDialogueModal } from './components/StoryDialogueModal';
-import { ShopAndMadaModal } from './components/ShopAndMadaModal';
-import {
-  CustomerPortrait,
-  ChainTreeModal,
-  LeaderboardModal,
-} from './components/CompetitorModalsAndPortraits';
+import { CustomerPortrait } from './components/CustomerPortrait';
 import { MergeParticleOverlay } from './components/MergeParticleOverlay';
 import { EnergyModal, QuestsModal, WorkshopModal } from './components/ProgressionModals';
 import { BottomNav, GameHud, NavTab } from './components/GameChrome';
 import { DailyLoginModal } from './components/DailyLoginModal';
-import { FinjanPourModal } from './components/FinjanPourModal';
 import { ItemArtwork, preloadItemArt } from './components/ItemArtwork';
 import { EVENT_ORDER_POINTS, activeLiveEvent, addEventPoints, claimEventMilestone, mergeEventPoints } from './game/events';
 import { LiveEventBar, LiveEventModal } from './components/LiveEventUI';
-import { SaveTransferModal } from './components/SaveTransferModal';
+
+// Screens opened from a button are split into their own chunks and fetched when the page is idle,
+// so the first screen downloads and parses less code.
+const loadMajlis = () => import('./components/MajlisRenovationView');
+const loadShop = () => import('./components/ShopAndMadaModal');
+const loadChainAndLeaderboard = () => import('./components/ChainAndLeaderboardModals');
+const loadPour = () => import('./components/FinjanPourModal');
+const loadTransfer = () => import('./components/SaveTransferModal');
+const MajlisRenovationView = lazy(() => loadMajlis().then((m) => ({ default: m.MajlisRenovationView })));
+const ShopAndMadaModal = lazy(() => loadShop().then((m) => ({ default: m.ShopAndMadaModal })));
+const ChainTreeModal = lazy(() => loadChainAndLeaderboard().then((m) => ({ default: m.ChainTreeModal })));
+const LeaderboardModal = lazy(() => loadChainAndLeaderboard().then((m) => ({ default: m.LeaderboardModal })));
+const FinjanPourModal = lazy(() => loadPour().then((m) => ({ default: m.FinjanPourModal })));
+const SaveTransferModal = lazy(() => loadTransfer().then((m) => ({ default: m.SaveTransferModal })));
+function prefetchScreens(): void {
+  const run = () => [loadMajlis, loadShop, loadChainAndLeaderboard, loadPour, loadTransfer].forEach((load) => load().catch(() => {}));
+  if (typeof window.requestIdleCallback === 'function') window.requestIdleCallback(run, { timeout: 4000 });
+  else window.setTimeout(run, 2000);
+}
 import {
   advanceArea,
   applyEnergyRegen,
@@ -159,7 +170,6 @@ export default function App() {
   const [leaderboardSection, setLeaderboardSection] = useState<'leaderboard' | 'mazayen' | 'wheel'>('leaderboard');
 
   const bannerTimeoutRef = useRef<number | null>(null);
-  const [now, setNow] = useState<number>(() => Date.now());
   const [transferOpen, setTransferOpen] = useState(false);
   const [eventOpen, setEventOpen] = useState(false);
   const [energyOpen, setEnergyOpen] = useState(false);
@@ -172,7 +182,6 @@ export default function App() {
   const comboTimeoutRef = useRef<number | null>(null);
   const [pourOpen, setPourOpen] = useState(false);
   const activeSeason = React.useMemo(() => getActiveSeason(new Date()), []);
-  const dayKey = dayKeyFromDate(new Date(now));
   const burstSeqRef = useRef<number>(1);
   const [mergeBursts, setMergeBursts] = useState<MergeParticleBurst[]>([]);
   const [celebratingCells, setCelebratingCells] = useState<Record<number, boolean>>({});
@@ -255,7 +264,6 @@ export default function App() {
   useEffect(() => {
     const tick = () => {
       const t = Date.now();
-      setNow(t);
       setGameState((prev) => {
         const regen = applyEnergyRegen(prev, t);
         return ensureDailyQuests(regen, dayKeyFromDate(new Date(t)));
@@ -274,6 +282,7 @@ export default function App() {
   }, [shellState, muted]);
   useEffect(() => {
     preloadItemArt();
+    prefetchScreens();
   }, []);
 
   // Offer the daily login reward once per calendar day when play begins
@@ -833,7 +842,7 @@ export default function App() {
   };
 
   const handleBuyEnergy = (kind: 'gems' | 'coins') => {
-    const r = kind === 'gems' ? buyEnergyWithGems(gameState) : buyEnergyWithCoins(gameState, dayKey);
+    const r = kind === 'gems' ? buyEnergyWithGems(gameState) : buyEnergyWithCoins(gameState, dayKeyFromDate(new Date()));
     if (!r.bought) {
       soundFX.playError();
       return;
@@ -912,7 +921,6 @@ export default function App() {
     setGameState(res.state);
   };
   const claimableQuests = questProgress(gameState).filter((r) => r.done && !r.claimed).length;
-  const energyCountdown = msUntilNextEnergy(gameState, now);
   const newDiscoveries = unclaimedDiscoveries(gameState);
   const discoveryCountRef = useRef(newDiscoveries.length);
   useEffect(() => {
@@ -1069,7 +1077,7 @@ export default function App() {
         levelProgress={levelProgress}
         energy={gameState.energy}
         maxEnergy={gameState.maxEnergy}
-        energyCountdownMs={energyCountdown}
+        energyCountdownAt={(t: number) => msUntilNextEnergy(gameState, t)}
         coins={gameState.coins}
         gems={gameState.diamonds}
         muted={muted}
@@ -1124,7 +1132,7 @@ export default function App() {
             )}
           </>
         }
-        below={<LiveEventBar lang={lang} state={gameState} now={now} onOpen={() => setEventOpen(true)} />}
+        below={<LiveEventBar lang={lang} state={gameState} onOpen={() => setEventOpen(true)} />}
       />
 
       {/* 2. MAIN CENTERED STAGE (Clean, Uncluttered Gossip Harbor / Travel Town Layout) */}
@@ -1194,6 +1202,7 @@ export default function App() {
         </div>
 
         {workspace === 'majlis' ? (
+          <Suspense fallback={<div className="h-64 rounded-2xl bg-[#241812] animate-pulse" />}>
           <MajlisRenovationView
             lang={lang}
             zones={gameState.renovationZones}
@@ -1215,6 +1224,7 @@ export default function App() {
               setGameState((prev) => ({ ...prev, activeStoryId: storyId }))
             }
           />
+          </Suspense>
         ) : (
           /* FOCUSED SINGLE-COLUMN MERGE-2 STAGE (Exact Gossip Harbor / Travel Town Proportions) */
           <div className="w-full max-w-[430px] mx-auto flex flex-col items-center gap-1.5">
@@ -1693,30 +1703,30 @@ export default function App() {
       />
 
       {transferOpen && (
-        <SaveTransferModal
-          lang={lang}
-          state={gameState}
-          onClose={() => setTransferOpen(false)}
-          onImport={(imported) => {
-            discoveryCountRef.current = unclaimedDiscoveries(imported).length;
-            setGameState(imported);
-            setTransferOpen(false);
-            soundFX.playLevelUp();
-            showFeedback(isAr ? 'تم نقل تقدمك بنجاح!' : 'Progress transferred!');
-          }}
-        />
+        <Suspense fallback={null}>
+          <SaveTransferModal
+            lang={lang}
+            state={gameState}
+            onClose={() => setTransferOpen(false)}
+            onImport={(imported) => {
+              discoveryCountRef.current = unclaimedDiscoveries(imported).length;
+              setGameState(imported);
+              setTransferOpen(false);
+              soundFX.playLevelUp();
+              showFeedback(isAr ? 'تم نقل تقدمك بنجاح!' : 'Progress transferred!');
+            }}
+          />
+        </Suspense>
       )}
 
       {eventOpen && (
-        <LiveEventModal lang={lang} state={gameState} now={now} onClose={() => setEventOpen(false)} onClaim={handleClaimEventMilestone} />
+        <LiveEventModal lang={lang} state={gameState} onClose={() => setEventOpen(false)} onClaim={handleClaimEventMilestone} />
       )}
 
       {energyOpen && (
         <EnergyModal
           lang={lang}
           state={gameState}
-          now={now}
-          dayKey={dayKey}
           onClose={() => setEnergyOpen(false)}
           onBuyWithGems={() => handleBuyEnergy('gems')}
           onBuyWithCoins={() => handleBuyEnergy('coins')}
@@ -1734,7 +1744,11 @@ export default function App() {
         <WorkshopModal lang={lang} state={gameState} onClose={() => setWorkshopOpen(false)} onUpgrade={handleUpgradeGenerator} />
       )}
       <DailyLoginModal lang={lang} day={gameState.activeStoryId ? null : dailyLoginDay} onClaim={handleClaimDailyLogin} />
-      <FinjanPourModal lang={lang} isOpen={pourOpen} tokens={gameState.pourTokens} onFinish={handleFinishPour} onClose={() => setPourOpen(false)} />
+      {pourOpen && (
+        <Suspense fallback={null}>
+        <FinjanPourModal lang={lang} isOpen={pourOpen} tokens={gameState.pourTokens} onFinish={handleFinishPour} onClose={() => setPourOpen(false)} />
+        </Suspense>
+      )}
 
       <StoryDialogueModal
         lang={lang}
@@ -1742,46 +1756,58 @@ export default function App() {
         onClose={handleClaimStoryChapter}
       />
 
-      <ChainTreeModal
-        lang={lang}
-        isOpen={chainModalOpen}
-        initialChain={chainModalCategory}
-        discoveredItemIds={gameState.discoveredItemIds}
-        claimableItemIds={newDiscoveries}
-        onClaimDiscovery={handleClaimDiscovery}
-        onClose={() => setChainModalOpen(false)}
-      />
+      {chainModalOpen && (
+        <Suspense fallback={null}>
+          <ChainTreeModal
+            lang={lang}
+            isOpen={chainModalOpen}
+            initialChain={chainModalCategory}
+            discoveredItemIds={gameState.discoveredItemIds}
+            claimableItemIds={newDiscoveries}
+            onClaimDiscovery={handleClaimDiscovery}
+            onClose={() => setChainModalOpen(false)}
+          />
+        </Suspense>
+      )}
 
-      <LeaderboardModal
-        lang={lang}
-        isOpen={leaderboardOpen}
-        initialSection={leaderboardSection}
-        playerPrestige={gameState.prestigePoints}
-        ordersCompleted={gameState.ordersCompleted}
-        totalRenovated={totalRenovated}
-        freeSpinsAvailable={gameState.freeSpinsAvailable}
-        diamonds={gameState.diamonds}
-        mazayenVotesRemaining={gameState.mazayenVotesRemaining}
-        votedRivalIds={gameState.votedRivalIds}
-        onSpinWheel={handleSpinWheel}
-        onVoteMazayen={handleVoteMazayen}
-        onClose={() => setLeaderboardOpen(false)}
-      />
+      {leaderboardOpen && (
+        <Suspense fallback={null}>
+          <LeaderboardModal
+            lang={lang}
+            isOpen={leaderboardOpen}
+            initialSection={leaderboardSection}
+            playerPrestige={gameState.prestigePoints}
+            ordersCompleted={gameState.ordersCompleted}
+            totalRenovated={totalRenovated}
+            freeSpinsAvailable={gameState.freeSpinsAvailable}
+            diamonds={gameState.diamonds}
+            mazayenVotesRemaining={gameState.mazayenVotesRemaining}
+            votedRivalIds={gameState.votedRivalIds}
+            onSpinWheel={handleSpinWheel}
+            onVoteMazayen={handleVoteMazayen}
+            onClose={() => setLeaderboardOpen(false)}
+          />
+        </Suspense>
+      )}
 
-      <ShopAndMadaModal
-        lang={lang}
-        isOpen={shopModalOpen}
-        initialTab={shopInitialTab}
-        coins={gameState.coins}
-        diamonds={gameState.diamonds}
-        liveOpsPoints={gameState.liveOpsPoints}
-        milestones={gameState.liveOpsMilestones}
-        discoveredItemIds={gameState.discoveredItemIds}
-        vipPassActive={gameState.vipPassActive}
-        onClose={() => setShopModalOpen(false)}
-        onBuyPack={handleBuyShopPack}
-        onClaimMilestone={handleClaimMilestone}
-      />
+      {shopModalOpen && (
+        <Suspense fallback={null}>
+          <ShopAndMadaModal
+            lang={lang}
+            isOpen={shopModalOpen}
+            initialTab={shopInitialTab}
+            coins={gameState.coins}
+            diamonds={gameState.diamonds}
+            liveOpsPoints={gameState.liveOpsPoints}
+            milestones={gameState.liveOpsMilestones}
+            discoveredItemIds={gameState.discoveredItemIds}
+            vipPassActive={gameState.vipPassActive}
+            onClose={() => setShopModalOpen(false)}
+            onBuyPack={handleBuyShopPack}
+            onClaimMilestone={handleClaimMilestone}
+          />
+        </Suspense>
+      )}
 
       {/* PAUSE OR VICTORY MODAL ('paused' | 'gameover') */}
       {(shellState === 'paused' || shellState === 'gameover') && (

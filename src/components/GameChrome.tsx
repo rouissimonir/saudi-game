@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ArrowRightLeft, Castle, Coins, Gem, Gift, Grid3x3, Hammer, Languages, Menu, Pause, ScrollText, ShoppingBag, Star, Trophy, Volume2, VolumeX, X, Zap } from 'lucide-react';
 import { Language } from '../game/rules';
 import { formatCountdown } from './ProgressionModals';
+import { useNow } from '../utils/useNow';
 
 /** 980 -> "980", 12_480 -> "12.4k", 2_300_000 -> "2.3M" so pills never truncate on small phones. */
 export function compact(n: number): string {
@@ -18,7 +19,8 @@ export const GameHud: React.FC<{
   levelProgress: number; // 0..1 towards the next level
   energy: number;
   maxEnergy: number;
-  energyCountdownMs: number | null;
+  /** Milliseconds until the next energy point at time t, or null when full. */
+  energyCountdownAt: (t: number) => number | null;
   coins: number;
   gems: number;
   muted: boolean;
@@ -39,6 +41,7 @@ export const GameHud: React.FC<{
 }> = (p) => {
   const isAr = p.lang === 'ar';
   const [menuOpen, setMenuOpen] = useState(false);
+  const energyCountdownMs = p.energyCountdownAt(useNow());
   const ring = 2 * Math.PI * 17;
   return (
     <header className="sticky top-0 z-40 w-full bg-gradient-to-b from-[#5C3A21] to-[#432815] border-b-[3px] border-[#C68B59] shadow-md">
@@ -59,7 +62,7 @@ export const GameHud: React.FC<{
           <span className="flex flex-col leading-none min-w-0">
             <span className="text-sm font-black tabular-nums text-[#3E2723]">{Math.round(p.energy)}</span>
             <span className="text-[9px] font-bold tabular-nums text-[#92400E] truncate">
-              {p.energyCountdownMs === null ? (isAr ? 'ممتلئة' : 'full') : formatCountdown(p.energyCountdownMs)}
+              {energyCountdownMs === null ? (isAr ? 'ممتلئة' : 'full') : formatCountdown(energyCountdownMs)}
             </span>
           </span>
         </button>

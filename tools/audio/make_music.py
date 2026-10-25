@@ -256,7 +256,7 @@ if __name__ == '__main__':
     only = os.environ.get('ONLY', 'ambient,order_complete,level_up').split(',')
     if 'ambient' in only:
         amb = finalize(render_ambient(), -20.0)
-        write_mp3(amb, os.path.join(out, 'ambient.mp3'), 128)
+        write_mp3(amb, os.path.join(out, 'ambient.mp3'), 96)  # background loop: 96 kbps is transparent here and 25% smaller
         np.save(os.path.join(out, '..', '_ambient_preview.npy'), amb) if os.environ.get('KEEP') else None
         print('ambient', amb.shape[1] / FS, 's')
     if 'order_complete' in only:
