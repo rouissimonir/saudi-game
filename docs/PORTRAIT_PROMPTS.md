@@ -154,7 +154,7 @@ These four speak in the story chapters. Until they are painted, the chapter scen
 
 ### Task for Codex, batch 2 (copy this whole subsection into Codex)
 
-> You are working in the `rouissimonir/saudi-game` repository on branch `feature/chapter-scenes`.
+> You are working in the `rouissimonir/saudi-game` repository. Check out the branch `art/codex`, creating it from `main` if it does not exist.
 > Generate the 16 portraits in the "Batch 2" section of `docs/PORTRAIT_PROMPTS.md` using your image generation tool.
 >
 > **Order:** generate each character's `_neutral` first, then each of their expressions as an **edit of that neutral image**, never from scratch.
@@ -171,7 +171,7 @@ These four speak in the story chapters. Until they are painted, the chapter scen
 > - The framing is waist-up with the hands visible at the bottom.
 > - There are no extra fingers or distorted hands.
 >
-> **Finish:** commit the 16 PNGs with the message "Add painted portraits for the chapter cast" and push the branch. Do not change any other files.
+> **Finish:** commit the 16 PNGs with the message "Add painted portraits for the chapter cast" and push the `art/codex` branch. Do not change any other files.
 
 ### `faisal_neutral.png`
 

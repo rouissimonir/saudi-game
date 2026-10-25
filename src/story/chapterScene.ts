@@ -1,13 +1,20 @@
 import type { StoryChapter } from '../game/rules';
 import { Beat, CastId, Expression, Scene } from './types';
 
-/** Backdrop per chapter; area chapters default to the street until they get their own painted backdrops. */
-const CHAPTER_BG: Record<string, string> = {
-  chap_1: 'courtyard',
-  chap_2: 'courtyard',
-  chap_3: 'dallah',
-  chap_4: 'courtyard',
-};
+/** Painted backdrops that exist in public/assets/art/story (add a key here when a new one lands). */
+const PAINTED_BGS = new Set(['street', 'courtyard', 'dallah']);
+/** The backdrop each chapter wants (docs/BACKGROUND_PROMPTS.md, batch 2). */
+const CHAPTER_BG: Record<string, string> = { chap_1: 'courtyard', chap_2: 'sadu', chap_3: 'dallah', chap_4: 'lanterns' };
+/** One per area, in the order of AREAS in src/game/progression.ts. */
+export const AREA_BG = ['street', 'jeddah', 'alula', 'taif', 'abha', 'ahsa', 'riyadh', 'khobar'];
+
+/** The chapter's own backdrop once painted; until then the street (areas) or the courtyard (Diriyah wings). */
+export function chapterBg(chapterId: string): string {
+  const area = /^area_(\d+)$/.exec(chapterId);
+  const wanted = area ? AREA_BG[Number(area[1]) % AREA_BG.length] : CHAPTER_BG[chapterId] ?? 'street';
+  if (PAINTED_BGS.has(wanted)) return wanted;
+  return area ? 'street' : 'courtyard';
+}
 
 /** Layla answers the last line, so every chapter ends on her resolve rather than on a monologue. */
 const LAYLA_REPLIES: { ar: string; en: string }[] = [
@@ -31,7 +38,7 @@ function speakerExpr(line: string, index: number, last: boolean): Expression {
  * (expressions follow the mood of each line), then Layla's reply. Hand-written scenes can replace any chapter later.
  */
 export function chapterScene(chapter: StoryChapter, speaker: CastId | null): Scene {
-  const bg = CHAPTER_BG[chapter.id] ?? 'street';
+  const bg = chapterBg(chapter.id);
   const who: CastId = speaker && speaker !== 'layla' ? speaker : 'noura';
   const count = Math.min(chapter.dialogueAr.length, chapter.dialogueEn.length);
   const beats: Beat[] = [

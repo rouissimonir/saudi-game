@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync } from 'node:fs';
-import { chapterScene } from './chapterScene';
+import { AREA_BG, chapterBg, chapterScene } from './chapterScene';
 import { STORY_CHAPTERS } from '../game/rules';
 import { findStoryChapter, areaChapterId, AREA_COUNT_BEFORE_PRESTIGE } from '../game/progression';
 import { speakerCharacter } from '../game/voiceLines';
@@ -43,4 +43,12 @@ test('the speaker of a chapter is on stage opposite Layla and Layla has the last
   assert.deepEqual(scene.beats[1].cast.map((a) => a.id), ['layla', 'faisal']);
   assert.equal(scene.beats[1].speaker, 'faisal');
   assert.equal(scene.beats.at(-1)!.speaker, 'layla');
+});
+
+test('each area has a backdrop slot, and chapters fall back to a painted backdrop until theirs arrives', () => {
+  assert.equal(AREA_BG.length, AREA_COUNT_BEFORE_PRESTIGE);
+  assert.equal(chapterBg('chap_3'), 'dallah');
+  for (const id of ['chap_1', 'chap_2', 'chap_4', 'area_1', 'area_7', 'area_9']) {
+    assert.ok(existsSync(`public/assets/art/story/bg_${chapterBg(id)}.webp`), id);
+  }
 });
