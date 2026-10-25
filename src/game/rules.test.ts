@@ -26,6 +26,7 @@ import {
   gradePour,
   completePour,
   POUR_REWARDS,
+  buildMergeParticleBurst,
 } from './rules';
 
 test('initial game state sets up 7x7 board with 4 heritage generators (including Oud) and starter items', () => {
@@ -336,3 +337,36 @@ test('voice lines: every character has every event, lines are short Arabic, ids 
   assert.equal(v.pickVoiceLine('noura', 'served', -1).id, v.voiceLineId('noura', 'served', 2));
   assert.equal(v.voiceFileUrl(a.id), '/assets/audio/voice/noura_served_1.mp3');
 });
+
+test('buildMergeParticleBurst scales particle count, shockwave rings, and celebration tier by item level', () => {
+  // Cell 24 is center of 7x7 board (row 3, col 3 -> 50%, 50%)
+  const standard = buildMergeParticleBurst(24, 'qahwa_2', 1);
+  assert.equal(standard.tier, 'standard');
+  assert.equal(standard.isHighLevel, false);
+  assert.equal(standard.row, 3);
+  assert.equal(standard.col, 3);
+  assert.ok(Math.abs(standard.xPercent - 50) < 0.01);
+  assert.ok(Math.abs(standard.yPercent - 50) < 0.01);
+  assert.equal(standard.particles.length, 12);
+  assert.equal(standard.ringCount, 1);
+
+  const epic = buildMergeParticleBurst(10, 'barista_3', 2);
+  assert.equal(epic.tier, 'epic');
+  assert.equal(epic.isHighLevel, true);
+  assert.equal(epic.particles.length, 20);
+  assert.equal(epic.ringCount, 2);
+
+  const royal = buildMergeParticleBurst(18, 'oud_4', 3);
+  assert.equal(royal.tier, 'royal');
+  assert.equal(royal.isHighLevel, true);
+  assert.equal(royal.particles.length, 28);
+  assert.equal(royal.ringCount, 3);
+
+  const masterpiece = buildMergeParticleBurst(30, 'qahwa_6', 4);
+  assert.equal(masterpiece.tier, 'masterpiece');
+  assert.equal(masterpiece.isHighLevel, true);
+  assert.equal(masterpiece.isMaxLevel, true);
+  assert.equal(masterpiece.particles.length, 36);
+  assert.equal(masterpiece.ringCount, 3);
+});
+

@@ -1,101 +1,319 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@500;600;700;800;900&family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
 
 @layer base {
   :root {
-    --font-display: 'Fraunces', 'Cairo', serif;
-    --font-sans: 'Plus Jakarta Sans', 'Cairo', system-ui, sans-serif;
+    --font-sans: 'Cairo', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-display: 'Cairo', 'Fraunces', Georgia, serif;
     --font-mono: 'JetBrains Mono', 'Cairo', 'Plus Jakarta Sans', monospace;
   }
 
   body {
     font-family: var(--font-sans);
-    background-color: #1C1410;
-    color: #FBF7F0;
+    background-color: #F4EFE6;
+    color: #2C1E14;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
     user-select: none;
     -webkit-user-select: none;
-    -webkit-touch-callout: none;
-  }
-
-  h1, h2, h3, .font-display {
-    font-family: var(--font-display);
-  }
-
-  .font-mono, .tabular-nums {
-    font-family: var(--font-sans);
-    font-variant-numeric: tabular-nums;
   }
 }
 
-/* Traditional Sadu geometric divider */
+/* Custom Sadu Geometric Divider Pattern */
 .sadu-trim {
   background-image: repeating-linear-gradient(
     90deg,
     #9E2A2B 0px,
-    #9E2A2B 12px,
-    #1C1410 12px,
-    #1C1410 16px,
-    #D99B26 16px,
-    #D99B26 24px,
-    #1C1410 24px,
-    #1C1410 28px,
-    #FBF7F0 28px,
-    #FBF7F0 32px,
-    #1C1410 32px,
-    #1C1410 36px
+    #9E2A2B 14px,
+    #1C1410 14px,
+    #1C1410 20px,
+    #D99B26 20px,
+    #D99B26 30px,
+    #1C1410 30px,
+    #1C1410 36px,
+    #FBF7F0 36px,
+    #FBF7F0 44px,
+    #1C1410 44px,
+    #1C1410 50px
   );
 }
 
-/* Custom subtle scrollbars */
+/* Tactile 3D Casual Game Surfaces (Gossip Harbor / Travel Town Benchmark) */
+.board-wood-frame {
+  background: linear-gradient(180deg, #9C6639 0%, #7C4D25 100%);
+  box-shadow:
+    0 10px 25px -5px rgba(44, 30, 20, 0.35),
+    0 5px 0 0 #563216,
+    inset 0 2px 1px rgba(255, 248, 231, 0.45);
+}
+
+.board-inner-well {
+  background-color: #C8A97E;
+  box-shadow: inset 0 4px 8px rgba(62, 39, 18, 0.45);
+}
+
+.tile-ivory {
+  background: linear-gradient(180deg, #FFFDF9 0%, #FBF3E4 100%);
+  border: 1.5px solid #E2CFAF;
+  box-shadow: 0 3px 0 0 #D5BE98;
+}
+
+.tile-sand {
+  background: linear-gradient(180deg, #F6EBD8 0%, #EDE0C7 100%);
+  border: 1.5px solid #D9C3A0;
+  box-shadow: 0 3px 0 0 #C8AF87;
+}
+
+.tile-generator-3d {
+  background: linear-gradient(180deg, #FEF08A 0%, #F59E0B 100%);
+  border: 2px solid #B45309;
+  box-shadow:
+    0 3px 0 0 #92400E,
+    inset 0 2px 2px rgba(255, 255, 255, 0.75);
+}
+
+.tile-chest-3d {
+  background: linear-gradient(180deg, #FDE68A 0%, #F97316 100%);
+  border: 2px solid #9A3412;
+  box-shadow:
+    0 3px 0 0 #7C2D12,
+    inset 0 2px 2px rgba(255, 255, 255, 0.7);
+}
+
+.tile-ready-3d {
+  background: linear-gradient(180deg, #ECFDF5 0%, #A7F3D0 100%);
+  border: 2px solid #059669;
+  box-shadow:
+    0 3px 0 0 #047857,
+    inset 0 2px 2px rgba(255, 255, 255, 0.8);
+}
+
+.tile-locked-3d {
+  background: repeating-linear-gradient(
+    -45deg,
+    #D6BE9C,
+    #D6BE9C 6px,
+    #CBB08B 6px,
+    #CBB08B 12px
+  );
+  border: 1.5px dashed #8C6239;
+  box-shadow: inset 0 2px 5px rgba(62, 39, 18, 0.25);
+}
+
+.btn-3d-green {
+  background: linear-gradient(180deg, #34D399 0%, #10B981 55%, #059669 100%);
+  border: 1.5px solid #047857;
+  box-shadow:
+    0 3px 0 0 #065F46,
+    inset 0 1.5px 1px rgba(255, 255, 255, 0.55);
+}
+.btn-3d-green:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 0 #065F46;
+}
+
+.btn-3d-amber {
+  background: linear-gradient(180deg, #FBBF24 0%, #F59E0B 55%, #D97706 100%);
+  border: 1.5px solid #B45309;
+  box-shadow:
+    0 3px 0 0 #92400E,
+    inset 0 1.5px 1px rgba(255, 255, 255, 0.6);
+}
+.btn-3d-amber:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 0 #92400E;
+}
+
+.hud-pill {
+  background: linear-gradient(180deg, #FFFDF9 0%, #F5EBD9 100%);
+  border: 2px solid #D4B483;
+  box-shadow:
+    0 3px 6px rgba(44, 30, 20, 0.12),
+    inset 0 1px 0 #FFFFFF;
+}
+
+/* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: rgba(28, 20, 16, 0.4);
+  background: #EFE5D4;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(217, 155, 38, 0.45);
-  border-radius: 3px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(217, 155, 38, 0.75);
+  background: #C68B59;
+  border-radius: 9999px;
 }
 
-/* Merge feedback FX */
-.merge-burst {
+/* ============================================================================
+   HIGH-LEVEL MERGE PARTICLE & RADIAL SHOCKWAVE CELEBRATION ANIMATIONS
+   ============================================================================ */
+
+@keyframes merge-particle-flight {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) translate3d(0px, 0px, 0px) scale(0.2) rotate(0deg);
+  }
+  16% {
+    opacity: 1;
+    transform: translate(-50%, -50%)
+      translate3d(calc(var(--dx) * 0.42), calc(var(--dy) * 0.42 - 6px), 0px)
+      scale(1.28)
+      rotate(calc(var(--rot) * 0.4));
+  }
+  68% {
+    opacity: 0.96;
+    transform: translate(-50%, -50%)
+      translate3d(calc(var(--dx) * 0.92), calc(var(--dy) * 0.92 + 4px), 0px)
+      scale(1)
+      rotate(calc(var(--rot) * 0.85));
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%)
+      translate3d(var(--dx), calc(var(--dy) + 18px), 0px)
+      scale(0.15)
+      rotate(var(--rot));
+  }
+}
+
+@keyframes merge-shockwave-expand {
+  0% {
+    opacity: 0.95;
+    transform: translate(-50%, -50%) scale(0.18);
+  }
+  55% {
+    opacity: 0.65;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(var(--ring-scale, 2.8));
+  }
+}
+
+@keyframes merge-core-flash {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.25);
+  }
+  22% {
+    opacity: 0.95;
+    transform: translate(-50%, -50%) scale(1.35);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(2.15);
+  }
+}
+
+@keyframes merge-sunburst-spin {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.35) rotate(0deg);
+  }
+  25% {
+    opacity: 0.88;
+    transform: translate(-50%, -50%) scale(1.18) rotate(35deg);
+  }
+  80% {
+    opacity: 0.55;
+    transform: translate(-50%, -50%) scale(1.32) rotate(110deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.6) rotate(145deg);
+  }
+}
+
+@keyframes merge-callout-rise {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 6px) scale(0.5);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(-50%, -18px) scale(1.12);
+  }
+  34% {
+    opacity: 1;
+    transform: translate(-50%, -22px) scale(1);
+  }
+  82% {
+    opacity: 1;
+    transform: translate(-50%, -36px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -52px) scale(0.88);
+  }
+}
+
+@keyframes merge-tile-pop {
+  0% {
+    transform: scale(0.68);
+    filter: brightness(1.45);
+  }
+  42% {
+    transform: scale(1.18);
+    filter: brightness(1.22);
+  }
+  72% {
+    transform: scale(0.95);
+  }
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+}
+
+.merge-particle-node {
   position: absolute;
-  inset: -6px;
-  border-radius: 14px;
+  left: 0;
+  top: 0;
   pointer-events: none;
-  z-index: 20;
-  background: radial-gradient(circle, rgba(253, 230, 138, 0.95) 0%, rgba(245, 158, 11, 0.55) 40%, transparent 70%);
-  animation: merge-burst 0.55s ease-out forwards;
+  will-change: transform, opacity;
+  animation: merge-particle-flight var(--dur, 800ms) cubic-bezier(0.16, 1, 0.3, 1) var(--delay, 0ms) both;
 }
-.merge-burst-big { animation-duration: 0.8s; box-shadow: 0 0 22px 6px rgba(251, 191, 36, 0.8); }
-.merge-burst-mega {
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.95) 0%, rgba(16, 185, 129, 0.6) 45%, transparent 72%);
-  box-shadow: 0 0 26px 8px rgba(16, 185, 129, 0.7);
-  animation-duration: 0.9s;
-}
-@keyframes merge-burst {
-  0% { transform: scale(0.4); opacity: 1; }
-  100% { transform: scale(1.7); opacity: 0; }
-}
-.combo-meter { position: relative; overflow: hidden; }
-.combo-bar {
+
+.merge-shockwave-ring {
   position: absolute;
-  inset-inline: 0;
-  bottom: 0;
-  height: 3px;
-  background: #1C1410;
-  transform-origin: left;
-  animation: combo-drain linear forwards;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  will-change: transform, opacity;
+  animation: merge-shockwave-expand var(--ring-dur, 720ms) cubic-bezier(0.16, 1, 0.3, 1) var(--ring-delay, 0ms) both;
 }
-[dir='rtl'] .combo-bar { transform-origin: right; }
-@keyframes combo-drain { from { transform: scaleX(1); } to { transform: scaleX(0); } }
-.level-up-toast { animation: level-pop 0.45s cubic-bezier(0.2, 1.4, 0.4, 1); }
-@keyframes level-pop { from { transform: scale(0.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-@media (prefers-reduced-motion: reduce) {
-  .merge-burst, .combo-bar, .level-up-toast { animation: none; }
-  .merge-burst { opacity: 0; }
+
+.merge-core-glow {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  will-change: transform, opacity;
+  animation: merge-core-flash 950ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
+
+.merge-sunburst-rays {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  will-change: transform, opacity;
+  animation: merge-sunburst-spin 1850ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.merge-callout-badge {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  will-change: transform, opacity;
+  animation: merge-callout-rise 2200ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.merge-tile-celebrate {
+  animation: merge-tile-pop 650ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+

@@ -292,7 +292,8 @@ class SoundAndHapticsManager {
   }
 
   /**
-   * Ringing Najdi Brass Mortar (نجر) & Oud harmonic chime scaled by item level
+   * Ringing Najdi Brass Mortar (نجر) & Oud harmonic chime scaled by item level.
+   * High-level merges (Lv.3+) trigger a multi-note Hijaz celebratory arpeggio shimmer.
    */
   public playMerge(level: number = 2) {
     this.triggerHaptic(level >= 4 ? 'heavy' : 'medium');
@@ -319,6 +320,28 @@ class SoundAndHapticsManager {
       osc.start(now + idx * 0.04);
       osc.stop(now + 0.3 + idx * 0.04);
     });
+
+    // High-level merge (Lv.3+) celebratory Hijaz sparkle cascade
+    if (level >= 3) {
+      const arpeggioCount = level >= 5 ? 5 : level === 4 ? 4 : 3;
+      const sparkleRatios = [1.25, 1.5, 2.0, 2.5, 3.0].slice(0, arpeggioCount);
+      sparkleRatios.forEach((ratio, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = i % 2 === 0 ? 'triangle' : 'sine';
+        const startAt = now + 0.06 + i * 0.055;
+        osc.frequency.setValueAtTime(baseFreq * ratio, startAt);
+        osc.frequency.exponentialRampToValueAtTime(baseFreq * ratio * 1.03, startAt + 0.32);
+
+        gain.gain.setValueAtTime(0.12, startAt);
+        gain.gain.exponentialRampToValueAtTime(0.001, startAt + 0.35);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(startAt);
+        osc.stop(startAt + 0.38);
+      });
+    }
   }
 
   /**

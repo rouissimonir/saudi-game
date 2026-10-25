@@ -2080,3 +2080,192 @@ export function completePour(
     grade,
   };
 }
+
+// ---------------------------------------------------------------------------
+// High-Level Merge Particle Burst & Radial Shockwave Generator
+// ---------------------------------------------------------------------------
+
+export type MergeBurstTier = 'standard' | 'epic' | 'royal' | 'masterpiece';
+export type MergeParticleShape = 'star8' | 'diamond' | 'spark' | 'orb';
+
+export interface MergeParticle {
+  id: number;
+  dxPx: number;
+  dyPx: number;
+  sizePx: number;
+  delayMs: number;
+  durationMs: number;
+  color: string;
+  shape: MergeParticleShape;
+  rotationDeg: number;
+}
+
+export interface MergeParticleBurst {
+  id: string;
+  cellIndex: number;
+  row: number;
+  col: number;
+  xPercent: number;
+  yPercent: number;
+  itemId: string;
+  level: number;
+  maxLevel: number;
+  chain: ChainId | 'generator';
+  tier: MergeBurstTier;
+  isHighLevel: boolean;
+  isMaxLevel: boolean;
+  megaMerge: boolean;
+  comboCount: number;
+  ringCount: number;
+  primaryColor: string;
+  secondaryColor: string;
+  calloutAr: string;
+  calloutEn: string;
+  itemNameAr: string;
+  itemNameEn: string;
+  xpGained: number;
+  particles: MergeParticle[];
+}
+
+const CHAIN_PARTICLE_PALETTES: Record<ChainId | 'generator', string[]> = {
+  qahwa: ['#F59E0B', '#FDE047', '#D97706', '#10B981', '#FFFBEB'],
+  barista: ['#38BDF8', '#FBBF24', '#0284C7', '#A7F3D0', '#FFFDF9'],
+  sweets: ['#EC4899', '#F59E0B', '#FDE047', '#A855F7', '#FFF1F2'],
+  oud: ['#A855F7', '#FBBF24', '#EC4899', '#DDD6FE', '#FEF08A'],
+  chest: ['#FBBF24', '#FDE047', '#10B981', '#38BDF8', '#FFFFFF'],
+  generator: ['#F59E0B', '#FDE047', '#D97706', '#FFFBEB'],
+};
+
+const PARTICLE_SHAPES: MergeParticleShape[] = ['star8', 'diamond', 'spark', 'orb'];
+
+export function buildMergeParticleBurst(
+  cellIndex: number,
+  mergedItemId: string,
+  burstSeq: number = 1,
+  options?: { megaMerge?: boolean; comboCount?: number }
+): MergeParticleBurst {
+  const safeIndex = Math.max(0, Math.min(48, cellIndex));
+  const row = Math.floor(safeIndex / 7);
+  const col = safeIndex % 7;
+  const xPercent = ((col + 0.5) / 7) * 100;
+  const yPercent = ((row + 0.5) / 7) * 100;
+
+  const itemDef = ITEM_CATALOG[mergedItemId] ?? ITEM_CATALOG.qahwa_2;
+  const isMaxLevel = itemDef.level >= itemDef.maxLevel;
+  const megaMerge = Boolean(options?.megaMerge);
+  const comboCount = options?.comboCount ?? 1;
+
+  let tier: MergeBurstTier = 'standard';
+  if (isMaxLevel || itemDef.level >= 5) {
+    tier = 'masterpiece';
+  } else if (itemDef.level === 4 || megaMerge) {
+    tier = 'royal';
+  } else if (itemDef.level === 3) {
+    tier = 'epic';
+  }
+
+  const isHighLevel = tier !== 'standard';
+  const ringCount = tier === 'masterpiece' ? 3 : tier === 'royal' ? 3 : tier === 'epic' ? 2 : 1;
+  const particleCount =
+    tier === 'masterpiece' ? 36 : tier === 'royal' ? 28 : tier === 'epic' ? 20 : 12;
+
+  const palette = CHAIN_PARTICLE_PALETTES[itemDef.chain] || CHAIN_PARTICLE_PALETTES.qahwa;
+  const baseRadius =
+    tier === 'masterpiece' ? 128 : tier === 'royal' ? 102 : tier === 'epic' ? 78 : 48;
+
+  const particles: MergeParticle[] = [];
+  for (let i = 0; i < particleCount; i++) {
+    // Deterministic golden-angle + ring layering for lush, balanced 360-degree bursts
+    const ringLayer = i % 3; // 0 = inner, 1 = mid, 2 = outer
+    const angleFraction = i / particleCount;
+    const jitterDeg = ((i * 37 + burstSeq * 19) % 16) - 8;
+    const angleDeg = angleFraction * 360 + jitterDeg;
+    const angleRad = (angleDeg * Math.PI) / 180;
+
+    const layerScale = ringLayer === 0 ? 0.55 : ringLayer === 1 ? 0.85 : 1.15;
+    const distJitter = ((i * 23) % 18) - 9;
+    const distance = Math.max(28, baseRadius * layerScale + distJitter);
+
+    // Slight upward celebratory lift on y-axis
+    const dxPx = Math.round(Math.cos(angleRad) * distance);
+    const dyPx = Math.round(Math.sin(angleRad) * distance - (isHighLevel ? 8 : 3));
+
+    const sizeBase =
+      tier === 'masterpiece' ? 13 : tier === 'royal' ? 11 : tier === 'epic' ? 10 : 7;
+    const sizePx = sizeBase + ((i * 5) % 6) - (ringLayer === 2 ? 1 : 0);
+
+    const delayMs = ringLayer * 28 + ((i * 11) % 35);
+    const durationMs =
+      (tier === 'masterpiece' ? 1320 : tier === 'royal' ? 1180 : tier === 'epic' ? 1040 : 680) +
+      ((i * 29) % 220);
+
+    const color = palette[i % palette.length];
+    const shape =
+      isHighLevel && i % 3 === 0
+        ? 'star8'
+        : PARTICLE_SHAPES[(i + (isHighLevel ? 0 : 1)) % PARTICLE_SHAPES.length];
+    const rotationDeg = (i * 55 + 45) % 360;
+
+    particles.push({
+      id: i,
+      dxPx,
+      dyPx,
+      sizePx,
+      delayMs,
+      durationMs,
+      color,
+      shape,
+      rotationDeg,
+    });
+  }
+
+  const calloutAr =
+    tier === 'masterpiece'
+      ? 'تحفة الديوان الملكي! ✨'
+      : tier === 'royal'
+      ? megaMerge
+        ? 'دمج ثلاثي خارق! 🌟'
+        : 'إبداع ملكي فاخر! 🌟'
+      : tier === 'epic'
+      ? 'دمج متقن! ⚡'
+      : 'دمج رائع!';
+
+  const calloutEn =
+    tier === 'masterpiece'
+      ? 'ROYAL MASTERPIECE! ✨'
+      : tier === 'royal'
+      ? megaMerge
+        ? 'TRIPLE MEGA MERGE! 🌟'
+        : 'ROYAL HIGH-LEVEL MERGE! 🌟'
+      : tier === 'epic'
+      ? 'GREAT MERGE! ⚡'
+      : 'Nice Merge!';
+
+  return {
+    id: `burst_${burstSeq}_${safeIndex}_${mergedItemId}`,
+    cellIndex: safeIndex,
+    row,
+    col,
+    xPercent,
+    yPercent,
+    itemId: mergedItemId,
+    level: itemDef.level,
+    maxLevel: itemDef.maxLevel,
+    chain: itemDef.chain,
+    tier,
+    isHighLevel,
+    isMaxLevel,
+    megaMerge,
+    comboCount,
+    ringCount,
+    primaryColor: palette[0],
+    secondaryColor: palette[1],
+    calloutAr,
+    calloutEn,
+    itemNameAr: itemDef.nameAr,
+    itemNameEn: itemDef.nameEn,
+    xpGained: itemDef.mergeXp,
+    particles,
+  };
+}
+

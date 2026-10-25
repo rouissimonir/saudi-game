@@ -16,6 +16,8 @@ import {
   Scissors,
   Gift,
   Wand2,
+  Plus,
+  Castle,
 } from 'lucide-react';
 import {
   createInitialGameState,
@@ -25,14 +27,6 @@ import {
   STORY_CHAPTERS,
   spawnFromGenerator,
   mergeOrMoveCells,
-  COMBO_WINDOW_MS,
-  dayKeyFromDate,
-  getDailyLoginDay,
-  claimDailyLoginReward,
-  getTutorialStep,
-  getActiveSeason,
-  completePour,
-  type LevelUpReward,
   findBestMergePair,
   sellBoardItem,
   findCellsForOrder,
@@ -52,6 +46,8 @@ import {
   MajlisRegion,
   MajlisAmbiance,
   WheelWedge,
+  buildMergeParticleBurst,
+  MergeParticleBurst,
 } from './game/rules';
 import {
   soundFX,
@@ -59,18 +55,16 @@ import {
   loadSavedGameState,
   clearSavedGameState,
 } from './utils/soundAndHaptics';
-import { ItemArtwork, preloadItemArt } from './components/ItemArtwork';
+import { ItemArtwork } from './components/ItemArtwork';
 import { MajlisRenovationView } from './components/MajlisRenovationView';
 import { StoryDialogueModal } from './components/StoryDialogueModal';
-import { DailyLoginModal } from './components/DailyLoginModal';
-import { isVoiceCharacter, speakerCharacter } from './game/voiceLines';
-import { FinjanPourModal } from './components/FinjanPourModal';
 import { ShopAndMadaModal } from './components/ShopAndMadaModal';
 import {
   CustomerPortrait,
   ChainTreeModal,
   LeaderboardModal,
 } from './components/CompetitorModalsAndPortraits';
+import { MergeParticleOverlay } from './components/MergeParticleOverlay';
 
 type ShellState = 'title' | 'playing' | 'paused' | 'gameover';
 type ActiveWorkspace = 'merge' | 'majlis';
@@ -116,14 +110,6 @@ export default function App() {
   const [hintPair, setHintPair] = useState<[number, number] | null>(null);
   const [dragFromIndex, setDragFromIndex] = useState<number | null>(null);
   const [feedbackBanner, setFeedbackBanner] = useState<string | null>(null);
-  const [mergeFx, setMergeFx] = useState<{ index: number; level: number; mega: boolean; key: number } | null>(null);
-  const [comboLive, setComboLive] = useState<boolean>(false);
-  const [levelUpToast, setLevelUpToast] = useState<LevelUpReward | null>(null);
-  const comboTimeoutRef = useRef<number | null>(null);
-  const [dailyLoginDay, setDailyLoginDay] = useState<number | null>(null);
-  const tutorialStep = getTutorialStep(gameState);
-  const activeSeason = React.useMemo(() => getActiveSeason(new Date()), []);
-  const [pourOpen, setPourOpen] = useState<boolean>(false);
 
   const [shopModalOpen, setShopModalOpen] = useState<boolean>(false);
   const [shopInitialTab, setShopInitialTab] = useState<'shop' | 'liveops' | 'almanac' | 'capacitor'>('shop');
@@ -134,6 +120,38 @@ export default function App() {
   const [leaderboardSection, setLeaderboardSection] = useState<'leaderboard' | 'mazayen' | 'wheel'>('leaderboard');
 
   const bannerTimeoutRef = useRef<number | null>(null);
+  const burstSeqRef = useRef<number>(1);
+  const [mergeBursts, setMergeBursts] = useState<MergeParticleBurst[]>([]);
+  const [celebratingCells, setCelebratingCells] = useState<Record<number, boolean>>({});
+
+  const triggerMergeParticleBurst = useCallback(
+    (
+      cellIndex: number,
+      mergedItemId: string,
+      options?: { megaMerge?: boolean; comboCount?: number }
+    ) => {
+      const seq = burstSeqRef.current++;
+      const burst = buildMergeParticleBurst(cellIndex, mergedItemId, seq, options);
+      setMergeBursts((prev) => [...prev.slice(-4), burst]);
+      setCelebratingCells((prev) => ({ ...prev, [cellIndex]: true }));
+
+      window.setTimeout(() => {
+        setCelebratingCells((prev) => {
+          const next = { ...prev };
+          delete next[cellIndex];
+          return next;
+        });
+      }, 620);
+
+      window.setTimeout(
+        () => {
+          setMergeBursts((prev) => prev.filter((b) => b.id !== burst.id));
+        },
+        burst.isHighLevel ? 2350 : 1250
+      );
+    },
+    []
+  );
 
   const showFeedback = useCallback((msg: string) => {
     setFeedbackBanner(msg);
@@ -154,43 +172,6 @@ export default function App() {
     document.documentElement.lang = lang;
     document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
   }, [lang]);
-
-  useEffect(() => {
-    preloadItemArt();
-  }, []);
-
-  // Ambient Hijaz oud loop while playing and unmuted
-  useEffect(() => {
-    if (shellState === 'playing' && !muted) {
-      soundFX.startAmbient();
-    } else {
-      soundFX.stopAmbient();
-    }
-    return () => soundFX.stopAmbient();
-  }, [shellState, muted]);
-
-  // Offer the daily login reward once per calendar day when play begins
-  useEffect(() => {
-    if (shellState !== 'playing') return;
-    setDailyLoginDay(getDailyLoginDay(gameState, dayKeyFromDate(new Date())));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [shellState]);
-
-  const handleFinishPour = (fillPercent: number) => {
-    const res = completePour(gameState, fillPercent);
-    if (!res.poured) return;
-    soundFX.playOrderComplete();
-    setGameState(res.state);
-  };
-
-  const handleClaimDailyLogin = () => {
-    const res = claimDailyLoginReward(gameState, dayKeyFromDate(new Date()));
-    setDailyLoginDay(null);
-    if (!res.claimed) return;
-    soundFX.playOrderComplete();
-    setGameState(res.state);
-    showFeedback(isAr ? `استلمت هدية اليوم ${res.day}!` : `Claimed Day ${res.day} reward!`);
-  };
 
   // Save game state automatically on change
   useEffect(() => {
@@ -286,44 +267,6 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [shellState, shopModalOpen, chainModalOpen, leaderboardOpen, gameState.activeStoryId, handleStartGame, handleToggleMute]);
 
-  // Shared merge outcome handler: sound, burst FX, combo meter, Mega Merge and level-up rewards
-  const applyMergeResult = (
-    res: ReturnType<typeof mergeOrMoveCells>,
-    targetIndex: number,
-    auto: boolean = false
-  ) => {
-    if (res.action !== 'MERGED' || !res.mergedItemId) return;
-    const mergedDef = ITEM_CATALOG[res.mergedItemId];
-    const level = mergedDef?.level || 2;
-    soundFX.playMerge(res.megaMerge ? level + 1 : level);
-    setGameState(res.state);
-    setMergeFx({ index: targetIndex, level, mega: Boolean(res.megaMerge), key: Date.now() });
-
-    setComboLive(true);
-    if (comboTimeoutRef.current) window.clearTimeout(comboTimeoutRef.current);
-    comboTimeoutRef.current = window.setTimeout(() => setComboLive(false), COMBO_WINDOW_MS);
-
-    const name = isAr ? mergedDef.nameAr : mergedDef.nameEn;
-    const parts: string[] = [];
-    if (res.megaMerge) {
-      parts.push(isAr ? `دمج ثلاثي ممتاز! ${name} (المستوى ${level})` : `Mega Merge! ${name} (Lv.${level})`);
-    } else if (auto) {
-      parts.push(isAr ? `دمج تلقائي: ${name} (المستوى ${level})!` : `Auto-Merged: ${name} (Lv.${level})!`);
-    } else {
-      parts.push(isAr ? `دمج رائع! حصلت على: ${name} (المستوى ${level})` : `Merged! Created: ${name} (Lv.${level})`);
-    }
-    if (res.comboBonusCoins) {
-      parts.push(isAr ? `كومبو ×${res.comboCount} +${res.comboBonusCoins} ريال` : `Combo ×${res.comboCount} +${res.comboBonusCoins} SAR`);
-    }
-    showFeedback(parts.join(' · '));
-
-    if (res.levelUp) {
-      setLevelUpToast(res.levelUp);
-      soundFX.playLevelUp();
-      window.setTimeout(() => setLevelUpToast(null), 3200);
-    }
-  };
-
   // Cell Click / Tap Interaction
   const handleCellClick = (index: number) => {
     setHintPair(null);
@@ -399,7 +342,18 @@ export default function App() {
 
     const moveRes = mergeOrMoveCells(gameState, gameState.selectedCellIndex, index);
     if (moveRes.action === 'MERGED' && moveRes.mergedItemId) {
-      applyMergeResult(moveRes, index);
+      const mergedDef = ITEM_CATALOG[moveRes.mergedItemId];
+      soundFX.playMerge(mergedDef?.level || 2);
+      triggerMergeParticleBurst(index, moveRes.mergedItemId, {
+        megaMerge: moveRes.megaMerge,
+        comboCount: moveRes.comboCount,
+      });
+      setGameState(moveRes.state);
+      showFeedback(
+        isAr
+          ? `دمج رائع! حصلت على: ${mergedDef.nameAr} (المستوى ${mergedDef.level})`
+          : `Merged! Created: ${mergedDef.nameEn} (Lv.${mergedDef.level})`
+      );
     } else if (moveRes.action === 'MOVED' || moveRes.action === 'SWAPPED') {
       soundFX.triggerHaptic('light');
       setGameState(moveRes.state);
@@ -425,7 +379,18 @@ export default function App() {
     }
     const moveRes = mergeOrMoveCells(gameState, dragFromIndex, targetIndex);
     if (moveRes.action === 'MERGED' && moveRes.mergedItemId) {
-      applyMergeResult(moveRes, targetIndex);
+      const mergedDef = ITEM_CATALOG[moveRes.mergedItemId];
+      soundFX.playMerge(mergedDef?.level || 2);
+      triggerMergeParticleBurst(targetIndex, moveRes.mergedItemId, {
+        megaMerge: moveRes.megaMerge,
+        comboCount: moveRes.comboCount,
+      });
+      setGameState(moveRes.state);
+      showFeedback(
+        isAr
+          ? `دمج رائع! حصلت على: ${mergedDef.nameAr} (المستوى ${mergedDef.level})`
+          : `Merged! Created: ${mergedDef.nameEn} (Lv.${mergedDef.level})`
+      );
     } else if (moveRes.action === 'MOVED' || moveRes.action === 'SWAPPED') {
       soundFX.triggerHaptic('light');
       setGameState(moveRes.state);
@@ -448,7 +413,20 @@ export default function App() {
     const [fromIdx, toIdx] = pair;
     setHintPair(pair);
     const res = mergeOrMoveCells(gameState, fromIdx, toIdx);
-    applyMergeResult(res, toIdx, true);
+    if (res.action === 'MERGED' && res.mergedItemId) {
+      const mergedDef = ITEM_CATALOG[res.mergedItemId];
+      soundFX.playMerge(mergedDef?.level || 2);
+      triggerMergeParticleBurst(toIdx, res.mergedItemId, {
+        megaMerge: res.megaMerge,
+        comboCount: res.comboCount,
+      });
+      setGameState(res.state);
+      showFeedback(
+        isAr
+          ? `دمج تلقائي: ${mergedDef.nameAr} (المستوى ${mergedDef.level})!`
+          : `Auto-Merged: ${mergedDef.nameEn} (Lv.${mergedDef.level})!`
+      );
+    }
   };
 
   // Power Boost Multiplier Toggle (1x -> 2x -> 4x)
@@ -465,7 +443,7 @@ export default function App() {
     });
   };
 
-  // Golden Brass Scissors Booster (Splits Lv.2-6 item into two Lv.(N-1) items)
+  // Golden Brass Scissors Booster
   const handleUseScissors = () => {
     if (gameState.selectedCellIndex === null) {
       soundFX.playError();
@@ -496,7 +474,7 @@ export default function App() {
     }
   };
 
-  // Royal Joker Finjan Booster (Upgrades Lv.1-5 item directly to Lv.(N+1))
+  // Royal Joker Finjan Booster
   const handleUseJoker = () => {
     if (gameState.selectedCellIndex === null) {
       soundFX.playError();
@@ -511,6 +489,7 @@ export default function App() {
     if (res.upgraded && res.upgradedItemId) {
       const upDef = ITEM_CATALOG[res.upgradedItemId];
       soundFX.playOrderComplete();
+      triggerMergeParticleBurst(gameState.selectedCellIndex, res.upgradedItemId);
       setGameState(res.state);
       showFeedback(
         isAr
@@ -607,13 +586,9 @@ export default function App() {
 
   // Fulfill Customer Order
   const handleFulfillOrder = (orderId: string) => {
-    const servedOrder = gameState.activeOrders.find((o) => o.id === orderId);
-    const res = fulfillCustomerOrder(gameState, orderId, activeSeason);
+    const res = fulfillCustomerOrder(gameState, orderId);
     if (res.fulfilled) {
       soundFX.playOrderComplete();
-      if (servedOrder && isVoiceCharacter(servedOrder.customerId)) {
-        soundFX.playVoice(servedOrder.customerId, servedOrder.isVip ? 'vip' : 'served');
-      }
       setGameState(res.state);
       showFeedback(
         res.spawnedChest
@@ -742,67 +717,65 @@ export default function App() {
   const activeStoryChapter =
     STORY_CHAPTERS.find((c) => c.id === gameState.activeStoryId) || null;
 
-  // The speaker greets the player when a story chapter opens
-  const storyChapterId = activeStoryChapter ? activeStoryChapter.id : null;
-  const storySpeaker = activeStoryChapter ? speakerCharacter(activeStoryChapter.speakerEn) : null;
-  useEffect(() => {
-    if (shellState === 'playing' && storyChapterId && storySpeaker) {
-      soundFX.playVoice(storySpeaker, 'greet');
-    }
-  }, [storyChapterId, storySpeaker, shellState]);
-
   // ============================================================================
   // 1. TITLE SCREEN ('title')
   // ============================================================================
   if (shellState === 'title') {
     return (
-      <main className="relative min-h-screen w-full bg-[#1C1410] text-[#FBF7F0] flex flex-col justify-between overflow-hidden select-none">
-        {/* Top Sadu Geometric Trim */}
+      <main className="relative min-h-screen w-full bg-gradient-to-b from-[#2A1B12] via-[#3A2417] to-[#1E130D] text-[#FBF7F0] flex flex-col justify-between overflow-hidden select-none">
         <div className="h-3 w-full sadu-trim" />
 
-        {/* Ambient Desert Starlight & Najdi Arch Silhouette Backdrop */}
-        <div className="absolute inset-0 pointer-events-none opacity-25 flex items-center justify-center">
-          <svg viewBox="0 0 1440 900" className="w-full h-full object-cover">
-            <circle cx="1150" cy="180" r="95" fill="#D99B26" opacity="0.25" />
-            <path
-              d="M0,760 L200,760 L200,520 L260,460 L320,520 L320,760 L1120,760 L1120,500 L1190,430 L1260,500 L1260,760 L1440,760 L1440,900 L0,900 Z"
-              fill="#2A1B12"
-            />
-          </svg>
-        </div>
-
-        {/* Main Asymmetric / Centered Monument Spotlight with >35% Calm Negative Space */}
         <div className="relative z-10 flex-1 max-w-5xl w-full mx-auto px-6 py-10 flex flex-col lg:flex-row items-center justify-between gap-10">
-          {/* Column 1: Interactive Hero Centerpiece (Gilded Najdi Dallah & V60 Crest) */}
-          <div className="relative w-56 h-56 sm:w-72 sm:h-72 rounded-full bg-[#241812] border-2 border-[#D99B26]/60 shadow-[0_0_60px_rgba(217,155,38,0.2)] flex items-center justify-center p-6 shrink-0">
-            <svg viewBox="0 0 200 200" className="absolute inset-6 w-[calc(100%-3rem)] h-[calc(100%-3rem)]" aria-hidden="true">
+          {/* Column 1: Interactive Hero Centerpiece */}
+          <div className="w-56 h-56 sm:w-72 sm:h-72 rounded-full bg-[#FFFDF9] border-4 border-[#F59E0B] shadow-[0_12px_50px_rgba(245,158,11,0.35)] flex items-center justify-center p-6 shrink-0">
+            <svg viewBox="0 0 200 200" className="w-full h-full">
               <polygon
                 points="100,10 126,42 168,32 158,74 190,100 158,126 168,168 126,158 100,190 74,158 32,168 42,126 10,100 42,74 32,32 74,42"
-                fill="#2E1E16"
-                stroke="#D99B26"
-                strokeWidth="3"
+                fill="#FEF3C7"
+                stroke="#D97706"
+                strokeWidth="3.5"
               />
+              <path
+                d="M78,76 L122,76 L132,148 L68,148 Z"
+                fill="#F59E0B"
+                stroke="#2A180D"
+                strokeWidth="4"
+              />
+              <path
+                d="M78,78 L42,60 L62,102 Z"
+                fill="#FBBF24"
+                stroke="#2A180D"
+                strokeWidth="3.5"
+              />
+              <path
+                d="M122,82 C152,82 152,128 126,134"
+                fill="none"
+                stroke="#B45309"
+                strokeWidth="7"
+                strokeLinecap="round"
+              />
+              <path
+                d="M84,76 L100,40 L116,76 Z"
+                fill="#D97706"
+                stroke="#2A180D"
+                strokeWidth="3.5"
+              />
+              <circle cx="100" cy="36" r="5" fill="#9E2A2B" />
+              <path d="M73,112 L127,112" stroke="#9E2A2B" strokeWidth="5" />
             </svg>
-            <img
-              src="/assets/art/dallah.png"
-              alt={lang === 'ar' ? 'دلة نجدية ذهبية' : 'Gilded Najdi dallah'}
-              width={512}
-              height={512}
-              className="relative w-4/5 h-4/5 object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,0.5)]"
-            />
           </div>
 
           {/* Column 2: Custom SVG Title Lockup & <= 3 Menu Actions */}
           <div className="flex flex-col items-center lg:items-start text-center lg:text-start max-w-xl">
             <svg viewBox="0 0 420 56" className="w-64 sm:w-80 h-auto mb-3">
-              <rect x="2" y="6" width="416" height="44" rx="10" fill="#241812" stroke="#D99B26" strokeWidth="2" />
+              <rect x="2" y="6" width="416" height="44" rx="12" fill="#FFFDF9" stroke="#F59E0B" strokeWidth="3" />
               <text
                 x="210"
                 y="35"
                 textAnchor="middle"
-                fill="#E9C46A"
+                fill="#92400E"
                 fontSize="20"
-                fontWeight="bold"
+                fontWeight="800"
                 fontFamily="Cairo, Plus Jakarta Sans, sans-serif"
               >
                 قهوة ومجلس · QAHWA &amp; MAJLIS
@@ -818,7 +791,7 @@ export default function App() {
                 : 'Merge Specialty Qahwa, Royal Oud & Restore Iconic Saudi Majlises'}
             </h1>
 
-            <p className="mt-4 text-sm sm:text-base text-[#E5DEC9]/85 leading-relaxed max-w-lg">
+            <p className="mt-4 text-sm sm:text-base text-[#FDE68A]/90 leading-relaxed max-w-lg">
               {isAr
                 ? 'اجمع بين أصالة الدلة النجدية والبن الخولاني والعود الكمبودي ومشروبات الـ V60، ولبِّ طلبات الضيوف في الدرعية وجدة التاريخية والعلا.'
                 : 'Combine Saudi Khawlani Dallah hospitality, Cambodian Oud perfumery, and artisanal V60 pour-overs across Diriyah, Historic Jeddah, and AlUla.'}
@@ -829,7 +802,7 @@ export default function App() {
                 type="button"
                 data-start="true"
                 onClick={handleStartGame}
-                className="px-8 py-4 rounded-xl bg-[#D97724] hover:bg-[#E08738] text-white font-bold text-base shadow-xl transition-transform active:scale-95 cursor-pointer whitespace-nowrap"
+                className="px-8 py-4 rounded-2xl btn-3d-green text-white font-extrabold text-base shadow-xl cursor-pointer whitespace-nowrap"
               >
                 {isAr ? 'ابدأ اللعب الآن · Play Now' : 'Start Playing · ابدأ اللعب'}
               </button>
@@ -837,7 +810,7 @@ export default function App() {
               <button
                 type="button"
                 onClick={handleToggleLanguage}
-                className="px-5 py-4 rounded-xl bg-[#241812] hover:bg-[#2F2018] border border-[#D99B26]/40 text-[#E9C46A] font-semibold text-sm transition-colors cursor-pointer whitespace-nowrap"
+                className="px-5 py-4 rounded-2xl bg-[#FFFDF9] hover:bg-[#FEF3C7] border-2 border-[#D97706] text-[#78350F] font-bold text-sm transition-colors cursor-pointer whitespace-nowrap"
               >
                 {isAr ? 'English · تغيير اللغة' : 'العربية · Switch Language'}
               </button>
@@ -845,8 +818,7 @@ export default function App() {
           </div>
         </div>
 
-        {/* Single flat, borderless inline control hint in bottom safe margin */}
-        <div className="relative z-10 pb-6 px-6 text-center text-xs text-[#D4A373]/80">
+        <div className="relative z-10 pb-6 px-6 text-center text-xs text-[#FDE68A]/80">
           {isAr
             ? 'انقر على المولّدات لإنتاج البن والعود · اسحب أو انقر لدمج عنصرين متطابقين · Enter للبدء · P للإيقاف المؤقت'
             : 'Tap Generators to Spawn Qahwa & Oud · Drag or Tap 2 Matching Items to Merge · Enter to Start · P to Pause'}
@@ -857,37 +829,39 @@ export default function App() {
 
   // ============================================================================
   // 2. ACTIVE PLAYING SHELL ('playing', 'paused', 'gameover')
+  //    HIGH-CRAFT CASUAL MERGE-2 INTERFACE (GOSSIP HARBOR / TRAVEL TOWN BENCHMARK)
   // ============================================================================
   const totalRenovated = gameState.renovationZones.reduce((acc, z) => acc + z.unlockedLevel, 0);
 
   return (
-    <div className="min-h-screen w-full bg-[#1C1410] text-[#FBF7F0] flex flex-col justify-between select-none">
+    <div className="min-h-screen w-full bg-gradient-to-b from-[#EDE0C8] via-[#F7F0E4] to-[#E5D3B3] text-[#2C1E14] flex flex-col justify-between select-none">
       {/* Top Sadu Geometric Trim */}
       <div className="h-1.5 w-full sadu-trim shrink-0" />
 
-      {/* World-Matched Perimeter HUD Dock */}
-      <div className="w-full bg-[#241812] border-b border-[#D99B26]/30 px-3 sm:px-6 py-2 shrink-0">
-        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2.5">
-          {/* Left: Brand Identity & Level Progress */}
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#D99B26]/20 border border-[#FBBF24] flex items-center justify-center tabular-nums font-extrabold text-sm sm:text-base text-[#FBBF24]">
-              {gameState.level}
+      {/* 1. TOP GLOSSY 3D RESOURCE PILL BAR (Gossip Harbor / Travel Town Style) */}
+      <header className="w-full bg-gradient-to-b from-[#5C3A21] to-[#432815] border-b-4 border-[#C68B59] px-2.5 sm:px-5 py-2 shadow-md shrink-0">
+        <div className="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-2">
+          {/* Left: 3D Royal Level Shield + Prestige */}
+          <div className="flex items-center gap-2">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-b from-[#38BDF8] to-[#0284C7] border-2 border-[#FDE68A] shadow-[0_3px_0_#0369A1] flex flex-col items-center justify-center text-white leading-none">
+              <span className="text-[8px] font-bold uppercase opacity-90">LV</span>
+              <span className="text-sm font-black tabular-nums">{gameState.level}</span>
             </div>
-            <div>
-              <div className="text-xs sm:text-sm font-bold text-[#FBF7F0] leading-tight">
+            <div className="hidden sm:block">
+              <div className="text-xs font-extrabold text-[#FFFDF9] leading-tight">
                 {isAr ? 'قهوة ومجلس الدرعية' : 'Qahwa & Majlis'}
               </div>
-              <div className="text-[11px] text-[#D4A373] tabular-nums">
+              <div className="text-[10px] font-bold text-[#FDE68A] tabular-nums">
                 {isAr
-                  ? `الخبرة ${gameState.xp} · الهيبة ${gameState.prestigePoints}`
-                  : `XP ${gameState.xp} · Prestige ${gameState.prestigePoints}`}
+                  ? `الهيبة ${gameState.prestigePoints} · الطلبات ${gameState.ordersCompleted}`
+                  : `Prestige ${gameState.prestigePoints} · Orders ${gameState.ordersCompleted}`}
               </div>
             </div>
           </div>
 
-          {/* Center: Hero-to-Kicker Resource Counters (Energy, Riyals, Renovation Stars, Royal Gems) */}
+          {/* Center: 4 Glossy Cream Resource Pills with Green (+) Buttons */}
           <div className="flex items-center gap-1.5 sm:gap-2.5 overflow-x-auto py-0.5">
-            {/* Energy Meter */}
+            {/* Energy Pill */}
             <button
               type="button"
               onClick={() => {
@@ -895,20 +869,20 @@ export default function App() {
                 setShopModalOpen(true);
               }}
               aria-label={isAr ? 'شحن الطاقة' : 'Refill Energy'}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#1C1410] border border-[#FBBF24]/40 hover:border-[#FBBF24] transition-colors cursor-pointer"
+              className="hud-pill rounded-full pl-2 pr-1.5 py-1 flex items-center gap-1.5 cursor-pointer hover:scale-[1.02] transition-transform"
             >
-              <Zap className="w-4 h-4 text-[#FBBF24] fill-[#FBBF24] shrink-0" />
-              <div className="text-start">
-                <span className="block text-[9px] text-[#D4A373] leading-none">
-                  {isAr ? 'الطاقة' : 'ENERGY'}
-                </span>
-                <span className="text-xs sm:text-sm tabular-nums font-extrabold text-[#FBBF24]">
-                  {Math.round(gameState.energy)}/{gameState.maxEnergy}
-                </span>
+              <div className="w-6 h-6 rounded-full bg-gradient-to-b from-[#FDE047] to-[#F59E0B] border border-[#B45309] flex items-center justify-center shadow-sm shrink-0">
+                <Zap className="w-3.5 h-3.5 text-[#78350F] fill-[#78350F]" />
               </div>
+              <span className="text-xs sm:text-sm font-black tabular-nums text-[#3E2723] px-0.5">
+                {Math.round(gameState.energy)}
+              </span>
+              <span className="w-5 h-5 rounded-full btn-3d-green text-white flex items-center justify-center shrink-0">
+                <Plus className="w-3 h-3 stroke-[3]" />
+              </span>
             </button>
 
-            {/* Gold Riyals (SAR Coins) */}
+            {/* Gold Riyals (SAR Coins) Pill */}
             <button
               type="button"
               onClick={() => {
@@ -916,38 +890,20 @@ export default function App() {
                 setShopModalOpen(true);
               }}
               aria-label={isAr ? 'رصيد الريالات الذهبية' : 'Gold Riyals Balance'}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#1C1410] border border-[#D99B26]/35 hover:border-[#D99B26] transition-colors cursor-pointer"
+              className="hud-pill rounded-full pl-2 pr-1.5 py-1 flex items-center gap-1.5 cursor-pointer hover:scale-[1.02] transition-transform"
             >
-              <Coins className="w-4 h-4 text-[#FDE68A] shrink-0" />
-              <div className="text-start">
-                <span className="block text-[9px] text-[#D4A373] leading-none">
-                  {isAr ? 'ريال ذهبي' : 'RIYALS'}
-                </span>
-                <span className="text-xs sm:text-sm tabular-nums font-extrabold text-[#FDE68A]">
-                  {Math.round(gameState.coins)}
-                </span>
+              <div className="w-6 h-6 rounded-full bg-gradient-to-b from-[#FBBF24] to-[#D97706] border border-[#92400E] flex items-center justify-center shadow-sm shrink-0">
+                <Coins className="w-3.5 h-3.5 text-[#FFFBEB]" />
               </div>
+              <span className="text-xs sm:text-sm font-black tabular-nums text-[#3E2723] px-0.5">
+                {Math.round(gameState.coins)}
+              </span>
+              <span className="w-5 h-5 rounded-full btn-3d-green text-white flex items-center justify-center shrink-0">
+                <Plus className="w-3 h-3 stroke-[3]" />
+              </span>
             </button>
 
-            {/* Renovation Stars */}
-            <button
-              type="button"
-              onClick={() => setWorkspace('majlis')}
-              aria-label={isAr ? 'نجوم إعمار المجلس' : 'Majlis Renovation Stars'}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#1C1410] border border-[#E76F51]/45 hover:border-[#E76F51] transition-colors cursor-pointer"
-            >
-              <Star className="w-4 h-4 text-[#F4A261] fill-[#F4A261] shrink-0" />
-              <div className="text-start">
-                <span className="block text-[9px] text-[#D4A373] leading-none">
-                  {isAr ? 'النجوم' : 'STARS'}
-                </span>
-                <span className="text-xs sm:text-sm tabular-nums font-extrabold text-[#F4A261]">
-                  {Math.round(gameState.stars)}
-                </span>
-              </div>
-            </button>
-
-            {/* Royal Gems */}
+            {/* Royal Gems Pill */}
             <button
               type="button"
               onClick={() => {
@@ -955,69 +911,69 @@ export default function App() {
                 setShopModalOpen(true);
               }}
               aria-label={isAr ? 'رصيد الجواهر' : 'Royal Gems Balance'}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#1C1410] border border-[#38BDF8]/35 hover:border-[#38BDF8] transition-colors cursor-pointer"
+              className="hud-pill rounded-full pl-2 pr-1.5 py-1 flex items-center gap-1.5 cursor-pointer hover:scale-[1.02] transition-transform"
             >
-              <Gem className="w-4 h-4 text-[#38BDF8] shrink-0" />
-              <div className="text-start">
-                <span className="block text-[9px] text-[#D4A373] leading-none">
-                  {isAr ? 'الجواهر' : 'GEMS'}
-                </span>
-                <span className="text-xs sm:text-sm tabular-nums font-extrabold text-[#38BDF8]">
-                  {Math.round(gameState.diamonds)}
-                </span>
+              <div className="w-6 h-6 rounded-full bg-gradient-to-b from-[#38BDF8] to-[#0284C7] border border-[#0369A1] flex items-center justify-center shadow-sm shrink-0">
+                <Gem className="w-3.5 h-3.5 text-white" />
               </div>
+              <span className="text-xs sm:text-sm font-black tabular-nums text-[#3E2723] px-0.5">
+                {Math.round(gameState.diamonds)}
+              </span>
+              <span className="w-5 h-5 rounded-full btn-3d-green text-white flex items-center justify-center shrink-0">
+                <Plus className="w-3 h-3 stroke-[3]" />
+              </span>
+            </button>
+
+            {/* Renovation Stars Pill */}
+            <button
+              type="button"
+              onClick={() => setWorkspace('majlis')}
+              aria-label={isAr ? 'نجوم إعمار المجلس' : 'Majlis Renovation Stars'}
+              className="hud-pill rounded-full px-2.5 py-1 flex items-center gap-1.5 cursor-pointer hover:scale-[1.02] transition-transform"
+            >
+              <div className="w-6 h-6 rounded-full bg-gradient-to-b from-[#FB923C] to-[#EA580C] border border-[#9A3412] flex items-center justify-center shadow-sm shrink-0">
+                <Star className="w-3.5 h-3.5 text-white fill-white" />
+              </div>
+              <span className="text-xs sm:text-sm font-black tabular-nums text-[#3E2723]">
+                {Math.round(gameState.stars)}
+              </span>
             </button>
           </div>
 
-          {/* Right: Compact Utility Icon Controls */}
+          {/* Right: Compact Glossy Utility Buttons */}
           <div className="flex items-center gap-1.5">
-            {/* Daily Finjan Al-Sabah Spin Wheel Button */}
             <button
               type="button"
               onClick={() => {
                 setLeaderboardSection('wheel');
                 setLeaderboardOpen(true);
               }}
-              className="px-2.5 py-2 rounded-xl bg-[#3B1D38] hover:bg-[#4C2448] border border-[#F472B6]/50 text-[#FBCFE8] text-xs font-bold inline-flex items-center gap-1 cursor-pointer whitespace-nowrap"
+              className="relative px-2.5 py-1.5 rounded-xl btn-3d-amber text-[#3E2723] text-xs font-extrabold inline-flex items-center gap-1 cursor-pointer whitespace-nowrap"
             >
-              <Gift className="w-3.5 h-3.5 text-[#F472B6]" />
-              <span className="hidden md:inline">
-                {isAr ? 'عجلة الصباح' : 'Lucky Spin'}
-              </span>
+              <Gift className="w-3.5 h-3.5" />
+              <span className="hidden md:inline">{isAr ? 'عجلة الصباح' : 'Spin'}</span>
               {gameState.freeSpinsAvailable > 0 && (
-                <span className="w-2 h-2 rounded-full bg-[#10B981]" />
+                <span className="w-2.5 h-2.5 rounded-full bg-[#10B981] border border-white" />
               )}
             </button>
 
-            {/* Diwan Al-Karam & Weekly Mazayen Leaderboard */}
             <button
               type="button"
               onClick={() => {
                 setLeaderboardSection('leaderboard');
                 setLeaderboardOpen(true);
               }}
-              className="px-2.5 py-2 rounded-xl bg-[#2E1E16] hover:bg-[#3A261B] border border-[#FBBF24]/45 text-[#FBBF24] text-xs font-bold inline-flex items-center gap-1 cursor-pointer whitespace-nowrap"
+              className="px-2.5 py-1.5 rounded-xl bg-[#FFFDF9] hover:bg-[#FEF3C7] border-2 border-[#D4B483] text-[#5C3A21] text-xs font-extrabold inline-flex items-center gap-1 cursor-pointer whitespace-nowrap shadow-sm"
             >
-              <Trophy className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">{isAr ? 'ديوان الكرم' : 'KSA Rank'}</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                setShopInitialTab('shop');
-                setShopModalOpen(true);
-              }}
-              className="px-3 py-2 rounded-xl bg-[#D97724] hover:bg-[#E08738] text-white text-xs font-bold cursor-pointer whitespace-nowrap"
-            >
-              {isAr ? 'متجر مدى' : 'Mada Shop'}
+              <Trophy className="w-3.5 h-3.5 text-[#D97706]" />
+              <span className="hidden sm:inline">{isAr ? 'ديوان الكرم' : 'Rank'}</span>
             </button>
 
             <button
               type="button"
               onClick={handleToggleLanguage}
               aria-label={isAr ? 'تبديل اللغة إلى الإنجليزية' : 'Switch Language to Arabic'}
-              className="h-9 px-2.5 rounded-xl bg-[#1C1410] border border-white/15 hover:border-[#D99B26] text-xs font-bold text-[#E9C46A] cursor-pointer"
+              className="h-8 px-2 rounded-xl bg-[#FFFDF9] border-2 border-[#D4B483] text-xs font-extrabold text-[#5C3A21] cursor-pointer shadow-sm"
             >
               {isAr ? 'EN' : 'عربي'}
             </button>
@@ -1027,7 +983,7 @@ export default function App() {
               tabIndex={-1}
               onClick={handleToggleMute}
               aria-label={muted ? 'Unmute Audio [M]' : 'Mute Audio [M]'}
-              className="w-9 h-9 rounded-xl bg-[#1C1410] border border-white/15 hover:border-[#D99B26] flex items-center justify-center text-[#E9C46A] cursor-pointer"
+              className="w-8 h-8 rounded-xl bg-[#FFFDF9] border-2 border-[#D4B483] flex items-center justify-center text-[#5C3A21] cursor-pointer shadow-sm"
             >
               {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
             </button>
@@ -1037,134 +993,77 @@ export default function App() {
               tabIndex={-1}
               onClick={handleTogglePause}
               aria-label="Pause Game [P]"
-              className="w-9 h-9 rounded-xl bg-[#1C1410] border border-white/15 hover:border-[#D99B26] flex items-center justify-center text-[#E9C46A] cursor-pointer"
+              className="w-8 h-8 rounded-xl bg-[#FFFDF9] border-2 border-[#D4B483] flex items-center justify-center text-[#5C3A21] cursor-pointer shadow-sm"
             >
               <Pause className="w-4 h-4" />
             </button>
           </div>
         </div>
-      </div>
+      </header>
 
-      {/* Main Content Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 py-2.5 sm:py-3.5 flex flex-col gap-3">
-        {/* Workspace Mode Switcher & Live Feedback Banner */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
-          <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[#241812] border border-[#D99B26]/25">
+      {/* 2. MAIN CENTERED STAGE (Clean, Uncluttered Gossip Harbor / Travel Town Layout) */}
+      <main className="flex-1 max-w-4xl w-full mx-auto px-2 sm:px-5 py-1.5 sm:py-2 flex flex-col gap-1.5">
+        {/* Top Segmented Mode Switcher Bar */}
+        <div className="flex flex-wrap items-center justify-between gap-2 max-w-[430px] w-full mx-auto">
+          <div className="inline-flex items-center justify-between w-full gap-1 p-1 rounded-2xl bg-[#E2CFAF] border-2 border-[#C8AF87] shadow-inner">
             <button
               type="button"
               onClick={() => setWorkspace('merge')}
-              className={`flex-1 sm:flex-initial px-3.5 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer whitespace-nowrap ${
+              className={`flex-1 px-2.5 py-1 rounded-xl text-xs font-extrabold transition-all cursor-pointer whitespace-nowrap ${
                 workspace === 'merge'
-                  ? 'bg-[#D97724] text-white shadow'
-                  : 'text-[#D4A373] hover:text-white'
+                  ? 'btn-3d-amber text-[#3E2723]'
+                  : 'text-[#5C3A21] hover:bg-white/40'
               }`}
             >
-              {isAr ? 'طاولة الدمج والطلبات (7×7)' : 'Merge Board & Orders (7×7)'}
+              {isAr ? 'طاولة الدمج (7×7)' : 'Merge (7×7)'}
             </button>
+
             <button
               type="button"
               onClick={() => setWorkspace('majlis')}
-              className={`flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer whitespace-nowrap ${
+              className={`flex-1 inline-flex items-center justify-center gap-1 px-2.5 py-1 rounded-xl text-xs font-extrabold transition-all cursor-pointer whitespace-nowrap ${
                 workspace === 'majlis'
-                  ? 'bg-[#D97724] text-white shadow'
-                  : 'text-[#D4A373] hover:text-white'
+                  ? 'btn-3d-green text-white'
+                  : 'text-[#5C3A21] hover:bg-white/40'
               }`}
             >
+              <Castle className="w-3.5 h-3.5" />
               <span>
                 {isAr
-                  ? `خريطة وإعمار المجالس (${totalRenovated}/8)`
-                  : `Kingdom Map & Majlis (${totalRenovated}/8)`}
+                  ? `قصر الدرعية (${totalRenovated}/8)`
+                  : `Estate (${totalRenovated}/8)`}
               </span>
-              <Star className="w-3.5 h-3.5 fill-current" />
             </button>
+
             <button
               type="button"
               onClick={() => {
                 setLeaderboardSection('mazayen');
                 setLeaderboardOpen(true);
               }}
-              className="hidden sm:inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold text-[#FBBF24] hover:bg-white/5 transition-colors cursor-pointer whitespace-nowrap"
+              className="hidden sm:inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-extrabold text-[#78350F] hover:bg-white/40 transition-colors cursor-pointer whitespace-nowrap"
             >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>{isAr ? 'مزاين المجالس' : 'Mazayen Contest'}</span>
+              <Sparkles className="w-3.5 h-3.5 text-[#D97706]" />
+              <span>{isAr ? 'مزاين' : 'Mazayen'}</span>
             </button>
-          </div>
 
-          {activeSeason && (
-            <div
-              data-testid="season-banner"
-              className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#065F46] to-[#047857] border border-[#34D399] text-xs font-bold text-[#D1FAE5]"
-            >
-              <span className="font-extrabold">{isAr ? activeSeason.nameAr : activeSeason.nameEn}</span>
-              <span className="mx-1.5 opacity-60">·</span>
-              <span>{isAr ? activeSeason.descAr : activeSeason.descEn}</span>
-            </div>
-          )}
-
-          {gameState.pourTokens > 0 && (
             <button
               type="button"
-              data-testid="pour-challenge-button"
-              onClick={() => setPourOpen(true)}
-              className="px-3.5 py-1.5 rounded-xl bg-[#D97724] hover:bg-[#EA8A35] text-xs font-extrabold text-white text-start"
+              onClick={() => {
+                setShopInitialTab('shop');
+                setShopModalOpen(true);
+              }}
+              className="px-2.5 py-1 rounded-xl text-xs font-extrabold text-[#047857] hover:bg-white/40 transition-colors cursor-pointer whitespace-nowrap"
             >
-              {isAr
-                ? `☕ تحدي ربع الفنجال جاهز (${gameState.pourTokens}) · اربح جواهر وجوكر`
-                : `☕ Rub'a al-Finjan challenge ready (${gameState.pourTokens}) · win gems & a Joker`}
+              {isAr ? 'متجر مدى' : 'Shop'}
             </button>
-          )}
-
-          {tutorialStep && (
-            <div
-              data-testid="tutorial-coach"
-              className="flex items-start gap-2 px-3.5 py-2 rounded-xl bg-[#10B981]/15 border border-[#10B981] text-xs font-bold text-[#A7F3D0]"
-            >
-              <span className="flex-1 leading-relaxed">
-                {tutorialStep === 'merge'
-                  ? isAr
-                    ? 'ابدأ هنا: اسحب عنصراً فوق عنصر مطابق (أو انقر الاثنين) لدمجهما. المربعات ذات الإطار الأخضر تعني دمجاً ممكناً.'
-                    : 'Start here: drag an item onto a matching one (or tap both) to merge. Green-ringed tiles are matches.'
-                  : isAr
-                  ? 'ممتاز! الآن جهّز العناصر ذات علامة ✓ الخضراء واضغط «تقديم!» لإسعاد ضيوف المجلس.'
-                  : 'Nice! Gather the items marked with a green ✓, then press “Serve!” to delight your guests.'}
-              </span>
-              <button
-                type="button"
-                onClick={() => setGameState((prev) => ({ ...prev, tutorialDismissed: true }))}
-                className="shrink-0 underline text-[#6EE7B7]"
-              >
-                {isAr ? 'تخطي' : 'Skip'}
-              </button>
-            </div>
-          )}
-
-          {comboLive && gameState.comboCount >= 2 && (
-            <div
-              data-testid="combo-meter"
-              className="combo-meter flex items-center justify-between px-3.5 py-1 rounded-xl bg-gradient-to-r from-[#B45309] to-[#F59E0B] text-[#1C1410] text-xs font-extrabold"
-            >
-              <span>{isAr ? `كومبو ×${gameState.comboCount}` : `Combo ×${gameState.comboCount}`}</span>
-              <span className="combo-bar" style={{ animationDuration: `${COMBO_WINDOW_MS}ms` }} key={gameState.lastMergeAt} />
-            </div>
-          )}
-
-          {levelUpToast && (
-            <div
-              role="status"
-              data-testid="level-up-toast"
-              className="level-up-toast px-3.5 py-2 rounded-xl bg-[#10B981] text-white text-xs font-extrabold text-center"
-            >
-              {isAr
-                ? `ارتقيت للمستوى ${levelUpToast.toLevel}! +${levelUpToast.gems} جوهرة وطاقة ممتلئة`
-                : `Level ${levelUpToast.toLevel}! +${levelUpToast.gems} gems & full energy`}
-            </div>
-          )}
+          </div>
 
           {feedbackBanner && (
             <div
               role="status"
               aria-live="polite"
-              className="px-3.5 py-1.5 rounded-xl bg-[#D99B26]/20 border border-[#FBBF24] text-xs font-bold text-[#FDE68A] truncate"
+              className="w-full text-center px-3 py-1 rounded-full bg-[#3E2723] border border-[#FBBF24] text-[11px] font-bold text-[#FEF3C7] shadow truncate"
             >
               {feedbackBanner}
             </div>
@@ -1193,213 +1092,234 @@ export default function App() {
             }
           />
         ) : (
-          /* COMPETITOR UPGRADE: GOSSIP HARBOR / TRAVEL TOWN TOP CUSTOMER ORDER STRIP + HIGH-CONTRAST PARCHMENT BOARD */
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
-            {/* Center / Primary Column: Top Customer Strip + 7x7 Parchment Merge Board (order-1 on mobile) */}
-            <div className="order-1 lg:col-span-7 flex flex-col items-center gap-2.5">
-              {/* 1. Gossip Harbor-Style Horizontal Customer Order Strip Pinned Directly Above Board */}
-              <div
-                aria-label={isAr ? 'شريط طلبات الضيوف العلوي' : 'Top Customer Order Dock'}
-                className="w-full max-w-[540px] grid grid-cols-3 gap-2"
-              >
-                {gameState.activeOrders.map((order) => {
-                  const readyIndices = findCellsForOrder(
-                    gameState.board,
-                    order.requiredItemIds
-                  );
-                  const isReady = readyIndices !== null;
+          /* FOCUSED SINGLE-COLUMN MERGE-2 STAGE (Exact Gossip Harbor / Travel Town Proportions) */
+          <div className="w-full max-w-[430px] mx-auto flex flex-col items-center gap-1.5">
+            {/* A. GOSSIP HARBOR-STYLE CUSTOMER ORDER TRAY (Directly Above the Board) */}
+            <section
+              aria-label={isAr ? 'شريط طلبات الضيوف العلوي' : 'Top Customer Order Dock'}
+              className="w-full grid grid-cols-3 gap-1.5"
+            >
+              {gameState.activeOrders.map((order) => {
+                const readyIndices = findCellsForOrder(
+                  gameState.board,
+                  order.requiredItemIds
+                );
+                const isReady = readyIndices !== null;
 
-                  return (
-                    <div
-                      key={order.id}
-                      className={`relative rounded-2xl p-2 border-2 flex flex-col justify-between transition-all ${
-                        isReady
-                          ? 'bg-gradient-to-b from-[#064E3B] to-[#1A2E26] border-[#10B981] shadow-[0_0_16px_rgba(16,185,129,0.3)]'
-                          : order.isVip
-                          ? 'bg-gradient-to-b from-[#3B1D38] to-[#241623] border-[#F59E0B]/80'
-                          : 'bg-[#261912] border-[#D99B26]/40'
-                      }`}
-                    >
-                      {/* Timed VIP Royal Convoy Rush Badge */}
-                      {order.isVip && (
-                        <div className="mb-1 px-1.5 py-0.5 rounded bg-[#F59E0B]/20 border border-[#F59E0B]/50 flex items-center justify-between text-[9px] font-extrabold text-[#FDE68A]">
-                          <span>{isAr ? '⚡ موكب ملكي VIP' : '⚡ VIP RUSH'}</span>
-                          <span>{isAr ? '+صندوق💎' : '+Chest💎'}</span>
+                return (
+                  <div
+                    key={order.id}
+                    className={`relative rounded-2xl p-1.5 sm:p-2 border-2 flex flex-col justify-between transition-all shadow-md overflow-hidden ${
+                      isReady
+                        ? 'bg-gradient-to-b from-[#ECFDF5] to-[#D1FAE5] border-[#059669] ring-2 ring-[#10B981]/40'
+                        : order.isVip
+                        ? 'bg-gradient-to-b from-[#FFFBEB] to-[#FEF3C7] border-[#D97706]'
+                        : 'bg-gradient-to-b from-[#FFFDF9] to-[#F5EBD9] border-[#C8AF87]'
+                    }`}
+                  >
+                    {/* VIP Rush Ribbon */}
+                    {order.isVip && (
+                      <span className="absolute top-1 end-1 px-1.5 py-0.2 rounded-full bg-gradient-to-r from-[#D97706] to-[#B45309] text-white text-[8px] font-black shadow z-10">
+                        VIP
+                      </span>
+                    )}
+
+                    {/* Character Bust + Name + Coin/Star Reward */}
+                    <div className="flex items-center gap-1">
+                      <CustomerPortrait avatarKey={order.customerId} size="sm" />
+                      <div className="min-w-0 flex-1">
+                        <div className="text-[10px] sm:text-[11px] font-extrabold text-[#2C1E14] truncate">
+                          {isAr ? order.customerNameAr : order.customerNameEn}
                         </div>
-                      )}
-
-                      {/* Top row: Portrait + Name + Reward */}
-                      <div className="flex items-center gap-1.5">
-                        <CustomerPortrait avatarKey={order.customerId} size="sm" />
-                        <div className="min-w-0 flex-1">
-                          <div className="text-[11px] font-bold text-[#FBF7F0] truncate">
-                            {isAr ? order.customerNameAr : order.customerNameEn}
-                          </div>
-                          <div className="inline-flex items-center gap-1 text-[10px] font-extrabold tabular-nums text-[#FBBF24]">
-                            <span>+{order.rewardCoins}</span>
-                            <span>·</span>
-                            <span className="inline-flex items-center gap-0.5">
-                              <Star className="w-2.5 h-2.5 fill-current" />
-                              {order.rewardStars}
-                            </span>
-                          </div>
+                        <div className="inline-flex items-center gap-0.5 text-[9px] sm:text-[10px] font-black tabular-nums text-[#B45309]">
+                          <span>+{order.rewardCoins}</span>
+                          <span>·</span>
+                          <span className="inline-flex items-center gap-0.5 text-[#D97706]">
+                            <Star className="w-2.5 h-2.5 fill-current" />
+                            {order.rewardStars}
+                          </span>
                         </div>
-                      </div>
-
-                      {/* Bottom row: Required item icons + 1-Tap Serve CTA */}
-                      <div className="mt-1.5 pt-1.5 border-t border-white/10 flex items-center justify-between gap-1">
-                        <div className="flex items-center gap-1">
-                          {order.requiredItemIds.map((reqId, idx) => {
-                            const reqDef = ITEM_CATALOG[reqId];
-                            const hasItem = gameState.board.some(
-                              (c) => !c.sandLocked && c.itemId === reqId
-                            );
-                            return (
-                              <button
-                                key={`${order.id}_top_${reqId}_${idx}`}
-                                type="button"
-                                onClick={() => {
-                                  if (reqDef && reqDef.chain !== 'generator') {
-                                    setChainModalCategory(reqDef.chain);
-                                    setChainModalOpen(true);
-                                  }
-                                }}
-                                title={isAr ? reqDef?.nameAr : reqDef?.nameEn}
-                                className={`relative w-8 h-8 rounded-lg border flex items-center justify-center cursor-pointer ${
-                                  hasItem
-                                    ? 'bg-[#FBF5E8] border-[#10B981] ring-1 ring-[#10B981]'
-                                    : 'bg-[#F5E9D4]/90 border-[#C89D66]'
-                                }`}
-                              >
-                                <ItemArtwork itemId={reqId} size="sm" />
-                                {hasItem && (
-                                  <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-[#10B981] text-white flex items-center justify-center shadow">
-                                    <Check className="w-2.5 h-2.5 stroke-[3]" />
-                                  </span>
-                                )}
-                              </button>
-                            );
-                          })}
-                        </div>
-
-                        <button
-                          type="button"
-                          onClick={() => handleFulfillOrder(order.id)}
-                          className={`px-2 py-1.5 rounded-lg text-[10px] font-extrabold transition-all cursor-pointer whitespace-nowrap ${
-                            isReady
-                              ? 'bg-[#10B981] hover:bg-[#059669] text-white shadow'
-                              : 'bg-white/10 text-[#D4A373] hover:bg-white/15'
-                          }`}
-                        >
-                          {isReady
-                            ? isAr
-                              ? 'تقديم!'
-                              : 'Serve!'
-                            : isAr
-                            ? 'تحضير'
-                            : 'Craft'}
-                        </button>
                       </div>
                     </div>
-                  );
-                })}
+
+                    {/* Speech-Bubble Recipe Tray + Serve CTA */}
+                    <div className="mt-1 pt-1 border-t border-[#D4B483]/50 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-1">
+                      <div className="flex items-center justify-center sm:justify-start gap-1">
+                        {order.requiredItemIds.map((reqId, idx) => {
+                          const reqDef = ITEM_CATALOG[reqId];
+                          const hasItem = gameState.board.some(
+                            (c) => !c.sandLocked && c.itemId === reqId
+                          );
+                          return (
+                            <button
+                              key={`${order.id}_top_${reqId}_${idx}`}
+                              type="button"
+                              onClick={() => {
+                                if (reqDef && reqDef.chain !== 'generator') {
+                                  setChainModalCategory(reqDef.chain);
+                                  setChainModalOpen(true);
+                                }
+                              }}
+                              title={isAr ? reqDef?.nameAr : reqDef?.nameEn}
+                              className={`relative w-7 h-7 rounded-lg border-2 flex items-center justify-center cursor-pointer transition-transform hover:scale-105 shrink-0 ${
+                                hasItem
+                                  ? 'bg-[#DCFCE7] border-[#10B981] shadow-sm'
+                                  : 'bg-[#F8EFE0] border-[#D4B483]'
+                              }`}
+                            >
+                              <ItemArtwork itemId={reqId} size="sm" />
+                              {hasItem && (
+                                <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-[#10B981] border border-white text-white flex items-center justify-center shadow">
+                                  <Check className="w-2 h-2 stroke-[3.5]" />
+                                </span>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleFulfillOrder(order.id)}
+                        className={`px-2 py-0.5 sm:py-1 rounded-lg text-[10px] font-black transition-all cursor-pointer whitespace-nowrap text-center shrink-0 ${
+                          isReady
+                            ? 'btn-3d-green text-white'
+                            : 'bg-[#E6D5B8] text-[#785A3C] hover:bg-[#DBC6A4]'
+                        }`}
+                      >
+                        {isReady
+                          ? isAr
+                            ? 'تقديم!'
+                            : 'Serve!'
+                          : isAr
+                          ? 'تحضير'
+                          : 'Craft'}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </section>
+
+            {/* B. FLOATING GOLDEN BONUS BUBBLE DEAL (When Active) */}
+            {gameState.bonusBubble && (
+              <div className="w-full rounded-2xl bg-gradient-to-r from-[#FEF3C7] via-[#FDE68A] to-[#FEF3C7] border-2 border-[#D97706] px-3 py-1.5 flex items-center justify-between gap-2 shadow-md">
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="w-8 h-8 rounded-full bg-white border-2 border-[#0284C7] flex items-center justify-center shrink-0 shadow-sm">
+                    <ItemArtwork itemId={gameState.bonusBubble.itemId} size="sm" />
+                  </div>
+                  <div className="min-w-0">
+                    <span className="text-[9px] font-black text-[#B45309] uppercase block">
+                      {isAr ? 'فقاعة البركة الذهبية!' : 'BONUS BUBBLE!'}
+                    </span>
+                    <span className="text-xs font-extrabold text-[#2C1E14] truncate block">
+                      {isAr
+                        ? ITEM_CATALOG[gameState.bonusBubble.itemId]?.nameAr
+                        : ITEM_CATALOG[gameState.bonusBubble.itemId]?.nameEn}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button
+                    type="button"
+                    onClick={handleUnlockBonusBubble}
+                    className="px-2.5 py-1 rounded-xl bg-[#0284C7] hover:bg-[#0369A1] text-white font-extrabold text-xs inline-flex items-center gap-1 cursor-pointer shadow"
+                  >
+                    <Gem className="w-3 h-3" />
+                    <span>{gameState.bonusBubble.gemCost}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setGameState((prev) => ({ ...prev, bonusBubble: null }))}
+                    className="px-2 py-1 rounded-xl bg-[#D6BE9C] hover:bg-[#C8AF87] text-xs font-bold text-[#3E2723] cursor-pointer"
+                  >
+                    {isAr ? 'تخطي' : 'Skip'}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* C. CARVED NAJDI WOOD & SUN-LIT IVORY 7×7 MERGE BOARD */}
+            <div className="w-full rounded-3xl board-wood-frame p-2 sm:p-2.5 border-2 border-[#563216]">
+              {/* Top Bezel Booster Bar */}
+              <div className="flex items-center justify-between mb-1.5 px-1 gap-1">
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={handleAutoMergeOrHint}
+                    className="px-2.5 py-1 rounded-xl btn-3d-green text-white text-[11px] font-extrabold inline-flex items-center gap-1 cursor-pointer whitespace-nowrap"
+                  >
+                    <Sparkles className="w-3 h-3" />
+                    <span>{isAr ? 'دمج تلقائي' : 'Auto-Merge'}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setChainModalCategory(
+                        selectedItemDef && selectedItemDef.chain !== 'generator'
+                          ? selectedItemDef.chain
+                          : 'qahwa'
+                      );
+                      setChainModalOpen(true);
+                    }}
+                    className="px-2.5 py-1 rounded-xl bg-[#FFFDF9] hover:bg-[#FEF3C7] border border-[#D4B483] text-[#5C3A21] text-[11px] font-extrabold inline-flex items-center gap-1 cursor-pointer whitespace-nowrap shadow-sm"
+                  >
+                    <Info className="w-3 h-3 text-[#D97706]" />
+                    <span>{isAr ? 'دليل السلاسل' : 'Chains'}</span>
+                  </button>
+                </div>
+
+                {/* Right: Scissors, Joker & Power Multiplier */}
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button
+                    type="button"
+                    onClick={handleUseScissors}
+                    title={isAr ? 'المقص الذهبي: يقسم أي عنصر (L2+) إلى قطعتين' : 'Golden Scissors: Split any Lv.2+ item'}
+                    className="px-2 py-1 rounded-xl bg-[#FFFDF9] hover:bg-[#FCE7F3] border border-[#DB2777] text-[#9D174D] text-[11px] font-black tabular-nums inline-flex items-center gap-1 cursor-pointer shadow-sm"
+                  >
+                    <Scissors className="w-3 h-3" />
+                    <span>{gameState.scissorsCount}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleUseJoker}
+                    title={isAr ? 'فنجال الجوكر: يرقّي أي عنصر للمستوى التالي فوراً' : 'Royal Joker: Upgrade any item +1 Level'}
+                    className="px-2 py-1 rounded-xl bg-[#FFFDF9] hover:bg-[#F3E8FF] border border-[#7C3AED] text-[#5B21B6] text-[11px] font-black tabular-nums inline-flex items-center gap-1 cursor-pointer shadow-sm"
+                  >
+                    <Wand2 className="w-3 h-3" />
+                    <span>{gameState.jokerCount}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleCyclePowerBoost}
+                    aria-label={isAr ? 'تغيير مضاعف الطاقة' : 'Toggle Power Boost Multiplier'}
+                    className={`px-2.5 py-1 rounded-xl text-xs font-black tabular-nums inline-flex items-center gap-1 transition-all cursor-pointer shadow-sm ${
+                      gameState.powerMultiplier === 4
+                        ? 'bg-[#DC2626] text-white border border-[#991B1B]'
+                        : gameState.powerMultiplier === 2
+                        ? 'btn-3d-amber text-[#3E2723]'
+                        : 'bg-[#FFFDF9] border border-[#D4B483] text-[#78350F]'
+                    }`}
+                  >
+                    <Zap className="w-3 h-3 fill-current" />
+                    <span>×{gameState.powerMultiplier}</span>
+                  </button>
+                </div>
               </div>
 
-              {/* 2. Floating Golden Bonus Bubble Deal (Spawns on Lv.3+ Merges like Gossip Harbor / Travel Town) */}
-              {gameState.bonusBubble && (
-                <div className="w-full max-w-[540px] rounded-xl bg-gradient-to-r from-[#3B2610] via-[#4C3214] to-[#2B1D14] border-2 border-[#FBBF24] px-3 py-2 flex items-center justify-between gap-2 shadow-lg">
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="w-10 h-10 rounded-full bg-[#FBF5E8] border-2 border-[#38BDF8] flex items-center justify-center shrink-0">
-                      <ItemArtwork itemId={gameState.bonusBubble.itemId} size="sm" />
-                    </div>
-                    <div className="min-w-0">
-                      <span className="text-[10px] font-extrabold text-[#FBBF24] uppercase block">
-                        {isAr ? 'فقاعة البركة الذهبية (مكافأة الدمج!)' : 'GOLDEN BONUS BUBBLE DEAL!'}
-                      </span>
-                      <span className="text-xs font-bold text-white truncate block">
-                        {isAr
-                          ? ITEM_CATALOG[gameState.bonusBubble.itemId]?.nameAr
-                          : ITEM_CATALOG[gameState.bonusBubble.itemId]?.nameEn}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <button
-                      type="button"
-                      onClick={handleUnlockBonusBubble}
-                      className="px-2.5 py-1.5 rounded-lg bg-[#38BDF8] hover:bg-[#0284C7] text-[#0F172A] font-extrabold text-xs inline-flex items-center gap-1 cursor-pointer"
-                    >
-                      <Gem className="w-3.5 h-3.5" />
-                      <span>{gameState.bonusBubble.gemCost}</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setGameState((prev) => ({ ...prev, bonusBubble: null }))}
-                      className="px-2 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-xs text-white/80 cursor-pointer"
-                    >
-                      {isAr ? 'تخطي' : 'Skip'}
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* 3. High-Contrast Warm Parchment & Walnut 7x7 Merge Board */}
-              <div className="w-full max-w-[540px] rounded-2xl border-2 border-[#D99B26]/65 bg-[#311F15] p-2.5 sm:p-3.5 shadow-2xl">
-                <div className="flex items-center justify-between mb-2 px-1 gap-2">
-                  <span className="text-xs font-bold text-[#FDE68A] truncate">
-                    {isAr
-                      ? 'لوحة الدمج (4 سلاسل + صناديق الضيافة)'
-                      : 'Khaleeji Board (4 Chains + Majlis Chests)'}
-                  </span>
-
-                  {/* Board Boosters Bar: Golden Scissors, Royal Joker & Power Boost */}
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <button
-                      type="button"
-                      onClick={handleUseScissors}
-                      title={isAr ? 'المقص الذهبي: يقسم أي عنصر (L2+) إلى قطعتين' : 'Golden Scissors: Split any Lv.2+ item into two'}
-                      className="px-2 py-1 rounded-lg bg-[#1C1410] hover:bg-[#2E1E16] border border-[#EC4899]/50 text-[#F472B6] text-[11px] font-extrabold tabular-nums inline-flex items-center gap-1 cursor-pointer"
-                    >
-                      <Scissors className="w-3 h-3" />
-                      <span>{gameState.scissorsCount}</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={handleUseJoker}
-                      title={isAr ? 'فنجال الجوكر: يرقّي أي عنصر للمستوى التالي فوراً' : 'Royal Joker: Upgrade any item +1 Level'}
-                      className="px-2 py-1 rounded-lg bg-[#1C1410] hover:bg-[#2E1E16] border border-[#A855F7]/60 text-[#C084FC] text-[11px] font-extrabold tabular-nums inline-flex items-center gap-1 cursor-pointer"
-                    >
-                      <Wand2 className="w-3 h-3" />
-                      <span>{gameState.jokerCount}</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={handleCyclePowerBoost}
-                      aria-label={isAr ? 'تغيير مضاعف الطاقة' : 'Toggle Power Boost Multiplier'}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-extrabold tabular-nums inline-flex items-center gap-1 transition-colors cursor-pointer ${
-                        gameState.powerMultiplier === 4
-                          ? 'bg-[#EF4444] text-white shadow'
-                          : gameState.powerMultiplier === 2
-                          ? 'bg-[#F59E0B] text-[#1C1410] shadow'
-                          : 'bg-[#1C1410] border border-[#FBBF24]/50 text-[#FBBF24]'
-                      }`}
-                    >
-                      <Zap className="w-3 h-3 fill-current" />
-                      <span>×{gameState.powerMultiplier}</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* 7x7 Grid with Warm Sand-Parchment Tiles */}
+              {/* 7×7 Inner Recessed Board Well + High-Level Merge Particle Overlay */}
+              <div className="relative w-full">
                 <div
                   data-testid="merge-board-grid"
-                  className="grid grid-cols-7 gap-1 sm:gap-1.5 aspect-square w-full bg-[#21140D] p-1.5 sm:p-2 rounded-xl border-2 border-[#8B5E3C]/50 shadow-inner"
+                  className="grid grid-cols-7 gap-1 sm:gap-1.5 aspect-square w-full board-inner-well p-1.5 sm:p-2 rounded-2xl"
                 >
                   {gameState.board.map((cell) => {
                     const itemDef = cell.itemId ? ITEM_CATALOG[cell.itemId] : null;
                     const isSelected = gameState.selectedCellIndex === cell.index;
+                    const isCelebrating = Boolean(celebratingCells[cell.index]);
                     const isHinted =
                       hintPair !== null &&
                       (hintPair[0] === cell.index || hintPair[1] === cell.index);
@@ -1418,6 +1338,18 @@ export default function App() {
                       );
 
                     const isEvenChecker = (cell.row + cell.col) % 2 === 0;
+
+                    const tileSurfaceClass = cell.sandLocked
+                      ? 'tile-locked-3d opacity-95'
+                      : itemDef?.isGenerator
+                      ? 'tile-generator-3d hover:scale-[1.03]'
+                      : itemDef?.isChest
+                      ? 'tile-chest-3d hover:scale-[1.03]'
+                      : isOrderNeeded
+                      ? 'tile-ready-3d active:scale-95'
+                      : isEvenChecker
+                      ? 'tile-ivory active:scale-95'
+                      : 'tile-sand active:scale-95';
 
                     const accessibleLabel = itemDef
                       ? `${isAr ? itemDef.nameAr : itemDef.nameEn} ${
@@ -1441,75 +1373,50 @@ export default function App() {
                         onDragOver={(e) => e.preventDefault()}
                         onDrop={() => handleDropOnCell(cell.index)}
                         onClick={() => handleCellClick(cell.index)}
-                        className={`relative aspect-square rounded-lg sm:rounded-xl flex flex-col items-center justify-center transition-transform cursor-pointer select-none ${
-                          cell.sandLocked
-                            ? 'bg-[#B08968]/85 border border-dashed border-[#5C3A21] opacity-90'
-                            : itemDef?.isGenerator
-                            ? 'bg-gradient-to-b from-[#FDE68A] to-[#F59E0B] border-2 border-[#B45309] shadow-md hover:scale-[1.03]'
-                            : itemDef?.isChest
-                            ? 'bg-gradient-to-b from-[#FEF3C7] to-[#FDE68A] border-2 border-[#D97706] shadow-md'
-                            : itemDef
-                            ? isOrderNeeded
-                              ? 'bg-[#DCFCE7] border-2 border-[#10B981] shadow-sm active:scale-95'
-                              : isEvenChecker
-                              ? 'bg-[#FBF5E8] border border-[#D4A373] hover:border-[#D97724] active:scale-95'
-                              : 'bg-[#F3E5AB] border border-[#C89D66] hover:border-[#D97724] active:scale-95'
-                            : isEvenChecker
-                            ? 'bg-[#E6D5B8]/40 border border-[#C89D66]/25 hover:border-[#D99B26]/50'
-                            : 'bg-[#D8C3A5]/30 border border-[#C89D66]/20 hover:border-[#D99B26]/50'
-                        } ${
+                        className={`relative aspect-square rounded-xl flex flex-col items-center justify-center transition-transform cursor-pointer select-none ${tileSurfaceClass} ${
                           isSelected
-                            ? 'ring-2 ring-[#D97724] scale-[1.04] z-10'
+                            ? 'ring-3 ring-[#F59E0B] scale-[1.05] z-10'
                             : ''
                         } ${
                           isMergeTarget || isHinted
-                            ? 'ring-2 ring-[#10B981]'
+                            ? 'ring-3 ring-[#10B981]'
+                            : ''
+                        } ${
+                          isCelebrating
+                            ? 'merge-tile-celebrate ring-3 ring-[#FDE047] shadow-[0_0_18px_rgba(250,204,21,0.85)] z-20'
                             : ''
                         }`}
                       >
-                        {mergeFx && mergeFx.index === cell.index && (
-                          <span
-                            key={mergeFx.key}
-                            aria-hidden="true"
-                            className={`merge-burst ${mergeFx.mega ? 'merge-burst-mega' : ''} ${mergeFx.level >= 4 ? 'merge-burst-big' : ''}`}
-                          />
-                        )}
                         {itemDef && (
                           <>
                             <ItemArtwork itemId={itemDef.id} size="md" />
 
-                            {/* Level or Generator Badge */}
-                            <span
-                              className={`absolute bottom-0.5 inset-x-0.5 text-[9px] sm:text-[10px] tabular-nums font-extrabold leading-none py-0.5 rounded flex items-center justify-center ${
-                                itemDef.isGenerator
-                                  ? 'bg-[#78350F] text-[#FEF3C7]'
-                                  : itemDef.isChest
-                                  ? 'bg-[#9A3412] text-[#FEF3C7]'
-                                  : 'bg-[#2B1D14]/90 text-[#FDE68A]'
-                              }`}
-                            >
-                              {itemDef.isGenerator ? (
+                            {/* Clean Gossip-Harbor Style Corner Badge */}
+                            {itemDef.isGenerator ? (
+                              <span className="absolute bottom-0.5 right-0.5 w-4 h-4 sm:w-4.5 sm:h-4.5 rounded-full bg-gradient-to-b from-[#FDE047] to-[#D97706] border border-[#78350F] text-[#3E2723] flex items-center justify-center shadow">
                                 <Zap className="w-2.5 h-2.5 fill-current" />
-                              ) : (
-                                `L${itemDef.level}`
-                              )}
-                            </span>
-
-                            {/* Order Needed Checkmark Indicator */}
-                            {isOrderNeeded && (
-                              <span
-                                title={isAr ? 'مطلوب لطلب ضيف' : 'Needed for Order'}
-                                className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-[#10B981] text-white flex items-center justify-center shadow"
-                              >
-                                <Check className="w-2.5 h-2.5 stroke-[3]" />
+                              </span>
+                            ) : (
+                              <span className="absolute bottom-0.5 left-0.5 px-1 min-w-[16px] h-4 rounded-md bg-[#3E2723]/85 text-[#FFFDF9] text-[9px] font-black tabular-nums flex items-center justify-center leading-none">
+                                {itemDef.level}
                               </span>
                             )}
 
-                            {/* Sand-Locked Dune Overlay */}
+                            {/* Order Needed Green Checkmark Badge */}
+                            {isOrderNeeded && (
+                              <span
+                                title={isAr ? 'مطلوب لطلب ضيف' : 'Needed for Order'}
+                                className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#10B981] border border-white text-white flex items-center justify-center shadow"
+                              >
+                                <Check className="w-2.5 h-2.5 stroke-[3.5]" />
+                              </span>
+                            )}
+
+                            {/* Sand-Locked Ribbon Badge */}
                             {cell.sandLocked && (
                               <span
                                 title={isAr ? 'ادمج عنصراً مطابقاً لفتح القفل' : 'Merge matching item to unlock'}
-                                className="absolute top-0.5 left-0.5 w-3.5 h-3.5 rounded bg-[#3E2723] text-[#FBBF24] flex items-center justify-center"
+                                className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-[#78350F] border border-[#FDE68A] text-[#FDE68A] flex items-center justify-center shadow"
                               >
                                 <Lock className="w-2.5 h-2.5" />
                               </span>
@@ -1520,287 +1427,122 @@ export default function App() {
                     );
                   })}
                 </div>
+                <MergeParticleOverlay bursts={mergeBursts} lang={lang} />
               </div>
             </div>
 
-            {/* Right / Secondary Column: Sadu Pantry Storage Bag + Item Inspector + Boosters + Full Order Cards */}
-            <div className="order-2 lg:col-span-5 flex flex-col gap-3">
-              {/* Selected Item Inspector + Chain Evolution Tree [i] + Sadu Pantry Storage */}
-              <section
-                aria-label={isAr ? 'تفاصيل العنصر وخزانة المؤونة' : 'Item Inspector & Sadu Pantry'}
-                className="rounded-2xl border border-[#D99B26]/35 bg-[#241812] p-3.5 space-y-3 shadow-lg"
-              >
+            {/* D. BOTTOM INSPECTOR & 4-SLOT SADU PANTRY TRAY (Clean Single-Row/Card Dock Below Board) */}
+            <section
+              aria-label={isAr ? 'تفاصيل العنصر وخزانة المؤونة' : 'Item Inspector & Sadu Pantry'}
+              className="w-full rounded-2xl bg-[#FFFDF9] border-2 border-[#C8AF87] p-3 shadow-md flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3"
+            >
+              {/* Left: Selected Item Inspector */}
+              <div className="flex items-center justify-between gap-2.5 flex-1 min-w-0">
                 {selectedItemDef ? (
-                  <div className="space-y-2.5">
-                    <div className="flex items-center justify-between gap-2.5">
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="w-12 h-12 rounded-xl bg-[#FBF5E8] border-2 border-[#D99B26] flex items-center justify-center shrink-0">
-                          <ItemArtwork itemId={selectedItemDef.id} size="md" />
-                        </div>
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-sm font-bold text-white truncate">
-                              {isAr ? selectedItemDef.nameAr : selectedItemDef.nameEn}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                if (selectedItemDef.chain !== 'generator') {
-                                  setChainModalCategory(selectedItemDef.chain);
-                                }
-                                setChainModalOpen(true);
-                              }}
-                              aria-label={isAr ? 'عرض شجرة تطور السلسلة' : 'View Merge Chain Evolution Tree'}
-                              className="w-6 h-6 rounded-lg bg-[#D99B26]/25 hover:bg-[#D99B26]/45 text-[#FBBF24] flex items-center justify-center shrink-0 cursor-pointer"
-                            >
-                              <Info className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                          <p className="text-xs text-[#E5DEC9]/80 mt-0.5 line-clamp-1">
-                            {isAr ? selectedItemDef.descAr : selectedItemDef.descEn}
-                          </p>
-                        </div>
+                  <>
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-11 h-11 rounded-xl tile-ivory flex items-center justify-center shrink-0">
+                        <ItemArtwork itemId={selectedItemDef.id} size="md" />
                       </div>
-
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        {selectedItemDef.isChest && gameState.selectedCellIndex !== null ? (
-                          <button
-                            type="button"
-                            onClick={() => handleOpenChest(gameState.selectedCellIndex!)}
-                            className="px-3 py-2 rounded-xl bg-[#10B981] hover:bg-[#059669] text-white text-xs font-extrabold cursor-pointer whitespace-nowrap shadow"
-                          >
-                            {isAr ? 'فتح الصندوق!' : 'Open Chest!'}
-                          </button>
-                        ) : !selectedItemDef.isGenerator ? (
-                          <>
-                            <button
-                              type="button"
-                              onClick={handleStoreInPantry}
-                              className="px-2.5 py-2 rounded-xl bg-[#2A9D8F]/25 hover:bg-[#2A9D8F]/45 border border-[#2A9D8F] text-[#5EEAD4] text-xs font-bold cursor-pointer whitespace-nowrap"
-                            >
-                              {isAr ? 'تخزين' : 'Store'}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                gameState.selectedCellIndex !== null &&
-                                setGameState((prev) =>
-                                  sellBoardItem(prev, prev.selectedCellIndex!)
-                                )
-                              }
-                              className="px-2.5 py-2 rounded-xl bg-white/10 hover:bg-red-500/30 text-[#FDE68A] text-xs font-bold cursor-pointer whitespace-nowrap"
-                            >
-                              +{selectedItemDef.sellValue} SAR
-                            </button>
-                          </>
-                        ) : null}
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs sm:text-sm font-black text-[#2C1E14] truncate">
+                            {isAr ? selectedItemDef.nameAr : selectedItemDef.nameEn}
+                          </span>
+                          <span className="px-1.5 py-0.5 rounded bg-[#EDE0C7] text-[#5C3A21] text-[10px] font-extrabold tabular-nums">
+                            L{selectedItemDef.level}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-[#6B4F35] truncate mt-0.5">
+                          {isAr ? selectedItemDef.descAr : selectedItemDef.descEn}
+                        </p>
                       </div>
                     </div>
 
-                    {/* Booster Actions for Selected Item (Golden Scissors & Royal Joker) */}
-                    {!selectedItemDef.isGenerator && (
-                      <div className="grid grid-cols-2 gap-2 pt-1">
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {selectedItemDef.isChest && gameState.selectedCellIndex !== null ? (
                         <button
                           type="button"
-                          onClick={handleUseScissors}
-                          disabled={selectedItemDef.level <= 1 || gameState.scissorsCount <= 0}
-                          className={`py-1.5 px-2.5 rounded-xl border text-xs font-bold inline-flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                            selectedItemDef.level > 1 && gameState.scissorsCount > 0
-                              ? 'bg-[#EC4899]/20 border-[#EC4899] text-[#FBCFE8] hover:bg-[#EC4899]/35'
-                              : 'bg-white/5 border-white/10 text-white/30 cursor-not-allowed'
-                          }`}
+                          onClick={() => handleOpenChest(gameState.selectedCellIndex!)}
+                          className="px-3 py-1.5 rounded-xl btn-3d-green text-white text-xs font-extrabold cursor-pointer whitespace-nowrap"
                         >
-                          <Scissors className="w-3.5 h-3.5" />
-                          <span>
-                            {isAr
-                              ? `المقص الذهبي (${gameState.scissorsCount})`
-                              : `Split Item (${gameState.scissorsCount})`}
-                          </span>
+                          {isAr ? 'فتح!' : 'Open!'}
                         </button>
-
-                        <button
-                          type="button"
-                          onClick={handleUseJoker}
-                          disabled={selectedItemDef.level >= selectedItemDef.maxLevel || gameState.jokerCount <= 0}
-                          className={`py-1.5 px-2.5 rounded-xl border text-xs font-bold inline-flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                            selectedItemDef.level < selectedItemDef.maxLevel && gameState.jokerCount > 0
-                              ? 'bg-[#A855F7]/25 border-[#A855F7] text-[#E9D5FF] hover:bg-[#A855F7]/40'
-                              : 'bg-white/5 border-white/10 text-white/30 cursor-not-allowed'
-                          }`}
-                        >
-                          <Wand2 className="w-3.5 h-3.5" />
-                          <span>
-                            {isAr
-                              ? `فنجال الجوكر (${gameState.jokerCount})`
-                              : `Joker +1 Lv (${gameState.jokerCount})`}
-                          </span>
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="text-xs text-[#D4A373] py-1">
-                    {isAr
-                      ? 'حدد أي عنصر على اللوحة لاستخدام (المقص الذهبي / فنجال الجوكر) أو حفظه في خزانة المؤونة.'
-                      : 'Select any tile to use Boosters (Golden Scissors / Royal Joker) or store it in the Sadu Pantry.'}
-                  </div>
-                )}
-
-                {/* Sadu Pantry Storage Bag (4 Slots) */}
-                <div className="pt-2.5 border-t border-white/10">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-xs font-bold text-[#E9C46A] inline-flex items-center gap-1.5">
-                      <Package className="w-3.5 h-3.5 text-[#FBBF24]" />
-                      {isAr
-                        ? `خزانة المؤونة (${gameState.inventory.length}/${gameState.inventoryCapacity}) · انقر للاستعادة`
-                        : `Sadu Pantry Storage (${gameState.inventory.length}/${gameState.inventoryCapacity}) · Tap to Retrieve`}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setChainModalCategory(
-                          selectedItemDef && selectedItemDef.chain !== 'generator'
-                            ? selectedItemDef.chain
-                            : 'oud'
-                        );
-                        setChainModalOpen(true);
-                      }}
-                      className="text-[11px] font-bold text-[#FBBF24] hover:underline cursor-pointer"
-                    >
-                      {isAr ? 'دليل السلاسل الأربع [i]' : '4-Chain Tree [i]'}
-                    </button>
-                  </div>
-
-                  <div className="grid grid-cols-4 gap-2">
-                    {Array.from({ length: gameState.inventoryCapacity }).map((_, slotIdx) => {
-                      const storedId = gameState.inventory[slotIdx];
-                      const storedDef = storedId ? ITEM_CATALOG[storedId] : null;
-                      return (
-                        <button
-                          key={`pantry_slot_${slotIdx}`}
-                          type="button"
-                          onClick={() => storedId && handleRetrieveFromPantry(slotIdx)}
-                          aria-label={
-                            storedDef
-                              ? isAr
-                                ? `استعادة ${storedDef.nameAr} من الخزانة`
-                                : `Retrieve ${storedDef.nameEn} from Pantry`
-                              : isAr
-                              ? 'خانة خزانة فارغة'
-                              : 'Empty Pantry Slot'
-                          }
-                          className={`h-12 rounded-xl border flex items-center justify-center transition-all ${
-                            storedDef
-                              ? 'bg-[#FBF5E8] border-[#D99B26] hover:scale-105 cursor-pointer shadow'
-                              : 'bg-[#19110D] border-dashed border-white/15 text-[10px] text-white/30'
-                          }`}
-                        >
-                          {storedDef ? (
-                            <ItemArtwork itemId={storedDef.id} size="sm" />
-                          ) : (
-                            <span>{isAr ? 'فارغ' : 'Empty'}</span>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Quick Helper Actions */}
-                <div className="pt-2 border-t border-white/10 flex flex-wrap items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={handleAutoMergeOrHint}
-                    className="flex-1 py-2.5 px-3 rounded-xl bg-[#2A9D8F] hover:bg-[#21867A] text-white text-xs font-bold inline-flex items-center justify-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap"
-                  >
-                    <Sparkles className="w-3.5 h-3.5" />
-                    <span>{isAr ? 'دمج تلقائي ذكي (Auto-Merge)' : 'Smart Auto-Merge Pair'}</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleCellClick(2)}
-                    className="py-2.5 px-3 rounded-xl bg-[#A855F7]/25 hover:bg-[#A855F7]/40 border border-[#A855F7]/60 text-[#E9D5FF] text-xs font-bold transition-colors cursor-pointer whitespace-nowrap"
-                  >
-                    {isAr ? `+ إنتاج عود (×${gameState.powerMultiplier})` : `+ Spawn Oud (×${gameState.powerMultiplier})`}
-                  </button>
-                </div>
-              </section>
-
-              {/* Detailed Story & Quotes Customer Order Cards */}
-              <section
-                aria-label={isAr ? 'تفاصيل طلبات ضيوف المجلس' : 'Detailed Majlis Guest Orders'}
-                className="rounded-2xl border border-[#D99B26]/30 bg-[#241812] p-3.5 space-y-2.5 shadow-lg"
-              >
-                <div className="flex items-center justify-between">
-                  <h2 className="text-xs sm:text-sm font-bold text-[#FBF7F0]">
-                    {isAr ? 'حكايات وطلبات ضيوف المجلس' : 'Guest Stories & Order Details'}
-                  </h2>
-                  <span className="inline-flex items-center gap-1 text-[11px] text-[#D4A373]">
-                    <span>{isAr ? `هيبة المجلس: ${gameState.prestigePoints}` : `Prestige: ${gameState.prestigePoints}`}</span>
-                    <Star className="w-3 h-3 fill-[#FBBF24] text-[#FBBF24]" />
-                  </span>
-                </div>
-
-                <div className="space-y-2">
-                  {gameState.activeOrders.map((order) => {
-                    const readyIndices = findCellsForOrder(
-                      gameState.board,
-                      order.requiredItemIds
-                    );
-                    const isReady = readyIndices !== null;
-
-                    return (
-                      <div
-                        key={`detail_${order.id}`}
-                        className={`rounded-xl p-2.5 border transition-all ${
-                          isReady
-                            ? 'bg-[#10B981]/15 border-[#10B981]'
-                            : 'bg-[#1C1410] border-white/10'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-2.5 min-w-0">
-                            <CustomerPortrait avatarKey={order.customerId} size="sm" />
-                            <div className="min-w-0">
-                              <div className="text-xs font-bold text-[#FBF7F0] truncate">
-                                {isAr ? order.customerNameAr : order.customerNameEn}
-                                <span className="mx-1 text-white/30">·</span>
-                                <span className="font-normal text-[#D4A373]">
-                                  {isAr ? order.customerRoleAr : order.customerRoleEn}
-                                </span>
-                              </div>
-                              <p className="text-[11px] text-[#E5DEC9]/75 truncate">
-                                “{isAr ? order.quoteAr : order.quoteEn}”
-                              </p>
-                            </div>
-                          </div>
-
+                      ) : !selectedItemDef.isGenerator ? (
+                        <>
                           <button
                             type="button"
-                            onClick={() => handleFulfillOrder(order.id)}
-                            className={`px-3 py-1.5 rounded-xl text-xs font-bold inline-flex items-center gap-1 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
-                              isReady
-                                ? 'bg-[#10B981] hover:bg-[#059669] text-white shadow-md'
-                                : 'bg-white/10 hover:bg-white/15 text-white/60'
-                            }`}
+                            onClick={handleStoreInPantry}
+                            className="px-2.5 py-1.5 rounded-xl bg-[#E0F2FE] hover:bg-[#BAE6FD] border border-[#0284C7] text-[#0369A1] text-xs font-extrabold cursor-pointer whitespace-nowrap"
                           >
-                            {isReady ? (
-                              <>
-                                <span>{isAr ? 'تقديم الطلب' : 'Serve Order'}</span>
-                                <Check className="w-3.5 h-3.5" />
-                              </>
-                            ) : (
-                              <span>+{order.rewardCoins} SAR</span>
-                            )}
+                            {isAr ? 'تخزين' : 'Store'}
                           </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </section>
-            </div>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              gameState.selectedCellIndex !== null &&
+                              setGameState((prev) =>
+                                sellBoardItem(prev, prev.selectedCellIndex!)
+                              )
+                            }
+                            className="px-2.5 py-1.5 rounded-xl bg-[#FEF3C7] hover:bg-[#FDE68A] border border-[#D97706] text-[#92400E] text-xs font-extrabold cursor-pointer whitespace-nowrap"
+                          >
+                            +{selectedItemDef.sellValue}
+                          </button>
+                        </>
+                      ) : null}
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-xs font-bold text-[#785A3C] py-1">
+                    {isAr
+                      ? 'انقر على أي مولّد (⚡) لإنتاج البن والعود، أو اسحب عنصرين متطابقين لدمجهما!'
+                      : 'Tap any Generator (⚡) to spawn items, or drag two matching items to merge!'}
+                  </div>
+                )}
+              </div>
+
+              {/* Right: 4-Slot Sadu Pantry Storage Tray */}
+              <div className="flex items-center gap-1.5 pt-2 sm:pt-0 sm:ps-3 border-t sm:border-t-0 sm:border-s border-[#E2CFAF] shrink-0">
+                <span
+                  title={isAr ? 'خزانة المؤونة (4 خانات)' : 'Sadu Pantry Storage (4 Slots)'}
+                  className="w-8 h-8 rounded-xl bg-[#5C3A21] text-[#FDE68A] flex items-center justify-center shrink-0"
+                >
+                  <Package className="w-4 h-4" />
+                </span>
+                {Array.from({ length: gameState.inventoryCapacity }).map((_, slotIdx) => {
+                  const storedId = gameState.inventory[slotIdx];
+                  const storedDef = storedId ? ITEM_CATALOG[storedId] : null;
+                  return (
+                    <button
+                      key={`pantry_slot_${slotIdx}`}
+                      type="button"
+                      onClick={() => storedId && handleRetrieveFromPantry(slotIdx)}
+                      aria-label={
+                        storedDef
+                          ? isAr
+                            ? `استعادة ${storedDef.nameAr} من الخزانة`
+                            : `Retrieve ${storedDef.nameEn} from Pantry`
+                          : isAr
+                          ? 'خانة خزانة فارغة'
+                          : 'Empty Pantry Slot'
+                      }
+                      className={`w-10 h-10 rounded-xl border-2 flex items-center justify-center transition-all ${
+                        storedDef
+                          ? 'tile-ivory border-[#D97706] hover:scale-105 cursor-pointer'
+                          : 'bg-[#F4EAD5] border-dashed border-[#C8AF87] text-[9px] font-bold text-[#9C7E5A]'
+                      }`}
+                    >
+                      {storedDef ? (
+                        <ItemArtwork itemId={storedDef.id} size="sm" />
+                      ) : (
+                        <span>+</span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
           </div>
         )}
       </main>
@@ -1810,16 +1552,6 @@ export default function App() {
         lang={lang}
         chapter={activeStoryChapter}
         onClose={handleClaimStoryChapter}
-      />
-
-      <DailyLoginModal lang={lang} day={gameState.activeStoryId ? null : dailyLoginDay} onClaim={handleClaimDailyLogin} />
-
-      <FinjanPourModal
-        lang={lang}
-        isOpen={pourOpen}
-        tokens={gameState.pourTokens}
-        onFinish={handleFinishPour}
-        onClose={() => setPourOpen(false)}
       />
 
       <ChainTreeModal
@@ -1867,11 +1599,11 @@ export default function App() {
           role="dialog"
           aria-modal="true"
           aria-label={shellState === 'gameover' ? 'Majlis Restoration Complete' : 'Game Paused'}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75"
         >
-          <div className="w-full max-w-md rounded-2xl border-2 border-[#D99B26] bg-[#241812] text-[#FBF7F0] p-6 shadow-2xl text-center space-y-5">
+          <div className="w-full max-w-md rounded-3xl border-4 border-[#C68B59] bg-[#FFFDF9] text-[#2C1E14] p-6 shadow-2xl text-center space-y-5">
             <div className="h-2 w-full sadu-trim rounded" />
-            <h2 className="text-2xl font-bold text-[#FBBF24]">
+            <h2 className="text-2xl font-black text-[#78350F]">
               {shellState === 'gameover'
                 ? isAr
                   ? 'اكتمل إعمار قصر الدرعية الملكي!'
@@ -1883,27 +1615,27 @@ export default function App() {
 
             {/* 3 Tabular-Nums Stat Tiles */}
             <div className="grid grid-cols-3 gap-2.5">
-              <div className="rounded-xl bg-[#1C1410] border border-white/10 p-3">
-                <span className="text-[10px] text-[#D4A373] block">
+              <div className="rounded-2xl bg-[#F6EBD8] border border-[#D4B483] p-3">
+                <span className="text-[10px] font-bold text-[#785A3C] block">
                   {isAr ? 'الطلبات المنجزة' : 'ORDERS'}
                 </span>
-                <span className="text-lg tabular-nums font-extrabold text-white">
+                <span className="text-lg tabular-nums font-black text-[#2C1E14]">
                   {gameState.ordersCompleted}
                 </span>
               </div>
-              <div className="rounded-xl bg-[#1C1410] border border-white/10 p-3">
-                <span className="text-[10px] text-[#D4A373] block">
+              <div className="rounded-2xl bg-[#F6EBD8] border border-[#D4B483] p-3">
+                <span className="text-[10px] font-bold text-[#785A3C] block">
                   {isAr ? 'إجمالي الدمج' : 'MERGES'}
                 </span>
-                <span className="text-lg tabular-nums font-extrabold text-[#FBBF24]">
+                <span className="text-lg tabular-nums font-black text-[#D97706]">
                   {gameState.totalMerges}
                 </span>
               </div>
-              <div className="rounded-xl bg-[#1C1410] border border-white/10 p-3">
-                <span className="text-[10px] text-[#D4A373] block">
+              <div className="rounded-2xl bg-[#F6EBD8] border border-[#D4B483] p-3">
+                <span className="text-[10px] font-bold text-[#785A3C] block">
                   {isAr ? 'الإعمار' : 'ESTATE'}
                 </span>
-                <span className="text-lg tabular-nums font-extrabold text-[#34D399]">
+                <span className="text-lg tabular-nums font-black text-[#059669]">
                   {totalRenovated}/8
                 </span>
               </div>
@@ -1914,7 +1646,7 @@ export default function App() {
                 type="button"
                 data-start="true"
                 onClick={() => setShellState('playing')}
-                className="w-full py-3 rounded-xl bg-[#D97724] hover:bg-[#E08738] text-white font-bold text-sm cursor-pointer"
+                className="w-full py-3 rounded-2xl btn-3d-green text-white font-extrabold text-sm cursor-pointer"
               >
                 {shellState === 'gameover'
                   ? isAr
@@ -1928,7 +1660,7 @@ export default function App() {
               <button
                 type="button"
                 onClick={handleResetGame}
-                className="w-full py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-white font-semibold text-xs cursor-pointer"
+                className="w-full py-2.5 rounded-2xl bg-[#EDE0C7] hover:bg-[#E2CFAF] text-[#5C3A21] font-extrabold text-xs cursor-pointer"
               >
                 {isAr ? 'بدء جولة جديدة (Restart)' : 'Restart Fresh Board'}
               </button>
@@ -1936,7 +1668,7 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setShellState('title')}
-                className="w-full py-2.5 rounded-xl bg-transparent hover:bg-white/5 text-[#D4A373] font-semibold text-xs cursor-pointer"
+                className="w-full py-2.5 rounded-2xl bg-transparent hover:bg-[#F6EBD8] text-[#785A3C] font-bold text-xs cursor-pointer"
               >
                 {isAr ? 'العودة للشاشة الرئيسية' : 'Return to Title Screen'}
               </button>
