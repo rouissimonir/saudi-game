@@ -111,6 +111,11 @@ The engine lives in `src/game/progression.ts` (pure, seeded RNG in `state.rngSee
     - **Self-hosted Cairo** (`public/fonts/`, SIL OFL): one variable font for all weights, so there are no third-party connections or render-blocking stylesheet, and it works offline.
     - **Merge particles and shockwave rings use the Web Animations API** with concrete keyframes. CSS keyframes reading `var(--dx)` cannot run on the compositor, so style work per merge fell from about 210 ms to about 130 ms (4× CPU). The burst also honours `prefers-reduced-motion` again.
     - **Memoised `BoardCell`:** a merge or spawn re-renders only the tiles that changed. The rules engine reuses unchanged cell objects, which a test checks.
+17. **Preact runtime:** `vite.config.ts` aliases `react`/`react-dom` to `preact/compat` at build time. The source code and TypeScript types stay React, and only the shipped runtime changes. Compared with the React build, measured on the same 3G/4× CPU iPhone profile:
+    - The shared runtime chunk went from 68.8 KB to 9.8 KB gzipped.
+    - Title ready went from 3.2 s to 2.2 s, largest paint from 3.15 s to 2.0 s, and the board from 4.05 s to 2.7 s.
+    - Idle script time went from 49 to 5 ms per 10 s, and JS per merge from 92 to 22 ms.
+    - A 17-step smoke test (title, story, login, tap and drag merges, sell, quests, workshop, shop, wheel, chains, energy, festival, pour, Majlis restore, pause, language, Fasih page) passes on both runtimes. To go back to React, delete the five `react*` aliases.
 
 ---
 
