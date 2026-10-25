@@ -78,6 +78,43 @@ Limits: these are clean stylized 3D props, not painterly game-art. Some are simp
   - Convert with `python3 tools/art/to_webp.py`.
 - **Voice:** every beat has a clip, `public/assets/audio/story/pro_*.mp3`, ElevenLabs `eleven_v4` (first take), trimmed and loudness-matched with ffmpeg. The casting is in `tools/voice/voices.json`; the narrator (`pro_narr_*`) reuses the jury's Ahmed MSA voice. A unit test fails if a beat has no voice or its file is missing. The lines still need a native-speaker listen, like the rest of the voice work.
 
+### 3c. Painted story portraits (replace the Blender half-bodies)
+
+The story cast moves to semi-realistic painted 2D portraits, closer to Hollywood Merge. Each one is generated with an image model, using the Blender renders above as the reference, so face, headwear and colours stay the same across expressions.
+
+- **Style (every portrait):**
+  - Semi-realistic digital painting with soft warm rim light from the left and a gentle painterly finish. Not anime, not photoreal.
+  - Waist-up, facing slightly left of camera, hands resting together in front.
+  - Transparent background, 768x1024, head top at about 12% from the top edge, so it drops into the same stage slots.
+  - Modest Saudi dress, respectful and culturally accurate.
+- **Layla (heroine, mid-20s):**
+  - Warm medium skin, kind brown eyes.
+  - Emerald silk hijab with a thin gold band, cream abaya with gold trim, small gold pendant.
+- **Grandma Noura (70s):**
+  - Kind lined face, warm smile, round thin gold-rimmed glasses, a little white hair at the forehead.
+  - Rose-red shayla with a thin gold band, black abaya with gold trim, matching her story render `public/assets/art/story/noura_neutral.webp`.
+- **Rashid (rival developer, 40s):**
+  - Neat black goatee, confident half-smile.
+  - White ghutra with a black agal, charcoal bisht with thin silver trim over a white thobe, gold watch.
+- **Expressions:**
+  - Same as the Blender set: `neutral`, `happy`, `surprised`, `worried`, `angry`.
+  - Only the face changes between them; clothing, light and framing stay identical.
+- **Pipeline (used for Layla, through the ElevenLabs connector):**
+  1. Generate the master from the Blender render as reference: `gemini-3-pro-image`, 4 variations, pick one.
+  2. Reframe the pick to 3:4 at 2K (node parameters `aspect_ratio: 3:4`, `resolution: 2K`) and pick the neutral.
+  3. Edit that neutral into each expression ("change only her facial expression to …; keep everything else exactly").
+  4. Cut out the flat backdrop and size to 768x1024: `python3 tools/art/cutout_portrait.py in.png public/assets/art/story/<name>.png`.
+  5. Convert with `python3 tools/art/to_webp.py` (about 47 KB each).
+- **Cost:** each image is about 1,830 ElevenLabs credits (about $0.37 at the time of writing).
+- **Status:** all prologue portraits are painted.
+  - Layla's first four expressions came through the ElevenLabs pipeline above.
+  - Layla's angry face and all of Noura and Rashid came from Codex image generation, using `docs/PORTRAIT_PROMPTS.md`, with painted Layla as the style reference.
+  - The generated sources are kept in `tools/art/portrait_inbox/`.
+  - The Blender half-bodies remain reproducible from `tools/blender/make_story_cast.py`, but are no longer used.
+- **Files:**
+  - Same names as today, `public/assets/art/story/<character>_<expression>.webp`. The only code change is the per-character expression list in `ScenePlayer.tsx`.
+  - The Blender renders stay reproducible from `tools/blender/make_story_cast.py` as the fallback and reference.
+
 ## 4. Voice lines
 
 **Status: recorded.** All 32 lines (about 1,070 Arabic characters, written in Saudi dialect: Najdi for Noura, Tariq and Sultan, Hijazi for Faisal, Riyadh youth for Lama, formal Arabic for the jury) are generated with ElevenLabs and stored in `public/assets/audio/voice/<id>.mp3` (ids like `noura_served_2`, 2.4 to 4.5 s, mono mp3, about 1.4 MB in total). The text is in `src/game/voiceLines.ts`. A character speaks when you serve one of their orders (normal or VIP line) and when their story chapter opens. Music ducks while they talk, and Mute silences voices too.

@@ -120,7 +120,7 @@ The engine lives in `src/game/progression.ts` (pure, seeded RNG in `state.rngSee
 19. **Animated story scenes (Hollywood Merge style), phase 1: the opening prologue.**
     - **What it is:** new players see a short animated scene when they tap Play. Layla comes home to Diriyah at dusk, Grandma Noura shows her the crumbling Majlis, and the developer Rashid offers to buy it. The player chooses a firm answer (+5 gems) or a polite one (+100 SAR), and Noura hands over grandfather's dallah, which flies into the board as the tutorial starts.
     - **How it plays:**
-      - Characters are Blender half-body figures with expressions.
+      - Characters are painted waist-up portraits with expressions (docs/ASSETS.md, section 3c).
       - They slide in, breathe, bob while talking and dim when not speaking.
       - Lines type into a speech bubble, and every line is voiced (14 clips, 12 per playthrough). The two scene-setting lines use a narrator, and the player's chosen answer is spoken aloud by Layla.
       - The camera pans, zooms or shakes, with cinematic letterbox bars, and Skip is always available.
