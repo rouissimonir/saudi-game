@@ -1,0 +1,71 @@
+/* ============================================================================
+   ANIMATED STORY SCENES (src/components/story/ScenePlayer.tsx)
+   Only transform/opacity animate, so the compositor can run them. Loaded with the lazy ScenePlayer chunk,
+   so these styles never block the first paint.
+   ============================================================================ */
+.scene-cam { transform-origin: 50% 60%; will-change: transform; }
+.cam-none { animation: cam-drift 9s ease-in-out both; }
+.cam-pan-down { animation: cam-pan-down 3.4s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.cam-zoom-in { animation: cam-zoom-in 2.6s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.cam-push { animation: cam-push 5s ease-out both; }
+.cam-shake { animation: cam-shake 0.5s ease-out both; }
+.cam-fg.cam-none { animation-name: cam-drift-fg; }
+.cam-fg.cam-pan-down { animation-name: cam-pan-down-fg; }
+@keyframes cam-drift { from { transform: scale(1.06) translateX(0); } to { transform: scale(1.08) translateX(-1%); } }
+@keyframes cam-drift-fg { from { transform: scale(1.1) translateX(0); } to { transform: scale(1.12) translateX(-2.5%); } }
+@keyframes cam-pan-down { from { transform: scale(1.18) translateY(-9%); } to { transform: scale(1.06) translateY(0); } }
+@keyframes cam-pan-down-fg { from { transform: scale(1.3) translateY(-4%); } to { transform: scale(1.1) translateY(0); } }
+@keyframes cam-zoom-in { from { transform: scale(1.04); } to { transform: scale(1.16); } }
+@keyframes cam-push { from { transform: scale(1.02); } to { transform: scale(1.14); } }
+@keyframes cam-shake {
+  0% { transform: scale(1.08) translate(0, 0); }
+  20% { transform: scale(1.08) translate(-1.2%, 0.6%); }
+  40% { transform: scale(1.08) translate(1.2%, -0.6%); }
+  60% { transform: scale(1.08) translate(-0.7%, 0.4%); }
+  80% { transform: scale(1.08) translate(0.5%, -0.2%); }
+  100% { transform: scale(1.08) translate(0, 0); }
+}
+
+.scene-bar { position: absolute; inset-inline: 0; height: 7vh; background: #000; z-index: 5; animation: scene-bar-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.scene-bar-top { top: 0; transform-origin: top; }
+.scene-bar-bottom { bottom: 0; transform-origin: bottom; }
+@keyframes scene-bar-in { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+
+/* Characters stand behind the speech bubble, lower body hidden, like a stage. */
+.scene-actor { position: absolute; bottom: 13vh; height: 56vh; aspect-ratio: 3 / 4; z-index: 2; transition: left 0.45s ease, right 0.45s ease; }
+.scene-actor-left { left: -9%; }
+.scene-actor-right { right: -9%; }
+.scene-actor-center { left: 50%; margin-left: -21vh; }
+.enter-from-left { animation: actor-in-left 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.enter-from-right { animation: actor-in-right 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.enter-from-bottom { animation: actor-in-bottom 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+@keyframes actor-in-left { from { transform: translateX(-35%); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes actor-in-right { from { transform: translateX(35%); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes actor-in-bottom { from { transform: translateY(12%); opacity: 0; } to { transform: none; opacity: 1; } }
+.scene-actor-body { width: 100%; height: 100%; transform-origin: 50% 100%; animation: actor-breathe 3.2s ease-in-out infinite alternate; transition: filter 0.25s ease; }
+.scene-actor-body.actor-talk { animation: actor-talk 0.34s ease-in-out infinite alternate; }
+.scene-actor-body.actor-dim { filter: brightness(0.72) saturate(0.85); }
+.scene-actor-img { width: 100%; height: 100%; object-fit: contain; object-position: bottom; animation: expr-pop 0.22s ease-out both; filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.35)); }
+@keyframes actor-breathe { from { transform: scale(1, 1); } to { transform: scale(1.006, 1.014); } }
+@keyframes actor-talk { from { transform: translateY(0) scale(1, 1); } to { transform: translateY(-1.2%) scale(1.004, 1.01); } }
+@keyframes expr-pop { from { transform: scale(0.975); } to { transform: scale(1); } }
+
+.scene-bubble { animation: bubble-pop 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+@keyframes bubble-pop { from { transform: translateY(10px) scale(0.96); opacity: 0; } to { transform: none; opacity: 1; } }
+.scene-choice { animation: bubble-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+.scene-next-hint { animation: next-hint 0.8s ease-in-out infinite alternate; }
+@keyframes next-hint { from { transform: translateY(0); opacity: 0.6; } to { transform: translateY(3px); opacity: 1; } }
+
+/* Finale: the dallah flies down into the board while the scene fades out. */
+.scene-finale > div > :not(.scene-dallah-fly) { animation: scene-fade 1s ease-in both; }
+@keyframes scene-fade { to { opacity: 0; } }
+.scene-dallah-fly { position: absolute; left: 50%; top: 40%; width: 42%; margin-left: -21%; z-index: 30; animation: dallah-fly 1.05s cubic-bezier(0.55, 0, 0.75, 0.3) both; filter: drop-shadow(0 0 22px rgba(253, 224, 71, 0.85)); }
+@keyframes dallah-fly {
+  0% { transform: scale(0.6) rotate(-8deg); opacity: 0; }
+  25% { transform: scale(1.1) rotate(4deg); opacity: 1; }
+  100% { transform: translateY(85%) scale(0.18) rotate(0deg); opacity: 0.9; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scene-cam, .scene-bar, .scene-actor, .scene-actor-body, .scene-actor-img, .scene-bubble, .scene-choice, .scene-next-hint { animation: none !important; }
+}

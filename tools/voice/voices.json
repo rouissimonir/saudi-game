@@ -50,6 +50,23 @@
       "style": 0.25,
       "speed": 0.95,
       "voice_name": "Ahmed - deep warm MSA (احمد النبرة العميقة الدافئة)"
+    },
+    "layla": {
+      "voice_id": "FZeLZd39ejvLgzR2gY0t",
+      "stability": 0.5,
+      "similarity_boost": 0.8,
+      "style": 0.35,
+      "speed": 1.0,
+      "voice_name": "Nora S - Saudi Natural & Calm"
+    },
+    "rashid": {
+      "voice_id": "wyC6KvCMTAXGbiCKlfSx",
+      "stability": 0.5,
+      "similarity_boost": 0.8,
+      "style": 0.3,
+      "speed": 0.95,
+      "voice_name": "Faisal alotaibi - Warm Saudi Voice"
     }
-  }
+  },
+  "_comment_story": "Story-scene lines (public/assets/audio/story/pro_*.mp3) were generated through the ElevenLabs connector with eleven_v4, first take, then trimmed and loudness-matched with ffmpeg (loudnorm I=-18.5, TP=-2, mono 64 kbps)."
 }

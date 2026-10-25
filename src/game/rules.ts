@@ -239,6 +239,10 @@ export interface GameState {
   lastMergedItemId: string | null;
   /** Progress in the current rotating festival (see events.ts); reset when a new festival starts. */
   liveEvent: { instanceId: string; points: number; claimed: number[] } | null;
+  /** Animated story scenes already watched (see src/story). */
+  seenScenes: string[];
+  /** Flags set by story choices, e.g. { rivalry: 'firm' }. */
+  storyFlags: Record<string, string>;
 }
 
 export const KSA_LEADERBOARD_RIVALS: LeaderboardEntry[] = [
@@ -1109,6 +1113,8 @@ export function createInitialGameState(): GameState {
     ],
     claimedDiscoveryIds: [],
     liveEvent: null,
+    seenScenes: [],
+    storyFlags: {},
     completedStoryIds: [],
     activeStoryId: null,
     liveOpsPoints: 15,
