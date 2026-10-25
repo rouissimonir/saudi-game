@@ -13,8 +13,11 @@ const EXPRESSIONS: Partial<Record<CastId, Expression[]>> = {
   noura: ['neutral', 'happy', 'surprised', 'worried'],
   rashid: ['neutral', 'angry', 'surprised'],
 };
-/** Backdrops that also have a transparent foreground layer for parallax (tools/blender/make_scenes.py). */
-const FG_LAYERS = new Set(['street', 'courtyard']);
+/**
+ * Backdrops that also have a transparent foreground layer for parallax. The painted backdrops
+ * (docs/BACKGROUND_PROMPTS.md) are a single layer; the Blender ones in tools/blender/make_scenes.py had one.
+ */
+const FG_LAYERS = new Set<string>();
 const NAME_COLORS: Partial<Record<CastId, string>> = { layla: '#047857', noura: '#9F1239', rashid: '#334155' };
 const TYPE_MS = 26;
 

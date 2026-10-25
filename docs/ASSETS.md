@@ -71,7 +71,10 @@ Limits: these are clean stylized 3D props, not painterly game-art. Some are simp
   - Layla, Noura, Rashid: `neutral`, `happy`, `surprised`, plus `worried` or `angry`.
   - Rendered by `tools/blender/make_story_cast.py`, which reuses the bust heads in `make_characters.py`. Expressions are set through `EXPR`, and the busts are unchanged.
   - A character or expression without a render falls back to its neutral pose or bust.
-- **Backdrops:** `bg_<scene>.webp` plus an optional transparent `bg_<scene>_fg.webp` for parallax, 1080×1920, rendered by `tools/blender/make_scenes.py`.
+- **Backdrops:** `bg_<scene>.webp` at 1080×1920.
+  - Painted with Codex image generation from `docs/BACKGROUND_PROMPTS.md`. The sources are kept in `tools/art/background_inbox/`.
+  - They are a single layer, so `FG_LAYERS` in `ScenePlayer.tsx` is empty.
+  - The older Blender versions, with parallax foreground layers, can still be rebuilt with `tools/blender/make_scenes.py`.
 - **Regenerating:**
   - Install Blender's Python module (`pip install bpy==5.2.3`).
   - Run `SAMPLES=48 python3 tools/blender/make_story_cast.py -- public/assets/art/story`, then `make_scenes.py` with the same output path.
