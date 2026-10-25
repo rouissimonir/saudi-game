@@ -1,0 +1,47 @@
+{
+  "generator": "built-in image_gen",
+  "width": 512,
+  "height": 512,
+  "format": "webp",
+  "alpha": true,
+  "assets": {
+    "noura": {
+      "neutral": "noura_neutral.webp",
+      "happy": "noura_happy.webp",
+      "surprised": "noura_surprised.webp",
+      "worried": "noura_worried.webp",
+      "angry": "noura_angry.webp"
+    },
+    "faisal": {
+      "neutral": "faisal_neutral.webp",
+      "happy": "faisal_happy.webp",
+      "surprised": "faisal_surprised.webp",
+      "worried": "faisal_worried.webp",
+      "angry": "faisal_angry.webp"
+    },
+    "tariq": {
+      "neutral": "tariq_neutral.webp",
+      "happy": "tariq_happy.webp",
+      "surprised": "tariq_surprised.webp",
+      "worried": "tariq_worried.webp",
+      "angry": "tariq_angry.webp"
+    },
+    "lama": {
+      "neutral": "lama_neutral.webp",
+      "happy": "lama_happy.webp",
+      "surprised": "lama_surprised.webp",
+      "worried": "lama_worried.webp",
+      "angry": "lama_angry.webp"
+    },
+    "sultan": {
+      "neutral": "sultan_neutral.webp",
+      "happy": "sultan_happy.webp",
+      "surprised": "sultan_surprised.webp",
+      "worried": "sultan_worried.webp",
+      "angry": "sultan_angry.webp"
+    },
+    "ghabga": {
+      "neutral": "ghabga_neutral.webp"
+    }
+  }
+}
