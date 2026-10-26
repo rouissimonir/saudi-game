@@ -1,4 +1,4 @@
-import { Beat, CastId, Expression, StageActor } from '../types';
+import { Beat, CastId, ChoiceOption, Expression, SceneReward, StageActor } from '../types';
 
 type Actor = [CastId, Expression];
 
@@ -21,4 +21,22 @@ export function say(
 /** The narrated title card that opens every chapter. */
 export function titleCard(bg: string, textAr: string, textEn: string): Beat {
   return { id: 'title', bg, camera: 'pan-down', cast: [], textAr, textEn };
+}
+
+type Option = [id: string, textAr: string, textEn: string, flag: [string, string], reward: SceneReward, next: string];
+
+/** The two-option choice beat: a narrated prompt with Layla and the other character on stage. */
+export function ask(bg: string, left: Actor, right: Actor, textAr: string, textEn: string, a: Option, b: Option): Beat {
+  const opt = ([id, ar, en, flag, reward, next]: Option): ChoiceOption => ({ id, textAr: ar, textEn: en, flag, reward, next });
+  return {
+    id: 'answer',
+    bg,
+    cast: [
+      { id: left[0], pos: 'left', expr: left[1] },
+      { id: right[0], pos: 'right', expr: right[1] },
+    ],
+    textAr,
+    textEn,
+    choice: [opt(a), opt(b)],
+  };
 }

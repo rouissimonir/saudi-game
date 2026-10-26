@@ -86,9 +86,14 @@ test('chapter 1 is hand-written: Rashid remembers the prologue, and the choice s
 });
 
 test('hand-written chapters: every choice, under every earlier choice, plays to the end with real art and a backdrop', () => {
-  const earlier: Record<string, string>[] = [{}, { rivalry: 'firm', rashid_ch1: 'proud', menu: 'heritage' }, { rivalry: 'polite', rashid_ch1: 'host', menu: 'fusion' }];
+  const earlier: Record<string, string>[] = [
+    {},
+    { rivalry: 'firm', rashid_ch1: 'proud', menu: 'heritage', tariq: 'blend', rashid_ch4: 'stand', jeddah: 'souq', abha: 'train', riyadh: 'own' },
+    { rivalry: 'polite', rashid_ch1: 'host', menu: 'fusion', tariq: 'cup', rashid_ch4: 'welcome', jeddah: 'rawshan', abha: 'farmers', riyadh: 'partner' },
+  ];
   for (const id of Object.keys(HAND_WRITTEN)) {
-    const chapter = STORY_CHAPTERS.find((c) => c.id === id)!;
+    const chapter = findStoryChapter(id)!;
+    assert.ok(chapter, id);
     for (const flags of earlier) {
       const scene = chapterScene(chapter, null, flags);
       assert.equal(scene.id, `chapter:${id}`);
