@@ -6,7 +6,9 @@ and moves the batch to "Done" below.
 
 ## Waiting for Codex
 
-Nothing queued. Next ideas: a second painted view per area (night), painted wing interiors, more story characters.
+| Batch | Prompts | Files | Lands in | Then (Claude) |
+|---|---|---|---|---|
+| Batch 6 | `docs/ART_BATCH_6.md` | 48: `<area>_<1-3>_night` and `<area>_<1-3>_rain` for diriyah, jeddah, alula, taif, abha, ahsa, riyadh, khobar | `tools/art/background_inbox/majlis/` | Overlay each against its golden-hour source to check alignment, convert to `public/assets/art/majlis/<area>_<n>_night.webp` and `_rain.webp` (1280x720, quality 72), and make `MajlisStageBanner` pick the file for the ambiance chip (`afternoon` = plain, `ramadan_night` = `_night`, `courtyard_rain` = `_rain`), falling back to the plain image when a mood is missing. Night lands first, areas can land one at a time |
 
 When a new batch is added:
 - **Portraits:** cut out with `tools/art/cutout_portrait.py`, convert, and add the character to `EXPRESSIONS` in `src/components/story/art.ts`.
