@@ -106,7 +106,7 @@ The story cast moves to semi-realistic painted 2D portraits, closer to Hollywood
   1. Generate the master from the Blender render as reference: `gemini-3-pro-image`, 4 variations, pick one.
   2. Reframe the pick to 3:4 at 2K (node parameters `aspect_ratio: 3:4`, `resolution: 2K`) and pick the neutral.
   3. Edit that neutral into each expression ("change only her facial expression to …; keep everything else exactly").
-  4. Cut out the flat backdrop and size to 768x1024: `python3 tools/art/cutout_portrait.py in.png public/assets/art/story/<name>.png`.
+  4. Cut out the flat backdrop and size to 768x1024: `python3 tools/art/cutout_portrait.py in.png public/assets/art/story/<name>.png`. The default tolerance is 12; a looser 30 let shaded cream or white fabric leak into the backdrop. Check each cutout on a dark background.
   5. Convert with `python3 tools/art/to_webp.py` (about 47 KB each).
 - **Cost:** each image is about 1,830 ElevenLabs credits (about $0.37 at the time of writing).
 - **Status:** all prologue portraits are painted.

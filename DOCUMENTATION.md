@@ -131,6 +131,10 @@ The engine lives in `src/game/progression.ts` (pure, seeded RNG in `state.rngSee
       - **Hand-written chapters** replace the adapter one by one (`HAND_WRITTEN` in `chapterScene.ts`). They add real back-and-forth, Rashid's returns, and choices whose flag and small reward apply once.
         - Chapter 1 (`src/story/scenes/chapter1.ts`): Rashid's opening line depends on the prologue answer (`rivalry`).
         - Showing him the wing (+5 gems) or offering him coffee (+100 SAR) sets `rashid_ch1` for later chapters.
+        - Chapter 2 (Faisal, Sadu corner): Faisal reports Rashid's move after chapter 1. Serving Lama classic cardamom qahwa or Faisal's saffron latte sets `menu`.
+        - Chapter 3 (Tariq, dallah majlis): Tariq was grandfather's friend and turned Rashid away. He mentions the drink from chapter 2. Asking about the royal blend or pouring him the first cup sets `tariq`.
+        - Chapter 4 (Lama, Ramadan lanterns): Lama praises the chapter 2 drink. Rashid arrives softened or hostile, depending on chapter 1. Inviting him in or standing firm sets `rashid_ch4`.
+        - The lines are written with `src/story/scenes/build.ts`. Tests walk every choice under several earlier-choice combinations.
       - Every speaker is painted (Faisal, Tariq, Lama and Sultan joined in batch 2).
       - Each chapter has its own painted location: the Sadu corner and Ramadan lanterns for the Diriyah wings, and one per area (Jeddah, AlUla, Taif, Abha, Al-Ahsa, Riyadh, Khobar).
     - **Code:**

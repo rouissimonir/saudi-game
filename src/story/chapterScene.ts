@@ -1,10 +1,16 @@
 import type { StoryChapter } from '../game/rules';
 import { Beat, CastId, Expression, Scene } from './types';
 import { chapter1Scene } from './scenes/chapter1';
+import { chapter2Scene } from './scenes/chapter2';
+import { chapter3Scene } from './scenes/chapter3';
+import { chapter4Scene } from './scenes/chapter4';
 
 /** Chapters with a hand-written script (choices, Rashid, callbacks); the rest use the generic adapter below. */
-const HAND_WRITTEN: Record<string, (flags: Record<string, string>) => Scene> = {
+export const HAND_WRITTEN: Record<string, (flags: Record<string, string>) => Scene> = {
   chap_1: chapter1Scene,
+  chap_2: chapter2Scene,
+  chap_3: chapter3Scene,
+  chap_4: chapter4Scene,
 };
 
 /** Painted backdrops that exist in public/assets/art/story (add a key here when a new one lands). */
