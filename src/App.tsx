@@ -1364,6 +1364,7 @@ export default function App() {
           <Suspense fallback={<div className="h-64 rounded-2xl bg-[#241812] animate-pulse" />}>
           <MajlisRenovationView
             lang={lang}
+            storyOpen={Boolean(activeScene || gameState.activeStoryId || endingOpen || replayChapterId)}
             zones={gameState.renovationZones}
             stars={gameState.stars}
             activeRegion={gameState.activeRegion}
