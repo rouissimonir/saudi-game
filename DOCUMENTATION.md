@@ -125,6 +125,7 @@ The engine lives in `src/game/progression.ts` (pure, seeded RNG in `state.rngSee
       - Lines type into a speech bubble, and every line is voiced (14 clips, 12 per playthrough). The two scene-setting lines use a narrator, and the player's chosen answer is spoken aloud by Layla.
       - The camera pans, zooms or shakes, with cinematic letterbox bars, and Skip is always available.
       - **Auto** (top corner) advances each finished line after a reading pause that grows with the line's length. It waits at choices, and the setting is remembered (`qahwa_scene_auto`).
+      - **History** (next to Auto) opens every line of the scene so far, with speakers in their colours. Auto pauses while it is open, and Escape closes it.
       - Chapter 1 later echoes the choice with one extra line from Noura.
     - **Every story chapter is a scene too:** the 4 Diriyah chapters and one per area, 11 in all.
       - `src/story/chapterScene.ts` turns each chapter into a narrated title card, the speaker's lines opposite Layla (expressions follow the mood of each line), and a closing reply from Layla.

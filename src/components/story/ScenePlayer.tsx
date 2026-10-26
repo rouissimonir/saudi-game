@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Coins, FastForward, Gem, Pause, Play, Zap } from 'lucide-react';
+import { Coins, FastForward, Gem, Pause, Play, ScrollText, X, Zap } from 'lucide-react';
 import { Language } from '../../game/rules';
 import { advance, autoDelayMs, choose, currentBeat, ScenePlay, skip, startScene, upcomingBeats } from '../../story/engine';
 import { SCENES } from '../../story/scenes';
@@ -88,6 +88,8 @@ export const ScenePlayer: React.FC<ScenePlayerProps> = ({ sceneId, scene: given,
   const [typed, setTyped] = useState(0);
   const [finale, setFinale] = useState(false);
   const [auto, setAuto] = useState(loadAuto);
+  const [history, setHistory] = useState<string[]>([]);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const finishedRef = useRef(false);
   const beat = currentBeat(scene, play);
   const text = beat ? Array.from(isAr ? beat.textAr : beat.textEn) : [];
@@ -120,8 +122,13 @@ export const ScenePlayer: React.FC<ScenePlayerProps> = ({ sceneId, scene: given,
 
   useEffect(() => () => sound.stopLine(), []);
 
+  // Every line shown so far, for the history panel.
+  useEffect(() => {
+    if (beat) setHistory((h) => (h[h.length - 1] === beat.id ? h : [...h, beat.id]));
+  }, [beat?.id]);
+
   const next = useCallback(() => {
-    if (!beat || finale) return;
+    if (!beat || finale || historyOpen) return;
     if (typing) {
       setTyped(text.length);
       return;
@@ -140,14 +147,14 @@ export const ScenePlayer: React.FC<ScenePlayerProps> = ({ sceneId, scene: given,
     } else {
       finish(n);
     }
-  }, [beat, finale, typing, text.length, scene, play, reduced, finish, sound]);
+  }, [beat, finale, historyOpen, typing, text.length, scene, play, reduced, finish, sound]);
 
   // Auto mode: once a line has finished typing, move on after a reading pause; choices still wait for the player.
   useEffect(() => {
-    if (!auto || typing || !beat || beat.choice || finale) return;
+    if (!auto || historyOpen || typing || !beat || beat.choice || finale) return;
     const t = window.setTimeout(next, autoDelayMs(text.length));
     return () => window.clearTimeout(t);
-  }, [auto, typing, beat, finale, next, text.length]);
+  }, [auto, historyOpen, typing, beat, finale, next, text.length]);
 
   const toggleAuto = () => {
     setAuto((on) => {
@@ -162,7 +169,8 @@ export const ScenePlayer: React.FC<ScenePlayerProps> = ({ sceneId, scene: given,
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Enter' || e.key === ' ') {
+      if (e.key === 'Escape') setHistoryOpen(false);
+      else if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
         next();
       }
@@ -211,6 +219,19 @@ export const ScenePlayer: React.FC<ScenePlayerProps> = ({ sceneId, scene: given,
         <div className="scene-bar scene-bar-top" />
         <div className="scene-bar scene-bar-bottom" />
 
+        <div className="absolute top-3 start-3 z-20 flex items-center gap-2">
+        <button
+          type="button"
+          data-testid="scene-history"
+          aria-label={isAr ? 'سجل الحوار' : 'Dialogue history'}
+          onClick={(e) => {
+            e.stopPropagation();
+            setHistoryOpen(true);
+          }}
+          className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-black/45 border border-white/30 text-white backdrop-blur-sm"
+        >
+          <ScrollText className="w-4 h-4" />
+        </button>
         <button
           type="button"
           data-testid="scene-auto"
@@ -219,13 +240,50 @@ export const ScenePlayer: React.FC<ScenePlayerProps> = ({ sceneId, scene: given,
             e.stopPropagation();
             toggleAuto();
           }}
-          className={`absolute top-3 start-3 z-20 inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold backdrop-blur-sm ${
+          className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold backdrop-blur-sm ${
             auto ? 'bg-[#D97706] border-[#FBBF24] text-white' : 'bg-black/45 border-white/30 text-white'
           }`}
         >
           {auto ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5 rtl:-scale-x-100" />}
           {isAr ? 'تلقائي' : 'Auto'}
         </button>
+        </div>
+
+        {historyOpen && (
+          <div
+            className="absolute inset-0 z-40 bg-black/70 flex items-end"
+            data-testid="scene-history-panel"
+            onClick={(e) => {
+              e.stopPropagation();
+              setHistoryOpen(false);
+            }}
+          >
+            <div className="w-full max-h-[72%] rounded-t-3xl bg-[#FFFDF9] border-t-4 border-[#D97706] flex flex-col" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center justify-between px-5 pt-4 pb-2">
+                <h2 className="text-base font-black text-[#78350F]">{isAr ? 'سجل الحوار' : 'Dialogue history'}</h2>
+                <button type="button" onClick={() => setHistoryOpen(false)} aria-label={isAr ? 'إغلاق' : 'Close'} className="w-8 h-8 rounded-full hud-pill flex items-center justify-center">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <ol className="px-5 pb-6 space-y-3 overflow-y-auto" ref={(el) => el?.scrollTo(0, el.scrollHeight)}>
+                {history.map((id) => {
+                  const b = scene.beats.find((x) => x.id === id);
+                  if (!b) return null;
+                  return (
+                    <li key={id} className="text-[14px] leading-relaxed text-[#3E2723]">
+                      {b.speaker ? (
+                        <span className="block text-xs font-extrabold" style={{ color: NAME_COLORS[b.speaker] ?? '#78350F' }}>
+                          {isAr ? CAST_NAMES[b.speaker].ar : CAST_NAMES[b.speaker].en}
+                        </span>
+                      ) : null}
+                      <span className={b.speaker ? 'font-bold' : 'italic text-[#92400E]'}>{isAr ? b.textAr : b.textEn}</span>
+                    </li>
+                  );
+                })}
+              </ol>
+            </div>
+          </div>
+        )}
 
         <button
           type="button"
