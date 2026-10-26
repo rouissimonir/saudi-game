@@ -133,3 +133,10 @@ test('upcomingBeats lists the next beat, both branches at a choice, and nothing 
   assert.deepEqual(upcomingBeats(PROLOGUE, at('say_firm')).map((b) => b.id), ['rashid_firm']);
   assert.deepEqual(upcomingBeats(PROLOGUE, at('promise')), []);
 });
+
+test('auto mode gives longer lines more reading time, within limits', async () => {
+  const { autoDelayMs } = await import('./engine');
+  assert.equal(autoDelayMs(0), 2200);
+  assert.ok(autoDelayMs(60) > autoDelayMs(20));
+  assert.equal(autoDelayMs(500), 7000);
+});

@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Coins, FastForward, Gem, Zap } from 'lucide-react';
+import { Coins, FastForward, Gem, Pause, Play, Zap } from 'lucide-react';
 import { Language } from '../../game/rules';
-import { advance, choose, currentBeat, ScenePlay, skip, startScene, upcomingBeats } from '../../story/engine';
+import { advance, autoDelayMs, choose, currentBeat, ScenePlay, skip, startScene, upcomingBeats } from '../../story/engine';
 import { SCENES } from '../../story/scenes';
 import { CAST_NAMES, CastId, Expression, Scene, StagePos } from '../../story/types';
 import { assetUrl } from '../../utils/assetUrl';
@@ -45,6 +45,16 @@ export function preloadScene(sceneOrId: string | Scene): void {
   if (first && typeof fetch !== 'undefined') void fetch(assetUrl(`assets/audio/story/${first}.mp3`), { priority: 'low' } as RequestInit).catch(() => {});
 }
 
+/** Auto mode is remembered between scenes and visits. */
+const AUTO_KEY = 'qahwa_scene_auto';
+const loadAuto = () => {
+  try {
+    return localStorage.getItem(AUTO_KEY) === '1';
+  } catch {
+    return false;
+  }
+};
+
 const prefersReducedMotion = () => typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
 /** Audio and haptics come from the app, so this chunk does not pull in the sound manager (and the rules it imports). */
@@ -77,6 +87,7 @@ export const ScenePlayer: React.FC<ScenePlayerProps> = ({ sceneId, scene: given,
   const [play, setPlay] = useState<ScenePlay>(() => startScene(scene));
   const [typed, setTyped] = useState(0);
   const [finale, setFinale] = useState(false);
+  const [auto, setAuto] = useState(loadAuto);
   const finishedRef = useRef(false);
   const beat = currentBeat(scene, play);
   const text = beat ? Array.from(isAr ? beat.textAr : beat.textEn) : [];
@@ -131,6 +142,24 @@ export const ScenePlayer: React.FC<ScenePlayerProps> = ({ sceneId, scene: given,
     }
   }, [beat, finale, typing, text.length, scene, play, reduced, finish, sound]);
 
+  // Auto mode: once a line has finished typing, move on after a reading pause; choices still wait for the player.
+  useEffect(() => {
+    if (!auto || typing || !beat || beat.choice || finale) return;
+    const t = window.setTimeout(next, autoDelayMs(text.length));
+    return () => window.clearTimeout(t);
+  }, [auto, typing, beat, finale, next, text.length]);
+
+  const toggleAuto = () => {
+    setAuto((on) => {
+      try {
+        localStorage.setItem(AUTO_KEY, on ? '0' : '1');
+      } catch {
+        // storage blocked: auto mode lasts for this scene only
+      }
+      return !on;
+    });
+  };
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Enter' || e.key === ' ') {
@@ -181,6 +210,22 @@ export const ScenePlayer: React.FC<ScenePlayerProps> = ({ sceneId, scene: given,
         {/* Letterbox */}
         <div className="scene-bar scene-bar-top" />
         <div className="scene-bar scene-bar-bottom" />
+
+        <button
+          type="button"
+          data-testid="scene-auto"
+          aria-pressed={auto}
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleAuto();
+          }}
+          className={`absolute top-3 start-3 z-20 inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold backdrop-blur-sm ${
+            auto ? 'bg-[#D97706] border-[#FBBF24] text-white' : 'bg-black/45 border-white/30 text-white'
+          }`}
+        >
+          {auto ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5 rtl:-scale-x-100" />}
+          {isAr ? 'تلقائي' : 'Auto'}
+        </button>
 
         <button
           type="button"
