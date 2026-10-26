@@ -8,7 +8,7 @@ and moves the batch to "Done" below.
 
 | Batch | Prompts | Files | Lands in | Then (Claude) |
 |---|---|---|---|---|
-| Batch 4 | `docs/ART_BATCH_4.md` | 4: `majlis_diriyah_1`–`3` (restoration stages), `app_icon` | `tools/art/background_inbox/` | Majlis: the crossfading banner is already built (`src/game/majlisStages.ts`); convert the stages to `public/assets/art/majlis/diriyah_<n>.webp` (16:9) and set `PAINTED_STAGES.diriyah = 3`. Icon: generate the 192/512/maskable/apple-touch PNGs in `public/icons/`. If the stages line up well, queue the other areas |
+| Batch 4 | `docs/ART_BATCH_4.md` | 4: `majlis_diriyah_1`–`3` (restoration stages), `app_icon` | `tools/art/background_inbox/` | Majlis: the crossfading banner is already built (`src/game/majlisStages.ts`); convert the stages to `public/assets/art/majlis/diriyah_<n>.webp` (16:9) and set `PAINTED_STAGES.diriyah = 3`. Icon: `python3 tools/art/make_icons.py tools/art/background_inbox/app_icon.png` writes the 192/512/maskable/apple-touch PNGs in `public/icons/`; bump the service-worker cache so installed apps pick them up. If the stages line up well, queue the other areas |
 
 When a new batch is added:
 - **Portraits:** cut out with `tools/art/cutout_portrait.py`, convert, and add the character to `EXPRESSIONS` in `src/components/story/art.ts`.
