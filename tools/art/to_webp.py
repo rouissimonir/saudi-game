@@ -23,7 +23,9 @@ def main() -> None:
             im = Image.open(png)
             if im.mode == 'RGBA' and im.getchannel('A').getextrema()[0] == 255:
                 im = im.convert('RGB')  # opaque backdrops: no alpha plane to store
-            im.save(webp, 'WEBP', quality=82 if im.mode == 'RGB' else 84, method=6, alpha_quality=90)
+            # Story backdrops sit behind the cast and the dialogue box, so 72 looks the same and is ~28% smaller.
+            quality = 72 if os.path.basename(png).startswith('bg_') else 82 if im.mode == 'RGB' else 84
+            im.save(webp, 'WEBP', quality=quality, method=6, alpha_quality=90)
             before += os.path.getsize(png)
             after += os.path.getsize(webp)
             if not keep:

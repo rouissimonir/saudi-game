@@ -128,7 +128,8 @@ The engine lives in `src/game/progression.ts` (pure, seeded RNG in `state.rngSee
     - **Every story chapter is a scene too:** the 4 Diriyah chapters and one per area, 11 in all.
       - `src/story/chapterScene.ts` turns each chapter into a narrated title card, the speaker's lines opposite Layla (expressions follow the mood of each line), and a closing reply from Layla.
       - The chapter reward is paid when the scene ends or is skipped.
-      - Faisal, Tariq, Lama and Sultan use the illustrated busts until their painted portraits arrive (batch 2 in `docs/PORTRAIT_PROMPTS.md`).
+      - Every speaker is painted (Faisal, Tariq, Lama and Sultan joined in batch 2).
+      - Each chapter has its own painted location: the Sadu corner and Ramadan lanterns for the Diriyah wings, and one per area (Jeddah, AlUla, Taif, Abha, Al-Ahsa, Riyadh, Khobar).
     - **Code:**
       - `src/story/` (types, a pure `engine.ts` reducer, `scenes/prologue.ts`, `flags.ts`).
       - `src/components/story/ScenePlayer.tsx` and its CSS, loaded on demand.

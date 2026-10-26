@@ -2,7 +2,7 @@ import type { StoryChapter } from '../game/rules';
 import { Beat, CastId, Expression, Scene } from './types';
 
 /** Painted backdrops that exist in public/assets/art/story (add a key here when a new one lands). */
-const PAINTED_BGS = new Set(['street', 'courtyard', 'dallah']);
+const PAINTED_BGS = new Set(['street', 'courtyard', 'dallah', 'sadu', 'lanterns', 'jeddah', 'alula', 'taif', 'abha', 'ahsa', 'riyadh', 'khobar']);
 /** The backdrop each chapter wants (docs/BACKGROUND_PROMPTS.md, batch 2). */
 const CHAPTER_BG: Record<string, string> = { chap_1: 'courtyard', chap_2: 'sadu', chap_3: 'dallah', chap_4: 'lanterns' };
 /** One per area, in the order of AREAS in src/game/progression.ts. */
