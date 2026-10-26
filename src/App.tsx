@@ -68,6 +68,8 @@ import { BoardCell } from './components/BoardCell';
 import { applySceneResult, ScenePlay } from './story/engine';
 import { withStoryFlags } from './story/flags';
 import { chapterScene } from './story/chapterScene';
+import { endingScene } from './story/scenes/ending';
+import type { StoryLogEntry } from './components/story/StoryLog';
 import { MergeParticleOverlay } from './components/MergeParticleOverlay';
 import { EnergyModal, QuestsModal, WorkshopModal } from './components/ProgressionModals';
 import { BottomNav, GameHud, NavTab } from './components/GameChrome';
@@ -188,6 +190,7 @@ export default function App() {
   const [activeScene, setActiveScene] = useState<string | null>(null);
   const [storyLogOpen, setStoryLogOpen] = useState(false);
   const [replayChapterId, setReplayChapterId] = useState<string | null>(null);
+  const [endingOpen, setEndingOpen] = useState(false);
   // ?scene=prologue replays a story scene on the next Play (handy for testing on a phone)
   const forcedSceneRef = useRef<string | null>(
     typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('scene') : null
@@ -1016,18 +1019,32 @@ export default function App() {
   const handleChapterSceneFinish = (play: ScenePlay) => {
     setGameState((prev) => applySceneResult(prev, play)); // a hand-written chapter's choice: its flag and small reward, once
     if (storyChapterId) handleClaimStoryChapter(storyChapterId);
+    // The Khobar finale leads straight into the epilogue the first time.
+    if (storyChapterId === areaChapterId(AREA_COUNT_BEFORE_PRESTIGE - 1) && !gameState.seenScenes.includes('ending')) setEndingOpen(true);
   };
+  const endingSceneData = useMemo(
+    () => (endingOpen ? endingScene(gameState.storyFlags) : null),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [endingOpen]
+  );
 
   // Story log: every chapter in order; finished ones can be rewatched (no second reward).
-  const storyLogEntries = useMemo(() => {
+  const storyLogEntries = useMemo<StoryLogEntry[]>(() => {
     if (!storyLogOpen) return [];
     const ids = [...STORY_CHAPTERS.map((c) => c.id), ...Array.from({ length: AREA_COUNT_BEFORE_PRESTIGE - 1 }, (_, i) => areaChapterId(i + 1))];
-    return ids.flatMap((id) => {
+    return ids.flatMap((id): StoryLogEntry[] => {
       const c = findStoryChapter(id);
       if (!c) return [];
       return [{ id, number: c.chapterNumber, titleAr: c.titleAr, titleEn: c.titleEn, speaker: speakerCharacter(c.speakerEn), unlocked: gameState.completedStoryIds.includes(id) }];
+    }).concat({
+      id: 'ending',
+      number: -1,
+      titleAr: 'الخاتمة: حكاية مجلسك',
+      titleEn: 'Epilogue: Your Majlis Story',
+      speaker: 'layla',
+      unlocked: gameState.seenScenes.includes('ending'),
     });
-  }, [storyLogOpen, gameState.completedStoryIds]);
+  }, [storyLogOpen, gameState.completedStoryIds, gameState.seenScenes]);
   const replaySceneData = useMemo(() => {
     const c = withStoryFlags(findStoryChapter(replayChapterId), gameState.storyFlags);
     return c ? chapterScene(c, speakerCharacter(c.speakerEn), gameState.storyFlags) : null;
@@ -1036,6 +1053,7 @@ export default function App() {
   const handleStoryLogPlay = (id: string) => {
     setStoryLogOpen(false);
     if (id === 'prologue') setActiveScene('prologue');
+    else if (id === 'ending') setEndingOpen(true);
     else setReplayChapterId(id);
   };
 
@@ -1756,6 +1774,22 @@ export default function App() {
             entries={storyLogEntries}
             onPlay={handleStoryLogPlay}
             onClose={() => setStoryLogOpen(false)}
+          />
+        </Suspense>
+      )}
+
+      {endingSceneData && !activeScene && !chapterSceneData && (
+        <Suspense fallback={null}>
+          <ScenePlayer
+            key="ending"
+            sceneId="ending"
+            scene={endingSceneData}
+            lang={lang}
+            sound={SCENE_SOUND}
+            onFinish={(play) => {
+              setEndingOpen(false);
+              setGameState((prev) => applySceneResult(prev, play));
+            }}
           />
         </Suspense>
       )}

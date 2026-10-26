@@ -22,6 +22,11 @@ const CHAPTER_BG: Record<string, string> = { chap_1: 'courtyard', chap_2: 'sadu'
 /** One per area, in the order of AREAS in src/game/progression.ts. */
 export const AREA_BG = ['street', 'jeddah', 'alula', 'taif', 'abha', 'ahsa', 'riyadh', 'khobar'];
 
+/** The wanted backdrop if it has been painted, else the fallback. */
+export function paintedBg(wanted: string, fallback: string): string {
+  return PAINTED_BGS.has(wanted) ? wanted : fallback;
+}
+
 /** The chapter's own backdrop once painted; until then the street (areas) or the courtyard (Diriyah wings). */
 export function chapterBg(chapterId: string): string {
   const area = /^area_(\d+)$/.exec(chapterId);

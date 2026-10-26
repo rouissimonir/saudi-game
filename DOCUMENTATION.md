@@ -139,6 +139,9 @@ The engine lives in `src/game/progression.ts` (pure, seeded RNG in `state.rngSee
           - It comes to a head in Riyadh (`riyadh`: share the stand or keep it), and Sultan's honour in Khobar settles it (`finale`).
           - Each chapter also echoes an earlier choice, such as grandfather's clove from Tariq's blend in Taif, or the Abha farmers' thanks in Al-Ahsa.
           - A second lap round the areas uses the generic adapter.
+        - **Epilogue** (`src/story/scenes/ending.ts`): plays right after the Khobar finale the first time, and is then rewatchable from the episode list.
+          - Noura looks back, and the narrator recaps the decisions this player actually made.
+          - The ending is named after the Riyadh choice: "The Majlis of Partnership" or "The Majlis That Stood Firm".
         - The lines are written with `src/story/scenes/build.ts`. Tests walk every choice under several earlier-choice combinations.
       - Every speaker is painted (Faisal, Tariq, Lama and Sultan joined in batch 2).
       - Each chapter has its own painted location: the Sadu corner and Ramadan lanterns for the Diriyah wings, and one per area (Jeddah, AlUla, Taif, Abha, Al-Ahsa, Riyadh, Khobar).
