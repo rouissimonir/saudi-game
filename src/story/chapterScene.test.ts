@@ -120,3 +120,19 @@ test('hand-written chapters: every choice, under every earlier choice, plays to 
     assert.notEqual(lines(earlier[1]), lines(earlier[2]), `${id}: earlier choices change some lines`);
   }
 });
+
+test('the epilogue recaps the choices the player made and names the ending after Riyadh', async () => {
+  const { endingScene } = await import('./scenes/ending');
+  const partner = endingScene({ rivalry: 'firm', menu: 'fusion', tariq: 'blend', abha: 'farmers', riyadh: 'partner', finale: 'team' });
+  const own = endingScene({ rivalry: 'polite', riyadh: 'own' });
+  const recapLines = (s: typeof partner) => s.beats.filter((b) => b.id.startsWith('recap_')).length;
+  assert.equal(recapLines(partner), 5);
+  assert.equal(recapLines(own), 2); // only the decisions this player reached
+  assert.match(partner.beats.find((b) => b.id === 'ending_name')!.textEn, /Partnership/);
+  assert.match(own.beats.find((b) => b.id === 'ending_name')!.textEn, /Stood Firm/);
+  for (const b of partner.beats) {
+    assert.ok(existsSync(`public/assets/art/story/bg_${b.bg}.webp`), b.id);
+    for (const a of b.cast) assert.ok(artExists(a.id, a.expr), `${b.id}: ${a.id}_${a.expr}`);
+  }
+  assert.ok(skip(partner, startScene(partner)).done);
+});

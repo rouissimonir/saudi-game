@@ -72,7 +72,7 @@ export const StoryLog: React.FC<StoryLogProps> = ({ lang, prologueSeen, entries,
                   </span>
                   <span className="flex-1 min-w-0">
                     <span className="block text-[11px] font-black text-[#B45309]">
-                      {r.number === 0 ? (isAr ? 'المقدمة' : 'Prologue') : isAr ? `الحلقة ${r.number}` : `Episode ${r.number}`}
+                      {r.number === 0 ? (isAr ? 'المقدمة' : 'Prologue') : r.number < 0 ? (isAr ? 'الخاتمة' : 'Epilogue') : isAr ? `الحلقة ${r.number}` : `Episode ${r.number}`}
                       {name && r.unlocked ? ` · ${name}` : ''}
                     </span>
                     <span className="block text-sm font-extrabold leading-snug truncate">
