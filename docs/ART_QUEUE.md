@@ -6,9 +6,7 @@ and moves the batch to "Done" below.
 
 ## Waiting for Codex
 
-| Batch | Prompts | Files | Lands in | Then (Claude) |
-|---|---|---|---|---|
-| Batch 5 | `docs/ART_BATCH_5.md` | 21: `<area>_1`–`3` for jeddah, alula, taif, abha, ahsa, riyadh, khobar | `tools/art/background_inbox/majlis/` | Check each area's stages line up, convert to `public/assets/art/majlis/<area>_<n>.webp` (1280x720, quality 72), and add the area to `PAINTED_STAGES` in `src/game/majlisStages.ts`. Areas can land one at a time |
+Nothing queued. Next ideas: a second painted view per area (night), painted wing interiors, more story characters.
 
 When a new batch is added:
 - **Portraits:** cut out with `tools/art/cutout_portrait.py`, convert, and add the character to `EXPRESSIONS` in `src/components/story/art.ts`.
@@ -16,6 +14,7 @@ When a new batch is added:
 
 ## Done
 
+- Batch 5: Majlis restoration stages 1–3 for Jeddah, AlUla, Taif, Abha, Al-Ahsa, Riyadh and Khobar (`public/assets/art/majlis/`).
 - Prologue cast: Layla (5 expressions), Noura (4), Rashid (3).
 - Prologue backgrounds: street, courtyard, dallah.
 - Chapter cast (batch 2): Faisal, Tariq, Lama, Sultan (4 expressions each).
