@@ -799,7 +799,7 @@ export const STORY_CHAPTERS: StoryChapter[] = [
   {
     id: 'chap_4',
     chapterNumber: 4,
-    titleAr: 'الفصل الرابع: ليالي الغبقة في العلا',
+    titleAr: 'الفصل الرابع: ليالي الغبقة تحت الفوانيس',
     titleEn: 'Chapter 4: Ramadan Ghabga Under the Lanterns',
     speakerAr: 'لمى (تذوّق وقهوة)',
     speakerEn: 'Lama (Lifestyle & Café Critic)',
