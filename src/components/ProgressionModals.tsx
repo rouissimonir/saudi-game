@@ -22,7 +22,7 @@ export function formatCountdown(ms: number): string {
   return `${m}:${String(s).padStart(2, '0')}`;
 }
 
-function Sheet({ title, icon, onClose, children, testId }: { title: string; icon: React.ReactNode; onClose: () => void; children: React.ReactNode; testId: string }) {
+export function Sheet({ title, icon, onClose, children, testId }: { title: string; icon: React.ReactNode; onClose: () => void; children: React.ReactNode; testId: string }) {
   return (
     <div role="dialog" aria-modal="true" aria-label={title} data-testid={testId} className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/55 p-3" onClick={onClose}>
       <div className="w-full max-w-md rounded-3xl bg-[#FFFDF9] border-[3px] border-[#D97706] shadow-2xl overflow-hidden text-[#2C1E14]" onClick={(e) => e.stopPropagation()}>

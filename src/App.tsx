@@ -155,6 +155,7 @@ import {
   buyEnergyWithGems,
   buySandTile,
   claimDiscovery,
+  claimShopGift,
   claimQuest,
   claimQuestBonus,
   ensureDailyQuests,
@@ -218,7 +219,6 @@ export default function App() {
   const [feedbackBanner, setFeedbackBanner] = useState<string | null>(null);
 
   const [shopModalOpen, setShopModalOpen] = useState<boolean>(false);
-  const [shopInitialTab, setShopInitialTab] = useState<'shop' | 'liveops' | 'almanac' | 'capacitor'>('shop');
 
   const [chainModalOpen, setChainModalOpen] = useState<boolean>(false);
   const [chainModalCategory, setChainModalCategory] = useState<ChainCategory>('qahwa');
@@ -916,6 +916,13 @@ export default function App() {
     }));
   };
 
+  const handleClaimShopGift = () => {
+    const r = claimShopGift(gameState, dayKeyFromDate(new Date()));
+    if (!r.claimed) return;
+    soundFX.playOrderComplete();
+    setGameState(r.state);
+  };
+
   // Claim LiveOps Milestone
   const handleClaimMilestone = (milestoneId: string) => {
     const m = gameState.liveOpsMilestones.find((item) => item.id === milestoneId);
@@ -1243,7 +1250,6 @@ export default function App() {
         onEnergy={() => setEnergyOpen(true)}
         onCoins={() => setWorkshopOpen(true)}
         onGems={() => {
-          setShopInitialTab('shop');
           setShopModalOpen(true);
         }}
         onSpin={() => {
@@ -1759,7 +1765,6 @@ export default function App() {
           else if (tab === 'quests') setQuestsOpen(true);
           else if (tab === 'workshop') setWorkshopOpen(true);
           else {
-            setShopInitialTab('shop');
             setShopModalOpen(true);
           }
         }}
@@ -1801,7 +1806,6 @@ export default function App() {
           onBuyWithCoins={() => handleBuyEnergy('coins')}
           onOpenShop={() => {
             setEnergyOpen(false);
-            setShopInitialTab('shop');
             setShopModalOpen(true);
           }}
         />
@@ -1912,14 +1916,12 @@ export default function App() {
           <ShopAndMadaModal
             lang={lang}
             isOpen={shopModalOpen}
-            initialTab={shopInitialTab}
-            coins={gameState.coins}
-            diamonds={gameState.diamonds}
+            shopGiftDay={gameState.shopGiftDay}
             liveOpsPoints={gameState.liveOpsPoints}
             milestones={gameState.liveOpsMilestones}
-            discoveredItemIds={gameState.discoveredItemIds}
             vipPassActive={gameState.vipPassActive}
             onClose={() => setShopModalOpen(false)}
+            onClaimGift={handleClaimShopGift}
             onBuyPack={handleBuyShopPack}
             onClaimMilestone={handleClaimMilestone}
           />

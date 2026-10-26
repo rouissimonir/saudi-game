@@ -180,8 +180,14 @@ The engine lives in `src/game/progression.ts` (pure, seeded RNG in `state.rngSee
    - Players vote on rival Saudi cafés to earn instant `+25 SAR` and `+20 Prestige Points` per vote.
 6. **Daily "Finjan Al-Sabah" Lucky Dallah Spin Wheel (`عجلة فنجال الصباح`):**
    - 6-wedge interactive SVG wheel with 1 free spin (and `15💎` respins) awarding Energy, Gold Riyals, Gems, Golden Scissors, Royal Joker, or a Majlis Sadu Chest.
-7. **Saudi Mada / Apple Pay / STC Bank Checkout & Ramadan Ghabga Pass (`ShopAndMadaModal.tsx`):**
-   - Localized SAR pricing (`SAR 14.99`, `SAR 29.99`, `SAR 49.99`, `SAR 99.99`) with simulated Apple Pay (Mada `مدى`) and STC Bank payment rails, plus a 4-milestone Ramadan Ghabga Event track and Capacitor iOS export guide.
+7. **Diriyah Souq shop (`ShopAndMadaModal.tsx`):**
+   - **Shop tab:**
+     - A free daily hospitality gift (+40 energy, +25 coins), once per calendar day (`claimShopGift`, `shopGiftDay`).
+     - A roastery energy crate (SAR 14.99).
+     - The Majlis Sheikh pass (SAR 44.99): energy cap 150 and luckier generators.
+   - **Milestones tab:** the four Majlis-point rewards.
+   - **Purchases:** paid packs are granted directly. Store billing (StoreKit / Play Billing) still has to be wired in the native build before release. App Store rules require in-app purchase for digital goods, so the shop no longer offers a Mada / STC Pay selector.
+   - **Collection:** the item collection lives in the Chains book.
 8. **Procedural WebAudio Hijaz Maqam Synthesizer (`soundAndHaptics.ts`):**
    - Zero external audio file dependencies—synthesizes authentic Hijaz scale Oud & Najdi brass mortar (`نجر`) harmonics and triggers native haptic vibrations.
 
@@ -207,7 +213,7 @@ The engine lives in `src/game/progression.ts` (pure, seeded RNG in `state.rngSee
         ├── ItemArtwork.tsx                   # 30 bespoke SVG illustrations (4 generators, 24 chain items, 2 treasure chests)
         ├── CompetitorModalsAndPortraits.tsx  # Illustrated Khaleeji character portraits, 4-Chain Evolution Tree, KSA Leaderboard, Mazayen & Spin Wheel
         ├── MajlisRenovationView.tsx          # Interactive architectural SVG diorama, Kingdom Map (Diriyah/Jeddah/AlUla) & Weather Ambiance
-        └── ShopAndMadaModal.tsx              # Saudi Mada / Apple Pay / STC Bank store, Ramadan Ghabga LiveOps pass, Almanac & Capacitor guide
+        └── ShopAndMadaModal.tsx              # Diriyah Souq: daily gift, energy crate, VIP pass, Majlis-point milestones
 ```
 
 ### Running Tests & Building for iOS / Android
