@@ -1,5 +1,11 @@
 import type { StoryChapter } from '../game/rules';
 import { Beat, CastId, Expression, Scene } from './types';
+import { chapter1Scene } from './scenes/chapter1';
+
+/** Chapters with a hand-written script (choices, Rashid, callbacks); the rest use the generic adapter below. */
+const HAND_WRITTEN: Record<string, (flags: Record<string, string>) => Scene> = {
+  chap_1: chapter1Scene,
+};
 
 /** Painted backdrops that exist in public/assets/art/story (add a key here when a new one lands). */
 const PAINTED_BGS = new Set(['street', 'courtyard', 'dallah', 'sadu', 'lanterns', 'jeddah', 'alula', 'taif', 'abha', 'ahsa', 'riyadh', 'khobar']);
@@ -37,7 +43,9 @@ function speakerExpr(line: string, index: number, last: boolean): Expression {
  * Turns a story chapter into an animated scene: a narrated title card, the speaker's lines opposite Layla
  * (expressions follow the mood of each line), then Layla's reply. Hand-written scenes can replace any chapter later.
  */
-export function chapterScene(chapter: StoryChapter, speaker: CastId | null): Scene {
+export function chapterScene(chapter: StoryChapter, speaker: CastId | null, flags: Record<string, string> = {}): Scene {
+  const written = HAND_WRITTEN[chapter.id];
+  if (written) return written(flags);
   const bg = chapterBg(chapter.id);
   const who: CastId = speaker && speaker !== 'layla' ? speaker : 'noura';
   const count = Math.min(chapter.dialogueAr.length, chapter.dialogueEn.length);

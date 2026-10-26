@@ -5,7 +5,7 @@ import { AREA_BG, chapterBg, chapterScene } from './chapterScene';
 import { STORY_CHAPTERS } from '../game/rules';
 import { findStoryChapter, areaChapterId, AREA_COUNT_BEFORE_PRESTIGE } from '../game/progression';
 import { speakerCharacter } from '../game/voiceLines';
-import { advance, skip, startScene } from './engine';
+import { advance, choose, skip, startScene } from './engine';
 
 const allChapters = () => [
   ...STORY_CHAPTERS,
@@ -22,7 +22,7 @@ test('every story chapter becomes a playable scene with art and backdrops that e
   assert.ok(chapters.length >= 11, `expected the 4 Diriyah chapters plus the area chapters, got ${chapters.length}`);
   for (const chapter of chapters) {
     const scene = chapterScene(chapter, speakerCharacter(chapter.speakerEn));
-    assert.equal(scene.beats.length, chapter.dialogueEn.length + 2, chapter.id);
+    if (!scene.beats.some((b) => b.choice)) assert.equal(scene.beats.length, chapter.dialogueEn.length + 2, chapter.id);
     for (const b of scene.beats) {
       assert.ok(existsSync(`public/assets/art/story/bg_${b.bg}.webp`), `${chapter.id}: missing backdrop ${b.bg}`);
       for (const a of b.cast) assert.ok(artExists(a.id, a.expr), `${chapter.id}: missing art for ${a.id}_${a.expr}`);
@@ -30,7 +30,10 @@ test('every story chapter becomes a playable scene with art and backdrops that e
     }
     // Plays through to the end, and skipping lands in the same place.
     let p = startScene(scene);
-    for (let i = 0; i < scene.beats.length; i++) p = advance(scene, p);
+    for (let i = 0; i < scene.beats.length * 2 && !p.done; i++) {
+      const beat = scene.beats[p.beatIndex];
+      p = beat.choice ? choose(scene, p, beat.choice[1].id) : advance(scene, p);
+    }
     assert.ok(p.done, chapter.id);
     assert.ok(skip(scene, startScene(scene)).done);
   }
@@ -53,4 +56,31 @@ test('each chapter gets its own painted backdrop', () => {
   for (const id of ['chap_1', 'chap_2', 'chap_4', 'area_1', 'area_7', 'area_9']) {
     assert.ok(existsSync(`public/assets/art/story/bg_${chapterBg(id)}.webp`), id);
   }
+});
+
+test('chapter 1 is hand-written: Rashid remembers the prologue, and the choice sets a flag and a reward', () => {
+  const chap1 = STORY_CHAPTERS.find((c) => c.id === 'chap_1')!;
+  const firm = chapterScene(chap1, 'noura', { rivalry: 'firm' });
+  const polite = chapterScene(chap1, 'noura', { rivalry: 'polite' });
+  const rashidLine = (s: typeof firm) => s.beats.find((b) => b.id === 'rashid')!;
+  assert.equal(rashidLine(firm).cast[1].expr, 'angry');
+  assert.notEqual(rashidLine(firm).textEn, rashidLine(polite).textEn);
+
+  const toChoice = (s: typeof firm) => {
+    let p = startScene(s);
+    while (!s.beats[p.beatIndex].choice) p = advance(s, p);
+    return p;
+  };
+  for (const [option, flag, reward] of [['proud', 'proud', { coins: 0, gems: 5, energy: 0 }], ['host', 'host', { coins: 100, gems: 0, energy: 0 }]] as const) {
+    let p = choose(polite, toChoice(polite), option);
+    assert.equal(p.flags.rashid_ch1, flag);
+    assert.deepEqual(p.reward, reward);
+    for (let i = 0; i < 20 && !p.done; i++) p = advance(polite, p);
+    assert.ok(p.done, option);
+  }
+  // Both branches meet again at Noura's closing line.
+  const ids = polite.beats.map((b) => b.id);
+  assert.equal(polite.beats[ids.indexOf('proud_rashid')].next, 'noura_end');
+  assert.equal(ids.indexOf('host_rashid') + 1, ids.indexOf('noura_end'));
+  assert.equal(skip(polite, startScene(polite)).flags.rashid_ch1, 'proud');
 });
