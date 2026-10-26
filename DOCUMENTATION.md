@@ -128,6 +128,9 @@ The engine lives in `src/game/progression.ts` (pure, seeded RNG in `state.rngSee
     - **Every story chapter is a scene too:** the 4 Diriyah chapters and one per area, 11 in all.
       - `src/story/chapterScene.ts` turns each chapter into a narrated title card, the speaker's lines opposite Layla (expressions follow the mood of each line), and a closing reply from Layla.
       - The chapter reward is paid when the scene ends or is skipped.
+      - **Hand-written chapters** replace the adapter one by one (`HAND_WRITTEN` in `chapterScene.ts`). They add real back-and-forth, Rashid's returns, and choices whose flag and small reward apply once.
+        - Chapter 1 (`src/story/scenes/chapter1.ts`): Rashid's opening line depends on the prologue answer (`rivalry`).
+        - Showing him the wing (+5 gems) or offering him coffee (+100 SAR) sets `rashid_ch1` for later chapters.
       - Every speaker is painted (Faisal, Tariq, Lama and Sultan joined in batch 2).
       - Each chapter has its own painted location: the Sadu corner and Ramadan lanterns for the Diriyah wings, and one per area (Jeddah, AlUla, Taif, Abha, Al-Ahsa, Riyadh, Khobar).
     - **Code:**

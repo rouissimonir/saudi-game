@@ -1009,11 +1009,12 @@ export default function App() {
 
   // Story chapters play as animated scenes; the chapter reward is paid when the scene ends (or is skipped).
   const chapterSceneData = useMemo(
-    () => (activeStoryChapter && shellState === 'playing' ? chapterScene(activeStoryChapter, storySpeaker) : null),
+    () => (activeStoryChapter && shellState === 'playing' ? chapterScene(activeStoryChapter, storySpeaker, gameState.storyFlags) : null),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [storyChapterId, shellState]
   );
-  const handleChapterSceneFinish = () => {
+  const handleChapterSceneFinish = (play: ScenePlay) => {
+    setGameState((prev) => applySceneResult(prev, play)); // a hand-written chapter's choice: its flag and small reward, once
     if (storyChapterId) handleClaimStoryChapter(storyChapterId);
   };
 
@@ -1029,7 +1030,7 @@ export default function App() {
   }, [storyLogOpen, gameState.completedStoryIds]);
   const replaySceneData = useMemo(() => {
     const c = withStoryFlags(findStoryChapter(replayChapterId), gameState.storyFlags);
-    return c ? chapterScene(c, speakerCharacter(c.speakerEn)) : null;
+    return c ? chapterScene(c, speakerCharacter(c.speakerEn), gameState.storyFlags) : null;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [replayChapterId]);
   const handleStoryLogPlay = (id: string) => {
