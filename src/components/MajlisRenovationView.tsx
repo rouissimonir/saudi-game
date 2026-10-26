@@ -10,6 +10,7 @@ import {
 } from '../game/rules';
 import { AREA_COUNT_BEFORE_PRESTIGE, AREA_REWARD, areaChapterId, areaInfo, findStoryChapter } from '../game/progression';
 import { speakerCharacter } from '../game/voiceLines';
+import { PAINTED_STAGES, restorationStage } from '../game/majlisStages';
 import { assetUrl } from '../utils/assetUrl';
 
 interface MajlisRenovationViewProps {
@@ -49,6 +50,30 @@ const EpisodeTeaser: React.FC<{ chapter: StoryChapter; isAr: boolean; locked: bo
   );
 };
 
+/**
+ * Painted restoration banner (docs/ART_BATCH_4.md): shows the stage for the current progress and crossfades from the
+ * previous one when a wing is restored. Only the current and previous stages are loaded.
+ */
+const MajlisStageBanner: React.FC<{ areaId: string; stage: number; stages: number; isAr: boolean }> = ({ areaId, stage, stages, isAr }) => {
+  const [shown, setShown] = React.useState({ current: stage, previous: stage });
+  React.useEffect(() => {
+    setShown((s) => (s.current === stage ? s : { current: stage, previous: s.current }));
+  }, [stage]);
+  const src = (n: number) => assetUrl(`assets/art/majlis/${areaId}_${n}.webp`);
+  return (
+    <div className="relative w-full aspect-video bg-[#2A1B12] overflow-hidden" data-testid="majlis-stage" data-stage={stage}>
+      {shown.previous !== shown.current && <img src={src(shown.previous)} alt="" className="absolute inset-0 w-full h-full object-cover" />}
+      <img
+        key={shown.current}
+        src={src(shown.current)}
+        alt={isAr ? `مرحلة الترميم ${stage} من ${stages}` : `Restoration stage ${stage} of ${stages}`}
+        decoding="async"
+        className="absolute inset-0 w-full h-full object-cover animate-[stage-in_1.2s_ease-out_both]"
+      />
+    </div>
+  );
+};
+
 export const MajlisRenovationView: React.FC<MajlisRenovationViewProps> = ({
   lang,
   zones,
@@ -76,6 +101,12 @@ export const MajlisRenovationView: React.FC<MajlisRenovationViewProps> = ({
   const area = areaInfo(areaIndex);
   const nextArea = areaInfo(areaIndex + 1);
   const nextChapter = findStoryChapter(areaChapterId(areaIndex + 1));
+  const paintedStages = PAINTED_STAGES[area.id] ?? 0;
+  const stage = restorationStage(
+    zones.reduce((n, z) => n + z.unlockedLevel, 0),
+    zones.length * 2,
+    paintedStages
+  );
   const lapStart = area.lap * AREA_COUNT_BEFORE_PRESTIGE;
   const journey = Array.from({ length: AREA_COUNT_BEFORE_PRESTIGE }, (_, i) => ({ index: lapStart + i, ...areaInfo(lapStart + i) }));
 
@@ -192,6 +223,9 @@ export const MajlisRenovationView: React.FC<MajlisRenovationViewProps> = ({
         </div>
 
         {/* Live SVG Isometric/Diorama Scene that visually transforms by Region, Ambiance & Upgrades */}
+        {paintedStages ? (
+          <MajlisStageBanner areaId={area.id} stage={stage} stages={paintedStages} isAr={isAr} />
+        ) : (
         <div className={`relative w-full h-56 sm:h-64 bg-gradient-to-b ${skyGradient} flex items-center justify-center overflow-hidden`}>
           <svg viewBox="0 0 800 320" className="w-full h-full" preserveAspectRatio="xMidYMid meet">
             {/* Sky Celestial Body (Afternoon Sun vs Crescent Moon vs Rain Clouds) */}
@@ -357,6 +391,7 @@ export const MajlisRenovationView: React.FC<MajlisRenovationViewProps> = ({
             )}
           </svg>
         </div>
+        )}
       </div>
 
       {areaComplete && (

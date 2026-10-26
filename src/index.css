@@ -308,3 +308,12 @@
 @media (prefers-reduced-motion: reduce) {
   .level-up-toast, .combo-meter, .combo-bar, .merge-sunburst-rays, .merge-tile-celebrate { animation: none; }
 }
+
+/* Majlis restoration banner: the newly reached stage fades in over the previous one */
+@keyframes stage-in {
+  from { opacity: 0; filter: brightness(1.25); }
+  to { opacity: 1; filter: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-testid='majlis-stage'] img { animation: none !important; }
+}
