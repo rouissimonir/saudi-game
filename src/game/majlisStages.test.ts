@@ -10,3 +10,13 @@ test('restoration stages: ruin until two wings are done, half restored after, fu
   assert.equal(restorationStage(5, 8, 1), 1);
   assert.equal(restorationStage(-1, 8, 3), 1);
 });
+
+test('every painted stage has its image, and every area is covered', async () => {
+  const { existsSync } = await import('node:fs');
+  const { PAINTED_STAGES } = await import('./majlisStages');
+  const { areaInfo, AREA_COUNT_BEFORE_PRESTIGE } = await import('./progression');
+  for (let i = 0; i < AREA_COUNT_BEFORE_PRESTIGE; i++) assert.ok(PAINTED_STAGES[areaInfo(i).id], `${areaInfo(i).id} has painted stages`);
+  for (const [id, n] of Object.entries(PAINTED_STAGES)) {
+    for (let i = 1; i <= n; i++) assert.ok(existsSync(`public/assets/art/majlis/${id}_${i}.webp`), `${id}_${i}.webp`);
+  }
+});

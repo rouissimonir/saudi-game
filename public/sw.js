@@ -1,6 +1,6 @@
 // Offline support. Pages: network-first. Other files: served from cache and refreshed in the background
 // (stale-while-revalidate), so replaced art or audio at the same URL reaches players on their next launch.
-const CACHE = 'qahwa-v4';
+const CACHE = 'qahwa-v5';
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
