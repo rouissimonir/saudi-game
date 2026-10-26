@@ -9,6 +9,9 @@ import { actorSrc } from './art';
 import './ScenePlayer.css';
 
 export { StoryLog } from './StoryLog';
+// Chapter and epilogue scripts live in this lazy chunk; App builds scenes through these.
+export { chapterScene } from '../../story/chapterScene';
+export { endingScene } from '../../story/scenes/ending';
 export type { StoryLogEntry } from './StoryLog';
 
 /**

@@ -8,7 +8,7 @@ and moves the batch to "Done" below.
 
 | Batch | Prompts | Files | Lands in | Then (Claude) |
 |---|---|---|---|---|
-| Batch 3 | `docs/ART_BATCH_3.md` | 4: `title_keyart`, `rashid_happy`, `rashid_worried`, `bg_finale` | `tools/art/background_inbox/` (key art, finale), `tools/art/portrait_inbox/` (Rashid) | Rashid: cut out and add `happy`/`worried` to `EXPRESSIONS`, then use them on the ally path (Jeddah, Abha, Riyadh, Khobar). Key art: add it behind the title screen, loaded after first paint. Finale: add `finale` to `PAINTED_BGS` in `src/story/chapterScene.ts`, and the epilogue (`src/story/scenes/ending.ts`, already live on the lanterns backdrop) switches to it |
+| (nothing waiting) | | | | |
 
 When a new batch is added:
 - **Portraits:** cut out with `tools/art/cutout_portrait.py`, convert, and add the character to `EXPRESSIONS` in `src/components/story/art.ts`.
@@ -20,3 +20,4 @@ When a new batch is added:
 - Prologue backgrounds: street, courtyard, dallah.
 - Chapter cast (batch 2): Faisal, Tariq, Lama, Sultan (4 expressions each).
 - Chapter locations (batch 2): Sadu corner, Ramadan lanterns, Jeddah, AlUla, Taif, Abha, Al-Ahsa, Riyadh, Khobar.
+- Batch 3: title key art (`bg_title`, on the title screen on phones), Rashid happy and worried (ally path), finale background (epilogue).

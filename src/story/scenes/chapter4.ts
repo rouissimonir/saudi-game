@@ -31,7 +31,7 @@ export function chapter4Scene(flags: Record<string, string>): Scene {
       say('booked', BG, ['layla', 'surprised'], ['lama', 'happy'], 'layla',
         'الحجوزات ممتلئة ثلاث أسابيع… ما كنت أحلم بهذا!',
         "Booked solid for three weeks… I never dreamed of this!"),
-      say('rashid', BG, ['layla', hosted ? 'surprised' : 'worried'], ['rashid', hosted ? 'neutral' : 'angry'], 'rashid',
+      say('rashid', BG, ['layla', hosted ? 'surprised' : 'worried'], ['rashid', hosted ? 'happy' : 'angry'], 'rashid',
         hosted
           ? 'جيت أشوف بنفسي… وأعترف: قهوتكم أطيب قهوة في الدرعية.'
           : 'استانسي بليلتك. المجلس البلدي يجتمع الأسبوع الجاي.',

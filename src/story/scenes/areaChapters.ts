@@ -253,7 +253,7 @@ export function riyadhScene(f: Flags): Scene {
       say('plan', bg, ['layla', 'happy'], ['faisal', 'happy'], 'layla',
         'قهوة جدّتي جنب القهوة المختصة… الرياض كلها بتذوق الدرعية.',
         "Grandma's qahwa next to specialty coffee… all of Riyadh will taste Diriyah."),
-      say('rashid', bg, ['layla', friendly ? 'surprised' : 'worried'], ['rashid', friendly ? 'neutral' : 'angry'], 'rashid',
+      say('rashid', bg, ['layla', friendly ? 'surprised' : 'worried'], ['rashid', friendly ? 'happy' : 'angry'], 'rashid',
         friendly
           ? 'ليلى… من ليلة الغبقة وأنا أفكر. خلّينا نشتغل سوا: كشكي جنبك، وقهوتك هي النجمة.'
           : 'ركني قبال ركنك بالضبط. الليلة الناس بتختار… وبتختارني.',
@@ -267,14 +267,14 @@ export function riyadhScene(f: Flags): Scene {
       say('partner_say', bg, ['layla', 'happy'], ['rashid', 'surprised'], 'layla',
         'جدّي كان يقول: المجلس يتّسع للكل. تعال، الركن يكفينا.',
         'Grandpa used to say: a majlis has room for everyone. Come, the stand is big enough for us both.'),
-      say('partner_rashid', bg, ['layla', 'happy'], ['rashid', 'surprised'], 'rashid',
+      say('partner_rashid', bg, ['layla', 'happy'], ['rashid', 'happy'], 'rashid',
         'ما توقعت هالكرم… أوعدك ما تندمين.',
         "I didn't expect such generosity… I promise you won't regret it.",
         { next: 'end' }),
       say('own_say', bg, ['layla', 'angry'], ['rashid', 'neutral'], 'layla',
         'المجلس يبقى لأهله. وخلّ الناس تذوق وتحكم.',
         'The Majlis stays with its family. Let people taste, and judge.'),
-      say('own_rashid', bg, ['layla', 'neutral'], ['rashid', friendly ? 'surprised' : 'angry'], 'rashid',
+      say('own_rashid', bg, ['layla', 'neutral'], ['rashid', friendly ? 'worried' : 'angry'], 'rashid',
         friendly ? 'فهمت… واحترم قرارك.' : 'طيب. نشوف طابور مين أطول.',
         friendly ? 'I understand… and I respect your decision.' : "Fine. We'll see whose queue is longer."),
       say('end', bg, ['layla', 'happy'], ['faisal', 'happy'], 'faisal',
@@ -300,7 +300,7 @@ export function khobarScene(f: Flags): Scene {
       say('honour', bg, ['layla', 'surprised'], ['sultan', 'happy'], 'sultan',
         'من الدرعية لجدة والعلا والطايف وأبها والأحساء والرياض… أحييتي روح المجلس في كل المملكة.',
         'From Diriyah to Jeddah, AlUla, Taif, Abha, Al-Ahsa and Riyadh… you revived the spirit of the Majlis across the Kingdom.'),
-      say('rashid', bg, ['layla', 'happy'], ['rashid', partner ? 'neutral' : 'surprised'], 'rashid',
+      say('rashid', bg, ['layla', 'happy'], ['rashid', partner ? 'happy' : 'worried'], 'rashid',
         partner
           ? 'وأنا… كنت أبي أشتري المجلس. اليوم أنا فخور إني صرت جزء منه.'
           : 'جيت أعترف قدام الكل: وصية جدّك كانت صح. المجلس ما ينباع.',
