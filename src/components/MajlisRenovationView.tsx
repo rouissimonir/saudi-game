@@ -28,6 +28,8 @@ interface MajlisRenovationViewProps {
   onAdvanceArea: () => void;
   onChangeAmbiance: (ambiance: MajlisAmbiance) => void;
   onOpenStory: (storyId: string) => void;
+  /** A story scene is covering the screen: hold the restoration banner until it closes, so the payoff is seen. */
+  storyOpen?: boolean;
 }
 
 /** "Chapter 2: Threads of Najdi Sadu" -> "Threads of Najdi Sadu". */
@@ -54,11 +56,22 @@ const EpisodeTeaser: React.FC<{ chapter: StoryChapter; isAr: boolean; locked: bo
  * Painted restoration banner (docs/ART_BATCH_4.md): shows the stage for the current progress and crossfades from the
  * previous one when a wing is restored. Only the current and previous stages are loaded.
  */
-const MajlisStageBanner: React.FC<{ areaId: string; stage: number; stages: number; isAr: boolean }> = ({ areaId, stage, stages, isAr }) => {
+const MajlisStageBanner: React.FC<{ areaId: string; stage: number; stages: number; isAr: boolean; hold: boolean }> = ({ areaId, stage, stages, isAr, hold }) => {
   const [shown, setShown] = React.useState({ current: stage, previous: stage });
+  const [cheer, setCheer] = React.useState<number | null>(null);
+  const lastStage = React.useRef(stage);
   React.useEffect(() => {
-    setShown((s) => (s.current === stage ? s : { current: stage, previous: s.current }));
-  }, [stage]);
+    const from = lastStage.current;
+    if (from === stage || hold) return;
+    lastStage.current = stage;
+    setShown({ current: stage, previous: from });
+    if (stage > from) setCheer(stage); // a newly reached stage, not a revisit
+  }, [stage, hold]);
+  React.useEffect(() => {
+    if (cheer === null) return;
+    const t = window.setTimeout(() => setCheer(null), 2600);
+    return () => window.clearTimeout(t);
+  }, [cheer]);
   const src = (n: number) => assetUrl(`assets/art/majlis/${areaId}_${n}.webp`);
   return (
     <div className="relative w-full aspect-video bg-[#2A1B12] overflow-hidden" data-testid="majlis-stage" data-stage={stage}>
@@ -70,6 +83,15 @@ const MajlisStageBanner: React.FC<{ areaId: string; stage: number; stages: numbe
         decoding="async"
         className="absolute inset-0 w-full h-full object-cover animate-[stage-in_1.2s_ease-out_both]"
       />
+      {cheer !== null && (
+        <div className="absolute inset-x-0 bottom-4 flex justify-center pointer-events-none" data-testid="stage-cheer">
+          <span className="stage-cheer rounded-full bg-[#FFFDF9]/95 border-2 border-[#F59E0B] px-4 py-1.5 text-sm font-black text-[#78350F] shadow-xl">
+            ✨ {cheer >= stages
+              ? isAr ? 'اكتمل الترميم!' : 'Fully restored!'
+              : isAr ? 'المجلس يعود للحياة!' : 'The Majlis is coming back to life!'}
+          </span>
+        </div>
+      )}
     </div>
   );
 };
@@ -88,6 +110,7 @@ export const MajlisRenovationView: React.FC<MajlisRenovationViewProps> = ({
   onAdvanceArea,
   onChangeAmbiance,
   onOpenStory,
+  storyOpen = false,
 }) => {
   const isAr = lang === 'ar';
 
@@ -224,7 +247,7 @@ export const MajlisRenovationView: React.FC<MajlisRenovationViewProps> = ({
 
         {/* Live SVG Isometric/Diorama Scene that visually transforms by Region, Ambiance & Upgrades */}
         {paintedStages ? (
-          <MajlisStageBanner areaId={area.id} stage={stage} stages={paintedStages} isAr={isAr} />
+          <MajlisStageBanner areaId={area.id} stage={stage} stages={paintedStages} isAr={isAr} hold={storyOpen} />
         ) : (
         <div className={`relative w-full h-56 sm:h-64 bg-gradient-to-b ${skyGradient} flex items-center justify-center overflow-hidden`}>
           <svg viewBox="0 0 800 320" className="w-full h-full" preserveAspectRatio="xMidYMid meet">

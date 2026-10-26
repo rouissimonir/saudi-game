@@ -317,3 +317,14 @@
 @media (prefers-reduced-motion: reduce) {
   [data-testid='majlis-stage'] img { animation: none !important; }
 }
+.stage-cheer { animation: stage-cheer 2.6s ease-out both; }
+@keyframes stage-cheer {
+  0% { opacity: 0; transform: translateY(10px) scale(0.9); }
+  15% { opacity: 1; transform: translateY(0) scale(1.05); }
+  25% { transform: scale(1); }
+  80% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-6px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stage-cheer { animation: none; }
+}
