@@ -153,7 +153,7 @@ The engine lives in `src/game/progression.ts` (pure, seeded RNG in `state.rngSee
       - It shows the prologue and all 11 chapters.
       - Finished ones can be rewatched, with no second reward. Upcoming ones show locked, with a blurred speaker.
     - **Episode teasers:** on the Majlis screen, each locked wing shows the episode it unlocks ("Restore to unlock Episode N", with the speaker's painted face). The travel card names the next area's episode.
-    - **Testing:** `?scene=prologue` forces the prologue on the next Play.
+    - **Testing:** `?scene=prologue` forces the prologue on the next Play. `tools/e2e/story_layout.cjs` plays every hand-written scene in both languages on an iPhone SE and flags speech bubbles that would cover faces.
     - **Art:** `tools/blender/make_story_cast.py` renders Layla, Noura and Rashid with 3–4 expressions each, and `tools/blender/make_scenes.py` renders the backdrops (dusk street, courtyard, dallah close-up) with foreground layers for parallax. Everything is WebP via `tools/art/to_webp.py`: 424 KB in total, preloaded on the title for new players.
     - **Voice:** Layla is "Nora S – Saudi Natural & Calm", Rashid is "Faisal alotaibi – Warm Saudi Voice", and Noura keeps her voice. The files live in `public/assets/audio/story/`, and each was checked word for word with speech-to-text.
     - **Cost to returning players:** none measurable (first paint and title-ready match `main`). The scene chunk is 4.4 KB gzipped plus 4 KB of CSS, and it shows no long tasks while animating at 4× CPU.
