@@ -94,6 +94,23 @@ const FinjanPourModal = lazy(() => loadPour().then((m) => ({ default: m.FinjanPo
 const SaveTransferModal = lazy(() => loadTransfer().then((m) => ({ default: m.SaveTransferModal })));
 const ScenePlayer = lazy(() => loadScenePlayer().then((m) => ({ default: m.ScenePlayer })));
 const StoryLog = lazy(() => loadScenePlayer().then((m) => ({ default: m.StoryLog })));
+/** The player's language choice survives reloads; Arabic until they switch. */
+const LANG_KEY = 'qahwa_lang';
+function loadLanguage(): Language {
+  try {
+    return localStorage.getItem(LANG_KEY) === 'en' ? 'en' : 'ar';
+  } catch {
+    return 'ar';
+  }
+}
+function saveLanguage(lang: Language): void {
+  try {
+    localStorage.setItem(LANG_KEY, lang);
+  } catch {
+    // private mode or storage blocked: the choice just lasts for this session
+  }
+}
+
 const SCENE_SOUND = {
   playLine: (id: string) => soundFX.playStoryLine(id),
   stopLine: () => soundFX.stopStoryLine(),
@@ -135,7 +152,7 @@ type ShellState = 'title' | 'playing' | 'paused' | 'gameover';
 type ActiveWorkspace = 'merge' | 'majlis';
 
 export default function App() {
-  const [lang, setLang] = useState<Language>('ar');
+  const [lang, setLang] = useState<Language>(loadLanguage);
   const isAr = lang === 'ar';
 
   const [shellState, setShellState] = useState<ShellState>(() => {
@@ -350,7 +367,11 @@ export default function App() {
   }, []);
 
   const handleToggleLanguage = useCallback(() => {
-    setLang((prev) => (prev === 'ar' ? 'en' : 'ar'));
+    setLang((prev) => {
+      const next = prev === 'ar' ? 'en' : 'ar';
+      saveLanguage(next);
+      return next;
+    });
   }, []);
 
   const handleToggleMute = useCallback((e?: React.MouseEvent<HTMLButtonElement>) => {
