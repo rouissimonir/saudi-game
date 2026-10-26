@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync } from 'node:fs';
-import { AREA_BG, chapterBg, chapterScene } from './chapterScene';
+import { AREA_BG, chapterBg, chapterScene, HAND_WRITTEN } from './chapterScene';
 import { STORY_CHAPTERS } from '../game/rules';
 import { findStoryChapter, areaChapterId, AREA_COUNT_BEFORE_PRESTIGE } from '../game/progression';
 import { speakerCharacter } from '../game/voiceLines';
@@ -83,4 +83,35 @@ test('chapter 1 is hand-written: Rashid remembers the prologue, and the choice s
   assert.equal(polite.beats[ids.indexOf('proud_rashid')].next, 'noura_end');
   assert.equal(ids.indexOf('host_rashid') + 1, ids.indexOf('noura_end'));
   assert.equal(skip(polite, startScene(polite)).flags.rashid_ch1, 'proud');
+});
+
+test('hand-written chapters: every choice, under every earlier choice, plays to the end with real art and a backdrop', () => {
+  const earlier: Record<string, string>[] = [{}, { rivalry: 'firm', rashid_ch1: 'proud', menu: 'heritage' }, { rivalry: 'polite', rashid_ch1: 'host', menu: 'fusion' }];
+  for (const id of Object.keys(HAND_WRITTEN)) {
+    const chapter = STORY_CHAPTERS.find((c) => c.id === id)!;
+    for (const flags of earlier) {
+      const scene = chapterScene(chapter, null, flags);
+      assert.equal(scene.id, `chapter:${id}`);
+      const choiceBeat = scene.beats.find((b) => b.choice)!;
+      assert.ok(choiceBeat, `${id} has a choice`);
+      for (const option of choiceBeat.choice!) {
+        let p = startScene(scene);
+        const seen: string[] = [];
+        for (let i = 0; i < 40 && !p.done; i++) {
+          const beat = scene.beats[p.beatIndex];
+          seen.push(beat.id);
+          assert.ok(existsSync(`public/assets/art/story/bg_${beat.bg}.webp`), `${id}/${beat.id}: backdrop`);
+          for (const a of beat.cast) assert.ok(artExists(a.id, a.expr), `${id}/${beat.id}: ${a.id}_${a.expr}`);
+          p = beat.choice ? choose(scene, p, option.id) : advance(scene, p);
+        }
+        assert.ok(p.done, `${id}/${option.id} finishes`);
+        assert.equal(p.flags[option.flag[0]], option.flag[1]);
+        assert.ok(seen.includes(option.next), `${id}/${option.id} visits its own branch`);
+        const other = choiceBeat.choice!.find((o) => o.id !== option.id)!;
+        assert.ok(!seen.includes(other.next), `${id}/${option.id} skips the other branch`);
+      }
+    }
+    const lines = (flags: Record<string, string>) => chapterScene(chapter, null, flags).beats.map((b) => b.textEn).join('|');
+    assert.notEqual(lines(earlier[1]), lines(earlier[2]), `${id}: earlier choices change some lines`);
+  }
 });

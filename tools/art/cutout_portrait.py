@@ -6,13 +6,14 @@ edge, and writes a 768x1024 PNG with a transparent background. Convert to WebP w
 
     python3 tools/art/cutout_portrait.py in.png public/assets/art/story/layla_happy.png
 """
+import os
 import sys
 from collections import deque
 
 from PIL import Image, ImageFilter
 
 W, H = 768, 1024
-TOLERANCE = 30  # max RGB distance from the backdrop colour that still counts as backdrop
+TOLERANCE = int(os.environ.get("CUTOUT_TOLERANCE", "12"))  # max RGB distance from the backdrop colour that still counts as backdrop; the generated backdrops are flat, and 30 let shaded cream fabric leak
 
 
 def backdrop_colour(img):
