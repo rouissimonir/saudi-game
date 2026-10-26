@@ -91,6 +91,7 @@ const LeaderboardModal = lazy(() => loadChainAndLeaderboard().then((m) => ({ def
 const FinjanPourModal = lazy(() => loadPour().then((m) => ({ default: m.FinjanPourModal })));
 const SaveTransferModal = lazy(() => loadTransfer().then((m) => ({ default: m.SaveTransferModal })));
 const ScenePlayer = lazy(() => loadScenePlayer().then((m) => ({ default: m.ScenePlayer })));
+const StoryLog = lazy(() => loadScenePlayer().then((m) => ({ default: m.StoryLog })));
 const SCENE_SOUND = {
   playLine: (id: string) => soundFX.playStoryLine(id),
   stopLine: () => soundFX.stopStoryLine(),
@@ -104,8 +105,10 @@ function prefetchScreens(): void {
   else window.setTimeout(run, 2000);
 }
 import {
+  AREA_COUNT_BEFORE_PRESTIGE,
   advanceArea,
   applyEnergyRegen,
+  areaChapterId,
   areaInfo,
   buyEnergyWithCoins,
   buyEnergyWithGems,
@@ -183,6 +186,8 @@ export default function App() {
 
   const bannerTimeoutRef = useRef<number | null>(null);
   const [activeScene, setActiveScene] = useState<string | null>(null);
+  const [storyLogOpen, setStoryLogOpen] = useState(false);
+  const [replayChapterId, setReplayChapterId] = useState<string | null>(null);
   // ?scene=prologue replays a story scene on the next Play (handy for testing on a phone)
   const forcedSceneRef = useRef<string | null>(
     typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('scene') : null
@@ -1012,6 +1017,27 @@ export default function App() {
     if (storyChapterId) handleClaimStoryChapter(storyChapterId);
   };
 
+  // Story log: every chapter in order; finished ones can be rewatched (no second reward).
+  const storyLogEntries = useMemo(() => {
+    if (!storyLogOpen) return [];
+    const ids = [...STORY_CHAPTERS.map((c) => c.id), ...Array.from({ length: AREA_COUNT_BEFORE_PRESTIGE - 1 }, (_, i) => areaChapterId(i + 1))];
+    return ids.flatMap((id) => {
+      const c = findStoryChapter(id);
+      if (!c) return [];
+      return [{ id, number: c.chapterNumber, titleAr: c.titleAr, titleEn: c.titleEn, speaker: speakerCharacter(c.speakerEn), unlocked: gameState.completedStoryIds.includes(id) }];
+    });
+  }, [storyLogOpen, gameState.completedStoryIds]);
+  const replaySceneData = useMemo(() => {
+    const c = withStoryFlags(findStoryChapter(replayChapterId), gameState.storyFlags);
+    return c ? chapterScene(c, speakerCharacter(c.speakerEn)) : null;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [replayChapterId]);
+  const handleStoryLogPlay = (id: string) => {
+    setStoryLogOpen(false);
+    if (id === 'prologue') setActiveScene('prologue');
+    else setReplayChapterId(id);
+  };
+
   const tutorialStep = getTutorialStep(gameState);
 
   // ============================================================================
@@ -1161,7 +1187,7 @@ export default function App() {
         onToggleMute={() => handleToggleMute()}
         onPause={() => handleTogglePause()}
         onTransfer={() => setTransferOpen(true)}
-        onReplayStory={() => setActiveScene('prologue')}
+        onReplayStory={() => setStoryLogOpen(true)}
         overlay={
           <>
             {levelUpToast && (
@@ -1718,6 +1744,31 @@ export default function App() {
       {pourOpen && (
         <Suspense fallback={null}>
         <FinjanPourModal lang={lang} isOpen={pourOpen} tokens={gameState.pourTokens} onFinish={handleFinishPour} onClose={() => setPourOpen(false)} />
+        </Suspense>
+      )}
+
+      {storyLogOpen && (
+        <Suspense fallback={null}>
+          <StoryLog
+            lang={lang}
+            prologueSeen={gameState.seenScenes.includes('prologue')}
+            entries={storyLogEntries}
+            onPlay={handleStoryLogPlay}
+            onClose={() => setStoryLogOpen(false)}
+          />
+        </Suspense>
+      )}
+
+      {replaySceneData && !activeScene && !chapterSceneData && (
+        <Suspense fallback={null}>
+          <ScenePlayer
+            key={replaySceneData.id}
+            sceneId={replaySceneData.id}
+            scene={replaySceneData}
+            lang={lang}
+            sound={SCENE_SOUND}
+            onFinish={() => setReplayChapterId(null)}
+          />
         </Suspense>
       )}
 

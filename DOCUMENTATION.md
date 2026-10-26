@@ -133,7 +133,10 @@ The engine lives in `src/game/progression.ts` (pure, seeded RNG in `state.rngSee
       - `src/story/` (types, a pure `engine.ts` reducer, `scenes/prologue.ts`, `flags.ts`).
       - `src/components/story/ScenePlayer.tsx` and its CSS, loaded on demand.
       - Save fields `seenScenes` and `storyFlags`. Saves from before this feature count the prologue as seen.
-    - **Testing and replay:** the HUD menu has **Replay story**, and `?scene=prologue` forces the scene on the next Play.
+    - **Story episodes:** the HUD menu opens an episode list (`src/components/story/StoryLog.tsx`).
+      - It shows the prologue and all 11 chapters.
+      - Finished ones can be rewatched, with no second reward. Upcoming ones show locked, with a blurred speaker.
+    - **Testing:** `?scene=prologue` forces the prologue on the next Play.
     - **Art:** `tools/blender/make_story_cast.py` renders Layla, Noura and Rashid with 3–4 expressions each, and `tools/blender/make_scenes.py` renders the backdrops (dusk street, courtyard, dallah close-up) with foreground layers for parallax. Everything is WebP via `tools/art/to_webp.py`: 424 KB in total, preloaded on the title for new players.
     - **Voice:** Layla is "Nora S – Saudi Natural & Calm", Rashid is "Faisal alotaibi – Warm Saudi Voice", and Noura keeps her voice. The files live in `public/assets/audio/story/`, and each was checked word for word with speech-to-text.
     - **Cost to returning players:** none measurable (first paint and title-ready match `main`). The scene chunk is 4.4 KB gzipped plus 4 KB of CSS, and it shows no long tasks while animating at 4× CPU.

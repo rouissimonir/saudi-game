@@ -5,14 +5,12 @@ import { advance, choose, currentBeat, ScenePlay, skip, startScene, upcomingBeat
 import { SCENES } from '../../story/scenes';
 import { CAST_NAMES, CastId, Expression, Scene, StagePos } from '../../story/types';
 import { assetUrl } from '../../utils/assetUrl';
+import { actorSrc } from './art';
 import './ScenePlayer.css';
 
-/** Painted expressions per character (docs/ASSETS.md, section 3c); anything else falls back to neutral. */
-const EXPRESSIONS: Partial<Record<CastId, Expression[]>> = {
-  layla: ['neutral', 'happy', 'surprised', 'worried', 'angry'],
-  noura: ['neutral', 'happy', 'surprised', 'worried'],
-  rashid: ['neutral', 'angry', 'surprised'],
-};
+export { StoryLog } from './StoryLog';
+export type { StoryLogEntry } from './StoryLog';
+
 /**
  * Backdrops that also have a transparent foreground layer for parallax. The painted backdrops
  * (docs/BACKGROUND_PROMPTS.md) are a single layer; the Blender ones in tools/blender/make_scenes.py had one.
@@ -23,15 +21,6 @@ const NAME_COLORS: Partial<Record<CastId, string>> = {
 };
 const TYPE_MS = 26;
 
-/** Characters with an illustrated expression set (public/assets/art/characters/illustrated), used until they are painted. */
-const ILLUSTRATED = new Set<CastId>(['faisal', 'tariq', 'lama', 'sultan']);
-
-function actorSrc(id: CastId, expr: Expression): string {
-  const rendered = EXPRESSIONS[id];
-  if (rendered) return assetUrl(`assets/art/story/${id}_${rendered.includes(expr) ? expr : 'neutral'}.webp`);
-  if (ILLUSTRATED.has(id)) return assetUrl(`assets/art/characters/illustrated/${id}_${expr}.webp`);
-  return assetUrl(`assets/art/characters/${id}.webp`);
-}
 const bgSrc = (key: string, layer: '' | '_fg' = '') => assetUrl(`assets/art/story/bg_${key}${layer}.webp`);
 
 /** Warm the cache with every image a scene uses, so beats never pop in blank, plus the first line's voice. */
