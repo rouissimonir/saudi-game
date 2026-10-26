@@ -114,6 +114,7 @@ The story cast moves to semi-realistic painted 2D portraits, closer to Hollywood
   - Layla's angry face and all of Noura and Rashid came from Codex image generation, using `docs/PORTRAIT_PROMPTS.md`, with painted Layla as the style reference.
   - The generated sources are kept in `tools/art/portrait_inbox/`.
   - The Blender half-bodies remain reproducible from `tools/blender/make_story_cast.py`, but are no longer used.
+  - The chapter cast (Faisal, Tariq, Lama, Sultan) came from Codex batch 2 in the same way.
 - **Files:**
   - Same names as today, `public/assets/art/story/<character>_<expression>.webp`. The only code change is the per-character expression list in `ScenePlayer.tsx`.
   - The Blender renders stay reproducible from `tools/blender/make_story_cast.py` as the fallback and reference.

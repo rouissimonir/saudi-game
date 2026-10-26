@@ -12,10 +12,9 @@ const allChapters = () => [
   ...Array.from({ length: AREA_COUNT_BEFORE_PRESTIGE }, (_, i) => findStoryChapter(areaChapterId(i))).filter((c) => c !== null),
 ];
 
-const PAINTED = new Set(['layla', 'noura', 'rashid']);
+// Every chapter speaker is painted; expressions without a painting fall back to neutral in the player.
 function artExists(id: string, expr: string): boolean {
-  if (PAINTED.has(id)) return existsSync(`public/assets/art/story/${id}_${expr}.webp`) || existsSync(`public/assets/art/story/${id}_neutral.webp`);
-  return existsSync(`public/assets/art/characters/illustrated/${id}_${expr}.webp`);
+  return existsSync(`public/assets/art/story/${id}_${expr}.webp`) || existsSync(`public/assets/art/story/${id}_neutral.webp`);
 }
 
 test('every story chapter becomes a playable scene with art and backdrops that exist', () => {
@@ -45,9 +44,12 @@ test('the speaker of a chapter is on stage opposite Layla and Layla has the last
   assert.equal(scene.beats.at(-1)!.speaker, 'layla');
 });
 
-test('each area has a backdrop slot, and chapters fall back to a painted backdrop until theirs arrives', () => {
+test('each chapter gets its own painted backdrop', () => {
   assert.equal(AREA_BG.length, AREA_COUNT_BEFORE_PRESTIGE);
   assert.equal(chapterBg('chap_3'), 'dallah');
+  assert.equal(chapterBg('chap_2'), 'sadu');
+  assert.equal(chapterBg('area_1'), 'jeddah');
+  assert.equal(chapterBg('area_9'), 'jeddah'); // second lap reuses the area's backdrop
   for (const id of ['chap_1', 'chap_2', 'chap_4', 'area_1', 'area_7', 'area_9']) {
     assert.ok(existsSync(`public/assets/art/story/bg_${chapterBg(id)}.webp`), id);
   }
