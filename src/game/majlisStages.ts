@@ -3,7 +3,7 @@
  * from 1 (ruin) to the last (fully restored). Add an area here once its stages have landed; areas without painted
  * stages keep the vector diorama.
  */
-export const PAINTED_STAGES: Record<string, number> = {};
+export const PAINTED_STAGES: Record<string, number> = { diriyah: 3 };
 
 /**
  * Which stage to show for a restoration progress of `levels` out of `maxLevels` wing tiers. The last stage only
