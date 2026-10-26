@@ -64,11 +64,11 @@ import {
   clearSavedGameState,
 } from './utils/soundAndHaptics';
 import { CustomerPortrait } from './components/CustomerPortrait';
+import { assetUrl } from './utils/assetUrl';
 import { BoardCell } from './components/BoardCell';
 import { applySceneResult, ScenePlay } from './story/engine';
 import { withStoryFlags } from './story/flags';
-import { chapterScene } from './story/chapterScene';
-import { endingScene } from './story/scenes/ending';
+import type { Scene } from './story/types';
 import type { StoryLogEntry } from './components/story/StoryLog';
 import { MergeParticleOverlay } from './components/MergeParticleOverlay';
 import { EnergyModal, QuestsModal, WorkshopModal } from './components/ProgressionModals';
@@ -94,6 +94,28 @@ const FinjanPourModal = lazy(() => loadPour().then((m) => ({ default: m.FinjanPo
 const SaveTransferModal = lazy(() => loadTransfer().then((m) => ({ default: m.SaveTransferModal })));
 const ScenePlayer = lazy(() => loadScenePlayer().then((m) => ({ default: m.ScenePlayer })));
 const StoryLog = lazy(() => loadScenePlayer().then((m) => ({ default: m.StoryLog })));
+
+type SceneModule = Awaited<ReturnType<typeof loadScenePlayer>>;
+/**
+ * Builds a story scene with code from the lazily loaded scene chunk, so the chapter scripts stay out of the first
+ * download. Rebuilds when `key` changes; null while the chunk loads (it is usually prefetched already).
+ */
+function useLazyScene(key: string | null, build: (m: SceneModule) => Scene | null): Scene | null {
+  const [scene, setScene] = useState<Scene | null>(null);
+  useEffect(() => {
+    setScene(null);
+    if (!key) return;
+    let live = true;
+    void loadScenePlayer().then((m) => {
+      if (live) setScene(build(m));
+    });
+    return () => {
+      live = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
+  return scene;
+}
 /** The player's language choice survives reloads; Arabic until they switch. */
 const LANG_KEY = 'qahwa_lang';
 function loadLanguage(): Language {
@@ -206,6 +228,7 @@ export default function App() {
   const bannerTimeoutRef = useRef<number | null>(null);
   const [activeScene, setActiveScene] = useState<string | null>(null);
   const [storyLogOpen, setStoryLogOpen] = useState(false);
+  const [keyArtReady, setKeyArtReady] = useState(false);
   const [replayChapterId, setReplayChapterId] = useState<string | null>(null);
   const [endingOpen, setEndingOpen] = useState(false);
   // ?scene=prologue replays a story scene on the next Play (handy for testing on a phone)
@@ -1032,10 +1055,8 @@ export default function App() {
   }, [storyChapterId, storySpeaker, shellState]);
 
   // Story chapters play as animated scenes; the chapter reward is paid when the scene ends (or is skipped).
-  const chapterSceneData = useMemo(
-    () => (activeStoryChapter && shellState === 'playing' ? chapterScene(activeStoryChapter, storySpeaker, gameState.storyFlags) : null),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [storyChapterId, shellState]
+  const chapterSceneData = useLazyScene(activeStoryChapter && shellState === 'playing' ? `chapter:${storyChapterId}` : null, (m) =>
+    activeStoryChapter ? m.chapterScene(activeStoryChapter, storySpeaker, gameState.storyFlags) : null
   );
   const handleChapterSceneFinish = (play: ScenePlay) => {
     setGameState((prev) => applySceneResult(prev, play)); // a hand-written chapter's choice: its flag and small reward, once
@@ -1043,11 +1064,7 @@ export default function App() {
     // The Khobar finale leads straight into the epilogue the first time.
     if (storyChapterId === areaChapterId(AREA_COUNT_BEFORE_PRESTIGE - 1) && !gameState.seenScenes.includes('ending')) setEndingOpen(true);
   };
-  const endingSceneData = useMemo(
-    () => (endingOpen ? endingScene(gameState.storyFlags) : null),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [endingOpen]
-  );
+  const endingSceneData = useLazyScene(endingOpen ? 'ending' : null, (m) => m.endingScene(gameState.storyFlags));
 
   // Story log: every chapter in order; finished ones can be rewatched (no second reward).
   const storyLogEntries = useMemo<StoryLogEntry[]>(() => {
@@ -1066,11 +1083,10 @@ export default function App() {
       unlocked: gameState.seenScenes.includes('ending'),
     });
   }, [storyLogOpen, gameState.completedStoryIds, gameState.seenScenes]);
-  const replaySceneData = useMemo(() => {
+  const replaySceneData = useLazyScene(replayChapterId, (m) => {
     const c = withStoryFlags(findStoryChapter(replayChapterId), gameState.storyFlags);
-    return c ? chapterScene(c, speakerCharacter(c.speakerEn), gameState.storyFlags) : null;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [replayChapterId]);
+    return c ? m.chapterScene(c, speakerCharacter(c.speakerEn), gameState.storyFlags) : null;
+  });
   const handleStoryLogPlay = (id: string) => {
     setStoryLogOpen(false);
     if (id === 'prologue') setActiveScene('prologue');
@@ -1086,11 +1102,23 @@ export default function App() {
   if (shellState === 'title') {
     return (
       <main className="relative min-h-screen w-full bg-gradient-to-b from-[#2A1B12] via-[#3A2417] to-[#1E130D] text-[#FBF7F0] flex flex-col justify-between overflow-hidden select-none">
-        <div className="h-3 w-full sadu-trim" />
+        {/* Painted key art on phones (docs/ART_BATCH_3.md): fades in once loaded, so it never holds up first paint */}
+        <img
+          src={assetUrl('assets/art/story/bg_title.webp')}
+          alt=""
+          decoding="async"
+          fetchPriority="low"
+          onLoad={() => setKeyArtReady(true)}
+          data-testid="title-keyart"
+          className={`absolute inset-0 w-full h-full object-cover object-[50%_35%] lg:hidden transition-opacity duration-700 ${keyArtReady ? 'opacity-100' : 'opacity-0'}`}
+        />
+        <div className="absolute inset-0 lg:hidden pointer-events-none" style={{ background: 'linear-gradient(to bottom, rgba(30,19,13,0.25) 0%, rgba(30,19,13,0) 18%, rgba(30,19,13,0) 52%, rgba(30,19,13,0.82) 68%, #1E130D 88%)' }} />
+        <div className="relative z-10 h-3 w-full sadu-trim" />
 
-        <div className="relative z-10 flex-1 max-w-5xl w-full mx-auto px-6 py-10 flex flex-col lg:flex-row items-center justify-between gap-10">
-          {/* Column 1: Interactive Hero Centerpiece */}
-          <div className="w-56 h-56 sm:w-72 sm:h-72 rounded-full bg-[#FFFDF9] border-4 border-[#F59E0B] shadow-[0_12px_50px_rgba(245,158,11,0.35)] flex items-center justify-center p-6 shrink-0">
+        <div className="relative z-10 flex-1 max-w-5xl w-full mx-auto px-6 py-6 lg:py-10 flex flex-col lg:flex-row items-center justify-between gap-4 lg:gap-10">
+          {/* Column 1: the emblem. On phones it holds the middle (where Layla appears) until the key art has loaded. */}
+          <div className={`order-2 lg:order-none flex-1 lg:flex-none flex items-center justify-center transition-opacity duration-700 ${keyArtReady ? 'max-lg:opacity-0' : ''}`}>
+          <div className="w-44 h-44 sm:w-72 sm:h-72 rounded-full bg-[#FFFDF9] border-4 border-[#F59E0B] shadow-[0_12px_50px_rgba(245,158,11,0.35)] flex items-center justify-center p-6 shrink-0">
             <svg viewBox="0 0 200 200" className="w-full h-full">
               <polygon
                 points="100,10 126,42 168,32 158,74 190,100 158,126 168,168 126,158 100,190 74,158 32,168 42,126 10,100 42,74 32,32 74,42"
@@ -1127,10 +1155,11 @@ export default function App() {
               <path d="M73,112 L127,112" stroke="#9E2A2B" strokeWidth="5" />
             </svg>
           </div>
+          </div>
 
-          {/* Column 2: Custom SVG Title Lockup & <= 3 Menu Actions */}
-          <div className="flex flex-col items-center lg:items-start text-center lg:text-start max-w-xl">
-            <svg viewBox="0 0 420 56" className="w-64 sm:w-80 h-auto mb-3">
+          {/* Column 2: Custom SVG Title Lockup & <= 3 Menu Actions (on phones the lockup leads, the rest sits at the bottom) */}
+          <div className="contents lg:flex flex-col items-center lg:items-start text-center lg:text-start max-w-xl">
+            <svg viewBox="0 0 420 56" className="order-1 lg:order-none w-64 sm:w-80 h-auto mb-3 drop-shadow-lg">
               <rect x="2" y="6" width="416" height="44" rx="12" fill="#FFFDF9" stroke="#F59E0B" strokeWidth="3" />
               <text
                 x="210"
@@ -1145,8 +1174,9 @@ export default function App() {
               </text>
             </svg>
 
+            <div className="order-3 lg:order-none flex flex-col items-center lg:items-start">
             <h1
-              className="text-3xl sm:text-5xl font-bold tracking-tight text-[#FBF7F0] leading-tight"
+              className="text-2xl sm:text-5xl font-bold tracking-tight text-[#FBF7F0] leading-tight drop-shadow-lg"
               style={{ textWrap: 'balance' }}
             >
               {isAr
@@ -1154,13 +1184,13 @@ export default function App() {
                 : 'Merge Specialty Qahwa, Royal Oud & Restore Iconic Saudi Majlises'}
             </h1>
 
-            <p className="mt-4 text-sm sm:text-base text-[#FDE68A]/90 leading-relaxed max-w-lg">
+            <p className="hidden sm:block mt-4 text-sm sm:text-base text-[#FDE68A]/90 leading-relaxed max-w-lg">
               {isAr
                 ? 'اجمع بين أصالة الدلة النجدية والبن الخولاني والعود الكمبودي ومشروبات الـ V60، ولبِّ طلبات الضيوف في الدرعية وجدة التاريخية والعلا.'
                 : 'Combine Saudi Khawlani Dallah hospitality, Cambodian Oud perfumery, and artisanal V60 pour-overs across Diriyah, Historic Jeddah, and AlUla.'}
             </p>
 
-            <div className="mt-7 flex flex-wrap items-center justify-center lg:justify-start gap-3.5 w-full sm:w-auto">
+            <div className="mt-5 sm:mt-7 flex flex-wrap items-center justify-center lg:justify-start gap-3.5 w-full sm:w-auto">
               <button
                 type="button"
                 data-start="true"
@@ -1178,10 +1208,11 @@ export default function App() {
                 {isAr ? 'English · تغيير اللغة' : 'العربية · Switch Language'}
               </button>
             </div>
+            </div>
           </div>
         </div>
 
-        <div className="relative z-10 pb-6 px-6 text-center text-xs text-[#FDE68A]/80">
+        <div className="relative z-10 pb-6 px-6 text-center text-xs text-[#FDE68A]/80 hidden sm:block">
           {isAr
             ? 'انقر على المولّدات لإنتاج البن والعود · اسحب أو انقر لدمج عنصرين متطابقين · Enter للبدء · P للإيقاف المؤقت'
             : 'Tap Generators to Spawn Qahwa & Oud · Drag or Tap 2 Matching Items to Merge · Enter to Start · P to Pause'}

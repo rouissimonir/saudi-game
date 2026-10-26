@@ -5,7 +5,7 @@ import { assetUrl } from '../../utils/assetUrl';
 const EXPRESSIONS: Partial<Record<CastId, Expression[]>> = {
   layla: ['neutral', 'happy', 'surprised', 'worried', 'angry'],
   noura: ['neutral', 'happy', 'surprised', 'worried'],
-  rashid: ['neutral', 'angry', 'surprised'],
+  rashid: ['neutral', 'angry', 'surprised', 'happy', 'worried'],
   faisal: ['neutral', 'happy', 'surprised', 'worried'],
   tariq: ['neutral', 'happy', 'surprised', 'worried'],
   lama: ['neutral', 'happy', 'surprised', 'worried'],
