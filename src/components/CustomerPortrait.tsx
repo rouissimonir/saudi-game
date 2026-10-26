@@ -18,7 +18,7 @@ export const CustomerPortrait: React.FC<{
   size?: 'sm' | 'md' | 'lg';
 }> = ({ avatarKey = 'noura', size = 'md' }) => {
   const dim = size === 'sm' ? 'w-9 h-9' : size === 'lg' ? 'w-14 h-14' : 'w-11 h-11';
-  // Blender-rendered bust in public/assets/art/characters/<key>.webp; falls back to the built-in SVG if missing
+  // Painted face cropped from the story portrait (tools/art/make_avatars.py); the jury medal keeps its Blender emblem
   const [failedKey, setFailedKey] = React.useState<string | null>(null);
   const useImage = failedKey !== avatarKey && avatarKey in PORTRAIT_BACKDROP;
 
@@ -29,14 +29,14 @@ export const CustomerPortrait: React.FC<{
     >
       {useImage && (
         <img
-          src={assetUrl(`assets/art/characters/${avatarKey}.webp`)}
+          src={assetUrl(avatarKey === 'ghabga' ? 'assets/art/characters/ghabga.webp' : `assets/art/avatars/${avatarKey}.webp`)}
           alt=""
           width={256}
           decoding="async"
           height={256}
           draggable={false}
           onError={() => setFailedKey(avatarKey)}
-          className="w-full h-full object-cover scale-[1.12] translate-y-[6%]"
+          className={`w-full h-full object-cover ${avatarKey === 'ghabga' ? 'scale-[1.12] translate-y-[6%]' : ''}`}
         />
       )}
       {!useImage && (

@@ -8,7 +8,7 @@ and moves the batch to "Done" below.
 
 | Batch | Prompts | Files | Lands in | Then (Claude) |
 |---|---|---|---|---|
-| (nothing waiting) | | | | |
+| Batch 3 | `docs/ART_BATCH_3.md` | 4: `title_keyart`, `rashid_happy`, `rashid_worried`, `bg_finale` | `tools/art/background_inbox/` (key art, finale), `tools/art/portrait_inbox/` (Rashid) | Rashid: cut out and add `happy`/`worried` to `EXPRESSIONS`, then use them on the ally path (Jeddah, Abha, Riyadh, Khobar). Key art: add it behind the title screen, loaded after first paint. Finale: an ending screen after Khobar with the player's choices |
 
 When a new batch is added:
 - **Portraits:** cut out with `tools/art/cutout_portrait.py`, convert, and add the character to `EXPRESSIONS` in `src/components/story/art.ts`.
