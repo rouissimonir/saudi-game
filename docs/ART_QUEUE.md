@@ -8,7 +8,7 @@ and moves the batch to "Done" below.
 
 | Batch | Prompts | Files | Lands in | Then (Claude) |
 |---|---|---|---|---|
-| (nothing waiting) | | | | |
+| Batch 5 | `docs/ART_BATCH_5.md` | 21: `<area>_1`–`3` for jeddah, alula, taif, abha, ahsa, riyadh, khobar | `tools/art/background_inbox/majlis/` | Check each area's stages line up, convert to `public/assets/art/majlis/<area>_<n>.webp` (1280x720, quality 72), and add the area to `PAINTED_STAGES` in `src/game/majlisStages.ts`. Areas can land one at a time |
 
 When a new batch is added:
 - **Portraits:** cut out with `tools/art/cutout_portrait.py`, convert, and add the character to `EXPRESSIONS` in `src/components/story/art.ts`.
