@@ -134,6 +134,11 @@ The engine lives in `src/game/progression.ts` (pure, seeded RNG in `state.rngSee
         - Chapter 2 (Faisal, Sadu corner): Faisal reports Rashid's move after chapter 1. Serving Lama classic cardamom qahwa or Faisal's saffron latte sets `menu`.
         - Chapter 3 (Tariq, dallah majlis): Tariq was grandfather's friend and turned Rashid away. He mentions the drink from chapter 2. Asking about the royal blend or pouring him the first cup sets `tariq`.
         - Chapter 4 (Lama, Ramadan lanterns): Lama praises the chapter 2 drink. Rashid arrives softened or hostile, depending on chapter 1. Inviting him in or standing firm sets `rashid_ch4`.
+        - Chapters 5–11, the area chapters (`src/story/scenes/areaChapters.ts`), are one journey across the Kingdom: Jeddah, AlUla, Taif, Abha, Al-Ahsa, Riyadh and Khobar.
+          - Rashid follows Layla from city to city. He drifts towards partnership or rivalry depending on chapter 4 (`rashid_ch4`).
+          - It comes to a head in Riyadh (`riyadh`: share the stand or keep it), and Sultan's honour in Khobar settles it (`finale`).
+          - Each chapter also echoes an earlier choice, such as grandfather's clove from Tariq's blend in Taif, or the Abha farmers' thanks in Al-Ahsa.
+          - A second lap round the areas uses the generic adapter.
         - The lines are written with `src/story/scenes/build.ts`. Tests walk every choice under several earlier-choice combinations.
       - Every speaker is painted (Faisal, Tariq, Lama and Sultan joined in batch 2).
       - Each chapter has its own painted location: the Sadu corner and Ramadan lanterns for the Diriyah wings, and one per area (Jeddah, AlUla, Taif, Abha, Al-Ahsa, Riyadh, Khobar).

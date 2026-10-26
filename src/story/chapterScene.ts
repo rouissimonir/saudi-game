@@ -4,6 +4,7 @@ import { chapter1Scene } from './scenes/chapter1';
 import { chapter2Scene } from './scenes/chapter2';
 import { chapter3Scene } from './scenes/chapter3';
 import { chapter4Scene } from './scenes/chapter4';
+import { AREA_SCENES } from './scenes/areaChapters';
 
 /** Chapters with a hand-written script (choices, Rashid, callbacks); the rest use the generic adapter below. */
 export const HAND_WRITTEN: Record<string, (flags: Record<string, string>) => Scene> = {
@@ -11,6 +12,7 @@ export const HAND_WRITTEN: Record<string, (flags: Record<string, string>) => Sce
   chap_2: chapter2Scene,
   chap_3: chapter3Scene,
   chap_4: chapter4Scene,
+  ...AREA_SCENES,
 };
 
 /** Painted backdrops that exist in public/assets/art/story (add a key here when a new one lands). */
