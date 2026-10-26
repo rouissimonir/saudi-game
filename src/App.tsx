@@ -1417,18 +1417,18 @@ export default function App() {
                         : 'bg-gradient-to-b from-[#FFFDF9] to-[#F5EBD9] border-[#C8AF87]'
                     }`}
                   >
-                    {/* VIP Rush Ribbon */}
-                    {order.isVip && (
-                      <span className="absolute top-1 end-1 px-1.5 py-0.2 rounded-full bg-gradient-to-r from-[#D97706] to-[#B45309] text-white text-[8px] font-black shadow z-10">
-                        VIP
-                      </span>
-                    )}
-
-                    {/* Character Bust + Name + Coin/Star Reward */}
+                    {/* Character Bust (VIP ribbon on its lower edge, clear of the name) + Name + Coin/Star Reward */}
                     <div className="flex items-center gap-1">
-                      <CustomerPortrait avatarKey={order.customerId} size="sm" />
+                      <span className="relative shrink-0">
+                        <CustomerPortrait avatarKey={order.customerId} size="sm" />
+                        {order.isVip && (
+                          <span data-testid="vip-ribbon" className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-1 rounded-full bg-gradient-to-r from-[#D97706] to-[#B45309] text-white text-[8px] leading-[12px] font-black shadow">
+                            VIP
+                          </span>
+                        )}
+                      </span>
                       <div className="min-w-0 flex-1">
-                        <div className="text-[10px] sm:text-[11px] font-extrabold text-[#2C1E14] truncate">
+                        <div className="text-[10px] sm:text-[11px] leading-tight font-extrabold text-[#2C1E14] line-clamp-2 break-words">
                           {isAr ? order.customerNameAr : order.customerNameEn}
                         </div>
                         <div className="inline-flex items-center gap-0.5 text-[9px] sm:text-[10px] font-black tabular-nums text-[#B45309]">
