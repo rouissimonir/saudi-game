@@ -36,6 +36,11 @@ export function upcomingBeats(scene: Scene, play: ScenePlay): Beat[] {
   return ids.flatMap((id) => scene.beats.find((b) => b.id === id) ?? []);
 }
 
+/** Auto mode: how long a finished line stays up before the scene moves on (longer lines get more reading time). */
+export function autoDelayMs(chars: number): number {
+  return Math.min(7000, Math.max(2200, 1500 + 55 * chars));
+}
+
 /** Next beat; a beat with a choice waits for `choose`. */
 export function advance(scene: Scene, play: ScenePlay): ScenePlay {
   const beat = currentBeat(scene, play);
