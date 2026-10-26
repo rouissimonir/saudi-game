@@ -140,6 +140,17 @@ test('coins can buy energy, and each purchase on the same day costs more; the pr
   assert.equal(P.buyEnergyWithCoins({ ...s, coins: 100 }, day).bought, false);
 });
 
+test('the free shop gift can be claimed once a day', () => {
+  const s = { ...createInitialGameState(), energy: 0, coins: 0 };
+  const day = '2026-10-26';
+  const r = P.claimShopGift(s, day);
+  assert.equal(r.claimed, true);
+  assert.equal(r.state.energy, P.SHOP_GIFT.energy);
+  assert.equal(r.state.coins, P.SHOP_GIFT.coins);
+  assert.equal(P.claimShopGift(r.state, day).claimed, false);
+  assert.equal(P.claimShopGift(r.state, '2026-10-27').claimed, true);
+});
+
 test('regen leaves the state object untouched between ticks so the game is not re-saved every second', () => {
   const t0 = 5_000_000;
   const full = { ...createInitialGameState(), energy: 100, lastEnergyTick: t0 };

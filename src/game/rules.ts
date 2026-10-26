@@ -229,6 +229,8 @@ export interface GameState {
   wingUpgrades: number;
   sandTilesBought: number;
   coinEnergyToday: { dayKey: string; count: number } | null;
+  /** Day key of the last free shop gift, so it can be claimed once a day. */
+  shopGiftDay: string;
   lastEnergyTick: number;
   dailyQuests: {
     dayKey: string;
@@ -1131,6 +1133,7 @@ export function createInitialGameState(): GameState {
     wingUpgrades: 0,
     sandTilesBought: 0,
     coinEnergyToday: null,
+    shopGiftDay: '',
     lastEnergyTick: 0,
     dailyQuests: null,
     lastMergedItemId: null,

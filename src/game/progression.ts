@@ -104,6 +104,17 @@ export function buyEnergyWithCoins(state: GameState, dayKey: string): { state: G
   };
 }
 
+/** The shop's free daily gift (a dallah refill), once per calendar day. */
+export const SHOP_GIFT = { energy: 40, coins: 25 };
+
+export function claimShopGift(state: GameState, dayKey: string): { state: GameState; claimed: boolean } {
+  if (state.shopGiftDay === dayKey) return { state, claimed: false };
+  return {
+    state: { ...state, energy: state.energy + SHOP_GIFT.energy, coins: state.coins + SHOP_GIFT.coins, shopGiftDay: dayKey },
+    claimed: true,
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Coin sinks: generator upgrades and clearing sand tiles
 // ---------------------------------------------------------------------------
