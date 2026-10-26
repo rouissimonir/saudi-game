@@ -6,8 +6,11 @@ import {
   MajlisRegion,
   RenovationZone,
   STORY_CHAPTERS,
+  StoryChapter,
 } from '../game/rules';
-import { AREA_COUNT_BEFORE_PRESTIGE, AREA_REWARD, areaInfo } from '../game/progression';
+import { AREA_COUNT_BEFORE_PRESTIGE, AREA_REWARD, areaChapterId, areaInfo, findStoryChapter } from '../game/progression';
+import { speakerCharacter } from '../game/voiceLines';
+import { assetUrl } from '../utils/assetUrl';
 
 interface MajlisRenovationViewProps {
   lang: Language;
@@ -25,6 +28,26 @@ interface MajlisRenovationViewProps {
   onChangeAmbiance: (ambiance: MajlisAmbiance) => void;
   onOpenStory: (storyId: string) => void;
 }
+
+/** "Chapter 2: Threads of Najdi Sadu" -> "Threads of Najdi Sadu". */
+const shortTitle = (t: string) => t.replace(/^[^:：]{1,40}[:：]\s*/, '');
+
+/** A small "next episode" teaser: the speaker's painted face, the episode number and title. */
+const EpisodeTeaser: React.FC<{ chapter: StoryChapter; isAr: boolean; locked: boolean }> = ({ chapter, isAr, locked }) => {
+  const who = speakerCharacter(chapter.speakerEn);
+  return (
+    <div className="flex items-center gap-2 rounded-lg bg-[#D99B26]/10 border border-[#D99B26]/25 px-2 py-1.5" data-testid={`teaser-${chapter.id}`}>
+      {who && <img src={assetUrl(`assets/art/avatars/${who}.webp`)} alt="" loading="lazy" className="w-8 h-8 rounded-full object-cover border border-[#D99B26]/60 shrink-0" />}
+      <span className="min-w-0 flex-1">
+        <span className="flex items-center gap-1 text-[10px] font-bold text-[#FBBF24]">
+          {locked && <Lock className="w-3 h-3" />}
+          {locked ? (isAr ? `رمّم لتفتح الحلقة ${chapter.chapterNumber}` : `Restore to unlock Episode ${chapter.chapterNumber}`) : isAr ? `الحلقة ${chapter.chapterNumber}` : `Episode ${chapter.chapterNumber}`}
+        </span>
+        <span className="block text-xs font-semibold text-[#FBF7F0] truncate">{shortTitle(isAr ? chapter.titleAr : chapter.titleEn)}</span>
+      </span>
+    </div>
+  );
+};
 
 export const MajlisRenovationView: React.FC<MajlisRenovationViewProps> = ({
   lang,
@@ -52,6 +75,7 @@ export const MajlisRenovationView: React.FC<MajlisRenovationViewProps> = ({
 
   const area = areaInfo(areaIndex);
   const nextArea = areaInfo(areaIndex + 1);
+  const nextChapter = findStoryChapter(areaChapterId(areaIndex + 1));
   const lapStart = area.lap * AREA_COUNT_BEFORE_PRESTIGE;
   const journey = Array.from({ length: AREA_COUNT_BEFORE_PRESTIGE }, (_, i) => ({ index: lapStart + i, ...areaInfo(lapStart + i) }));
 
@@ -345,6 +369,11 @@ export const MajlisRenovationView: React.FC<MajlisRenovationViewProps> = ({
               <span className="inline-flex items-center gap-0.5">+{AREA_REWARD.energy}<Zap className="w-3.5 h-3.5 fill-current" /></span>
               <span>{isAr ? '+ فصل جديد من القصة' : '+ a new story chapter'}</span>
             </p>
+            {nextChapter && (
+              <div className="mt-2 max-w-xs mx-auto sm:mx-0">
+                <EpisodeTeaser chapter={nextChapter} isAr={isAr} locked={false} />
+              </div>
+            )}
           </div>
           <button type="button" onClick={onAdvanceArea} className="rounded-2xl btn-3d-green text-white font-extrabold px-5 py-3 inline-flex items-center gap-2 animate-pulse">
             <Plane className="w-5 h-5" />
@@ -391,6 +420,12 @@ export const MajlisRenovationView: React.FC<MajlisRenovationViewProps> = ({
                 <p className="text-xs text-[#E5DEC9]/80 mt-2 leading-relaxed">
                   {isAr ? zone.descAr : zone.descEn}
                 </p>
+
+                {chapter && zone.unlockedLevel === 0 && (
+                  <div className="mt-2.5">
+                    <EpisodeTeaser chapter={chapter} isAr={isAr} locked />
+                  </div>
+                )}
 
                 {/* 3 Khaleeji Interior Design Style Swatches */}
                 <div className="mt-3">
