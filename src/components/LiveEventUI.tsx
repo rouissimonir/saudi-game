@@ -91,7 +91,7 @@ export const LiveEventModal: React.FC<{
             {isAr ? `ينتهي خلال ${formatEndsIn(ev.endsAt - now, true)}` : `Ends in ${formatEndsIn(ev.endsAt - now, false)}`} · {p.points} {ev.def.token}
           </p>
         </div>
-        <ol className="px-4 py-3 space-y-2 max-h-[60vh] overflow-y-auto">
+        <ol className="px-4 py-3 space-y-2 max-h-[60vh] overflow-y-auto" tabIndex={0}>
           {state.festivalDelivery && <li data-testid="festival-delivery" className="rounded-2xl border-2 border-[#D97706] bg-[#FEF3C7] p-3 text-[#78350F]">
             <p className="text-sm font-black">{isAr ? 'مكافآت مهرجانك السابق' : 'Your previous festival rewards'}</p>
             <p className="mt-1 text-xs">{isAr ? 'أضفنا المكافآت التي كسبتها قبل انتهاء المهرجان إلى رصيدك.' : 'We added the rewards you earned before the festival ended to your balance.'}</p>
@@ -128,7 +128,7 @@ export const LiveEventModal: React.FC<{
             );
           })}
         </ol>
-        <p className="px-4 pb-4 text-[11px] text-center text-[#78350F]/70">
+        <p className="px-4 pb-4 text-[11px] text-center text-[#78350F]/85">
           {isAr ? 'مهرجان جديد كل ثلاثة أيام، والنقاط تبدأ من الصفر. مكافآتك المكتسبة محفوظة.' : 'A new festival starts every three days. Points reset, but earned rewards are kept.'}
         </p>
       </div>

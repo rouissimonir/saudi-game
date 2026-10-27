@@ -187,7 +187,7 @@ export const FinjanPourModal: React.FC<FinjanPourModalProps> = ({ lang, isOpen, 
               <button
                 type="button"
                 onClick={onClose}
-                className="mt-3 w-full rounded-xl bg-[#D97724] hover:bg-[#EA8A35] text-white font-extrabold py-2.5"
+                className="mt-3 w-full rounded-xl bg-[#B45309] hover:bg-[#A94E08] text-white font-extrabold py-2.5"
               >
                 {isAr ? 'تمام' : 'Done'}
               </button>

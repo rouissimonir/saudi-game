@@ -248,7 +248,7 @@ export const ScenePlayer: React.FC<ScenePlayerProps> = ({ sceneId, scene: given,
             toggleAuto();
           }}
           className={`inline-flex min-h-11 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold backdrop-blur-sm ${
-            auto ? 'bg-[#D97706] border-[#FBBF24] text-white' : 'bg-black/45 border-white/30 text-white'
+            auto ? 'bg-[#B45309] border-[#FBBF24] text-white' : 'bg-black/45 border-white/30 text-white'
           }`}
         >
           {auto ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5 rtl:-scale-x-100" />}
