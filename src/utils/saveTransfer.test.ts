@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { exportSaveCode, importSaveCode } from './saveTransfer';
 import { createInitialGameState } from '../game/rules';
+import { advanceArea, restoredPlaceDetails } from '../game/progression';
 
 test('a save survives the transfer code round trip and the code stays short', async () => {
   const s = { ...createInitialGameState(), coins: 4321, areaIndex: 3 };
@@ -20,6 +21,21 @@ test('garbage and truncated codes are rejected', async () => {
   assert.equal(await importSaveCode('hello'), null);
   assert.equal(await importSaveCode(code.slice(0, code.length - 30)), null);
   assert.equal(await importSaveCode('QM1.' + btoa('{"board":[]}')), null);
+});
+
+test('completed-place choices survive transfer across multiple areas', async () => {
+  let state = createInitialGameState();
+  for (let area = 0; area < 10; area++) {
+    state = advanceArea({ ...state, renovationZones: state.renovationZones.map((zone, index) => ({ ...zone, unlockedLevel: 2, selectedStyle: index % zone.styles.length })) }).state;
+  }
+  const imported = await importSaveCode(await exportSaveCode(state));
+  assert.ok(imported);
+  assert.equal(imported.areaIndex, 10);
+  for (let area = 0; area < 10; area++) {
+    assert.deepEqual(restoredPlaceDetails(imported.storyFlags, area), restoredPlaceDetails(state.storyFlags, area));
+    assert.ok(restoredPlaceDetails(imported.storyFlags, area));
+  }
+  assert.equal(restoredPlaceDetails(imported.storyFlags, 10), null);
 });
 
 test('transfer codes work without browser compression streams and stay compatible', async () => {
