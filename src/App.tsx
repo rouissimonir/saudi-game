@@ -65,6 +65,7 @@ import {
 } from './utils/soundAndHaptics';
 import { CustomerPortrait } from './components/CustomerPortrait';
 import { assetUrl } from './utils/assetUrl';
+import { TITLE_PLACEHOLDER } from './utils/titlePlaceholder';
 import { BoardCell } from './components/BoardCell';
 import { applySceneResult, ScenePlay } from './story/engine';
 import { withStoryFlags } from './story/flags';
@@ -1122,6 +1123,12 @@ export default function App() {
   if (shellState === 'title') {
     return (
       <main className="relative min-h-screen w-full bg-gradient-to-b from-[#2A1B12] via-[#3A2417] to-[#1E130D] text-[#FBF7F0] flex flex-col justify-between overflow-hidden select-none">
+        {/* Tiny blurred copy of the key art (same one the splash in index.html shows), so loading looks painted, not flat */}
+        <div
+          aria-hidden="true"
+          className={`absolute inset-0 lg:hidden transition-opacity duration-[1400ms] ${keyArtReady ? 'opacity-0' : 'opacity-100'}`}
+          style={{ background: `url(${TITLE_PLACEHOLDER}) 50% 35%/cover`, filter: 'blur(14px) saturate(1.15)', transform: 'scale(1.12)' }}
+        />
         {/* Painted key art on phones (docs/ART_BATCH_3.md): fades in once loaded, so it never holds up first paint */}
         <img
           src={assetUrl('assets/art/story/bg_title.webp')}
