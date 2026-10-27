@@ -16,3 +16,11 @@ export function restorationStage(levels: number, maxLevels: number, stages: numb
   if (levels >= maxLevels) return stages;
   return 1 + Math.floor((Math.max(0, levels) / maxLevels) * (stages - 1));
 }
+
+/** File-name suffix of each painted mood (docs/ART_BATCH_6.md): '' is the golden-afternoon original. */
+export const MOOD_SUFFIXES = ['', '_night', '_rain'] as const;
+
+/** The mood picture for a Majlis ambiance chip. */
+export function moodSuffix(ambiance: string): (typeof MOOD_SUFFIXES)[number] {
+  return ambiance === 'ramadan_night' ? '_night' : ambiance === 'courtyard_rain' ? '_rain' : '';
+}
