@@ -36,3 +36,5 @@ The gathering check uses a fresh game and plays one specific route through the f
 The restoration check starts from a fresh game, selects a free style, restores a wing, checks the visible family reaction and verifies saved progress. It is not a cultural or usability review.
 
 The guest Majlis check uses a synthetic save to verify that the order guide follows the saved wing style after reload and does not show another guest's reaction.
+
+For the optional accessibility audit, install `axe-core` without saving it to the project (`npm install --no-save axe-core`), then run `node tools/e2e/a11y.cjs en,ar http://127.0.0.1:4173/`. The audit reports the screens reached and exits nonzero for reported violations or navigation errors. Story choices and event screens depend on the run; inspect the listed screens to see what was covered. Automated checks do not replace device accessibility testing.
