@@ -8,7 +8,8 @@ Find out whether people enjoy the merge-and-hospitality loop, understand what to
 
 ## Before recruiting
 
-- Build the current commit on macOS using Xcode and install it on actual iPhones. Record the commit, build number, iOS version and device model. Do not label browser simulation as a device test.
+- For early feedback, use the [Windows-to-iPhone Safari preview](WINDOWS_IPHONE_PREVIEW.md) on the participant's iPhone. Record the preview's source commit, iPhone model, iOS version and Safari, and note that it is a web preview. A Safari session on a real phone can reveal touch, layout and comprehension problems but cannot establish native app behavior.
+- For native QA, build the current commit on macOS using Xcode and install it on actual iPhones. Record the commit, build number, iOS version and device model. Keep native results separate from Safari results.
 - Recruit a small, varied exploratory group of Arabic-speaking Saudi players, including both people familiar with merge games and people new to them. Include different iPhone sizes and, where participants already use them, accessibility settings. A small group reveals problems but cannot estimate population rates reliably.
 - Run sessions in the participant's preferred language. Ask permission before recording audio, video, or collecting a transfer code. Explain that participation is voluntary, the game is being tested rather than the participant, and they may stop or skip a question. Avoid collecting names or contact details in the observation sheet; use participant IDs and store any recordings separately according to the team's retention policy.
 - Prepare a fresh-install build and a separate test device or disposable test save for recovery and later-area scenarios. Never reset or replace a participant's real progress. Do not test a transfer or reset with a personal save.
@@ -17,6 +18,8 @@ Find out whether people enjoy the merge-and-hospitality loop, understand what to
 ## First session: let the player lead
 
 Start a fresh game. Say: “Please explore as you normally would. Tell me what you expect and what you are trying to do.” Do not explain the mechanics or point out the gathering. Observe what they choose to do first; let them read, skip, or linger naturally. Only provide a hint if they are stuck or ask for help, and record the exact hint and time before giving it.
+
+For an owner testing alone in Safari, play normally for a few minutes and note what you expected, what happened, and anything enjoyable, confusing or frustrating. A useful report includes the screen or step and, if possible, how to reproduce it. Self-testing is useful for finding issues but is not an independent usability study.
 
 | Moment | Observe without prompting | Record |
 | --- | --- | --- |
