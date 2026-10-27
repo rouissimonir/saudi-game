@@ -1135,6 +1135,9 @@ export default function App() {
   const focusedOrder = gameState.activeOrders.find(order => order.id === focusedOrderId);
   const guideOrder = gameState.activeOrders.find(order => order.id === guideOrderId);
   const focusedCells = focusedOrder ? focusCells(orderNeeds(focusedOrder, gameState.board, gameState.inventory), gameState.board) : tastingFocus ? focusCells(ingredientNeeds(tastingFocus.items, gameState.board, gameState.inventory), gameState.board) : new Set<number>();
+  const boardFull = gameState.board.every(cell => cell.itemId !== null || cell.sandLocked);
+  const recoveryPair = boardFull ? findBestMergePair(gameState.board, autoMergeReservations(gameState.activeOrders, tastingFocus?.items, gameState.inventory)) : null;
+  const recoveryItem = boardFull && gameState.board.some(cell => { const item = cell.itemId ? ITEM_CATALOG[cell.itemId] : null; return !cell.sandLocked && item && !item.isGenerator && !item.isChest; });
 
   const selectedCell =
     gameState.selectedCellIndex !== null ? gameState.board[gameState.selectedCellIndex] : null;
@@ -1724,6 +1727,11 @@ export default function App() {
               </div>
 
               <div className="mb-1 px-1 text-[#FFF4DA]"><div className="flex items-center justify-between gap-2"><button type="button" data-testid="show-board" onClick={() => { const board = boardGridRef.current; if (!board) return; board.scrollIntoView({ block: 'center' }); const header = document.querySelector('[data-testid=game-hud]')?.closest('header'); if (header) { const overlap = header.getBoundingClientRect().bottom + 4 - board.getBoundingClientRect().top; if (overlap > 0) window.scrollBy({ top: -overlap, behavior: 'instant' }); } board.focus({ preventScroll: true }); }} className="min-h-8 text-[11px] font-bold underline">{isAr ? 'إظهار اللوحة كاملة' : 'Show the whole board'}</button>{!tutorialStep && <button type="button" onClick={() => setShowBoostHelp(value => !value)} aria-expanded={showBoostHelp} aria-controls="boost-explanation" className="min-h-8 text-[11px] font-bold underline">{isAr ? 'كيف يعمل المضاعف؟' : 'How does the boost work?'}</button>}</div>{!tutorialStep && showBoostHelp && <p id="boost-explanation" data-testid="boost-explanation" className="text-[10px] leading-snug font-bold">{generatorBoost === 0 ? (isAr ? 'لا توجد طاقة للمولّد الآن.' : 'No energy available for a generator yet.') : (isAr ? `كل نقرة: ${generatorBoost} طاقة · المستوى الأساسي ${generatorTier}، وقد ينتج مستوى أعلى${generatorBoost < gameState.powerMultiplier ? ' · خُفّض المضاعف مؤقتاً لقلة الطاقة' : ''}.` : `Per tap: ${generatorBoost} energy · base level ${generatorTier}; a lucky drop can be higher${generatorBoost < gameState.powerMultiplier ? ' · boost reduced while energy is low' : ''}.`)}</p>}</div>
+
+              {boardFull && <div data-testid="board-full-help" role="status" className="mb-1 rounded-xl border border-[#D99B26] bg-[#FFF3D4] px-2 py-2 text-xs font-bold leading-snug text-[#78350F]">
+                <p>{isAr ? 'اللوحة ممتلئة — أفسح مساحة لمواصلة الضيافة.' : 'The board is full — make room to keep welcoming guests.'}</p>
+                {recoveryPair ? <button type="button" data-testid="board-full-merge" onClick={handleAutoMergeOrHint} className="mt-1 min-h-10 rounded-lg btn-3d-green px-3 text-white">{isAr ? 'ادمج قطعتين فائضتين' : 'Merge a spare pair'}</button> : <p className="mt-1 font-normal">{!recoveryItem ? (isAr ? 'ابحث عن طلب جاهز أو صندوق لفتحه، أو ادمج قطعتين يدوياً.' : 'Look for a ready order or a chest to open, or merge a pair manually.') : gameState.inventory.length < gameState.inventoryCapacity ? (isAr ? 'حدّد عنصراً ثم اختر «تخزين»، أو قدّم طلباً جاهزاً.' : 'Select an item and choose Store, or serve a ready order.') : (isAr ? 'قدّم طلباً جاهزاً أو حدّد عنصراً واختر «بيع»؛ يمكنك التراجع فوراً.' : 'Serve a ready order, or select an item and choose Sell; you can undo it immediately.')}</p>}
+              </div>}
 
               {/* 7×7 Inner Recessed Board Well + High-Level Merge Particle Overlay */}
               <div className="relative w-full">
