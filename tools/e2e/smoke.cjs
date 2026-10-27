@@ -3,7 +3,8 @@
 const { chromium, devices } = require('playwright');
 (async () => {
   const base = process.argv[2] || 'http://localhost:4173/';
-  const b = await chromium.launch();
+  const executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH;
+  const b = await chromium.launch(executablePath ? { executablePath } : {});
   const ctx = await b.newContext({ ...devices['iPhone 13'] });
   const pg = await ctx.newPage();
   const errs = []; pg.on('pageerror', e => errs.push('pageerror: ' + e.message)); pg.on('console', m => m.type() === 'error' && errs.push('console: ' + m.text()));
@@ -76,4 +77,5 @@ const { chromium, devices } = require('playwright');
   await step('fasih kids page', async () => { const p2 = await ctx.newPage(); p2.on('pageerror', e => errs.push('fasih: ' + e.message)); await p2.goto(base + 'fasih.html'); await p2.waitForTimeout(1200); const n = await p2.locator('button').count(); if (n < 1) throw new Error('no buttons'); await p2.locator('button').first().tap(); await p2.waitForTimeout(500); await p2.close(); });
   console.log(log.join('\n')); console.log('errors', errs.length ? errs : '[]');
   await b.close();
-})();
+  if (errs.length || log.some(entry => entry.startsWith('FAIL '))) process.exitCode = 1;
+})().catch(error => { console.error(error); process.exitCode = 1; });
