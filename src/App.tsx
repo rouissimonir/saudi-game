@@ -867,11 +867,11 @@ export default function App() {
       );
     } else {
       soundFX.playError();
-      showFeedback(
-        isAr
-          ? 'خزانة المؤونة ممتلئة (4/4) أو لا يمكن تخزين المولّدات.'
-          : 'Sadu Pantry is full (4/4) or generators cannot be stored.'
-      );
+      showFeedback(res.reason === 'INVENTORY_FULL'
+        ? (isAr ? `خزانة المؤونة ممتلئة (${gameState.inventory.length}/${gameState.inventoryCapacity}).` : `Sadu Pantry is full (${gameState.inventory.length}/${gameState.inventoryCapacity}).`)
+        : res.reason === 'CANNOT_STORE_GENERATOR'
+          ? (isAr ? 'لا يمكن تخزين هذا العنصر في المؤونة.' : 'This item cannot be stored in the pantry.')
+          : (isAr ? 'تعذّر تخزين العنصر. اختر عنصراً متاحاً وحاول مرة أخرى.' : 'Could not store this item. Select an available item and try again.'));
     }
   };
 
@@ -1896,7 +1896,7 @@ export default function App() {
               {/* Right: 4-Slot Sadu Pantry Storage Tray */}
               <div className="flex items-center gap-1.5 pt-2 sm:pt-0 sm:ps-3 border-t sm:border-t-0 sm:border-s border-[#E2CFAF] shrink-0">
                 <span
-                  title={isAr ? 'خزانة المؤونة (4 خانات)' : 'Sadu Pantry Storage (4 Slots)'}
+                  title={isAr ? `خزانة المؤونة (${gameState.inventoryCapacity} خانات)` : `Sadu Pantry Storage (${gameState.inventoryCapacity} slots)`}
                   className="w-8 h-8 rounded-xl bg-[#5C3A21] text-[#FDE68A] flex items-center justify-center shrink-0"
                 >
                   <Package className="w-4 h-4" />
