@@ -1,0 +1,41 @@
+name: iOS simulator build
+
+'on':
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/ios-simulator.yml'
+      - 'ios/**'
+      - 'capacitor.config.json'
+      - 'package.json'
+      - 'package-lock.json'
+
+permissions:
+  contents: read
+
+jobs:
+  simulator-build:
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Check and build web app
+        run: |
+          npm run lint
+          npm test
+          npm run build
+      - name: Sync and audit the iOS bundle
+        run: |
+          npx cap sync ios
+          npm run check:ios-assets
+      - name: Compile for iOS simulator
+        run: |
+          xcodebuild -version
+          xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build
