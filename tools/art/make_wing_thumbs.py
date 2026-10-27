@@ -9,6 +9,9 @@ src/game/rules.ts). Re-run after repainting a stage:
     python3 tools/art/make_wing_thumbs.py
 
 Writes public/assets/art/majlis/wings/<area>_<wing>_ruin.webp and _done.webp (480x210).
+
+A wing with its own painting wins over the crop: put `<area>_<wing>_ruin.png` / `_done.png` in
+tools/art/background_inbox/majlis/wings/ (docs/ART_BATCH_7.md) and they are resized to fit instead.
 """
 import os
 
@@ -16,6 +19,7 @@ from PIL import Image
 
 STAGES = os.path.join(os.path.dirname(__file__), '..', '..', 'public', 'assets', 'art', 'majlis')
 OUT = os.path.join(STAGES, 'wings')
+PAINTED = os.path.join(os.path.dirname(__file__), 'background_inbox', 'majlis', 'wings')
 
 # (x, y) centre of each wing, left to right as listed in the area's wing order
 RECTS = {
@@ -43,6 +47,20 @@ def crop(img, cx, cy):
     return img.crop((x0, y0, x0 + cw, y0 + ch)).resize(SIZE, Image.LANCZOS)
 
 
+def fit(img):
+    """Centre-crop a painted wing picture to 16:7 and resize."""
+    w, h = img.size
+    want_h = int(w * SIZE[1] / SIZE[0])
+    if want_h <= h:
+        top = (h - want_h) // 2
+        img = img.crop((0, top, w, top + want_h))
+    else:
+        want_w = int(h * SIZE[0] / SIZE[1])
+        left = (w - want_w) // 2
+        img = img.crop((left, 0, left + want_w, h))
+    return img.resize(SIZE, Image.LANCZOS)
+
+
 def main():
     os.makedirs(OUT, exist_ok=True)
     total = count = 0
@@ -51,7 +69,8 @@ def main():
             img = Image.open(os.path.join(STAGES, f'{area}_{stage}.webp')).convert('RGB')
             for i, (cx, cy) in enumerate(centres):
                 path = os.path.join(OUT, f'{area}_{i}_{state}.webp')
-                crop(img, cx, cy).save(path, 'WEBP', quality=72, method=6)
+                painted = os.path.join(PAINTED, f'{area}_{i}_{state}.png')
+                (fit(Image.open(painted).convert('RGB')) if os.path.exists(painted) else crop(img, cx, cy)).save(path, 'WEBP', quality=72, method=6)
                 total += os.path.getsize(path)
                 count += 1
     print(f'{count} thumbnails, {total // 1024} KB')
