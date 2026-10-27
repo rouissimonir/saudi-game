@@ -12,6 +12,7 @@ interface BoardCellProps {
   isTutorialTarget: boolean;
   isMergeTarget: boolean;
   isOrderNeeded: boolean;
+  isRecipeNeeded: boolean;
   isDragSource: boolean;
   isDragOver: boolean;
   onPointerDown: (e: React.PointerEvent<HTMLButtonElement>, index: number) => void;
@@ -31,6 +32,7 @@ export const BoardCell = memo(function BoardCell({
   isTutorialTarget,
   isMergeTarget,
   isOrderNeeded,
+  isRecipeNeeded,
   isDragSource,
   isDragOver,
   onPointerDown,
@@ -58,8 +60,9 @@ export const BoardCell = memo(function BoardCell({
   return (
     <button
       type="button"
-      aria-label={`${accessibleLabel}${isFocused ? (isAr ? '، مفيد للمهمة المختارة' : ', useful for the focused goal') : ''}${isTutorialTarget ? (isAr ? '، مقترح للدمج الأول' : ', suggested for your first merge') : ''}`}
+      aria-label={`${accessibleLabel}${isFocused ? (isAr ? '، مفيد للمهمة المختارة' : ', useful for the focused goal') : ''}${isTutorialTarget ? (isAr ? '، مقترح للدمج الأول' : ', suggested for your first merge') : ''}${isRecipeNeeded ? (isAr ? '، جاهز للوصفة المختارة' : ', ready for the focused recipe') : ''}`}
       data-cell-index={cell.index}
+      data-recipe-needed={isRecipeNeeded || undefined}
       onPointerDown={(e) => onPointerDown(e, cell.index)}
       onClick={() => onSelect(cell.index)}
       className={`relative min-w-0 aspect-square rounded-xl flex flex-col items-center justify-center transition-transform cursor-pointer select-none ${!cell.itemId || cell.sandLocked ? 'touch-pan-y' : 'touch-none'} ${tileSurfaceClass} ${
@@ -103,6 +106,12 @@ export const BoardCell = memo(function BoardCell({
               title={isAr ? 'مطلوب لطلب ضيف' : 'Needed for Order'}
               className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#10B981] border border-white text-white flex items-center justify-center shadow"
             >
+              <Check className="w-2.5 h-2.5 stroke-[3.5]" />
+            </span>
+          )}
+
+          {isRecipeNeeded && (
+            <span aria-hidden="true" title={isAr ? 'جاهز للوصفة المختارة' : 'Ready for the focused recipe'} className="absolute -top-1 -left-1 w-4 h-4 rounded-full bg-[#B45309] border border-white text-white flex items-center justify-center shadow">
               <Check className="w-2.5 h-2.5 stroke-[3.5]" />
             </span>
           )}

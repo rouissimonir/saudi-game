@@ -1150,6 +1150,7 @@ export default function App() {
   const guideOrder = gameState.activeOrders.find(order => order.id === guideOrderId);
   const tastingNeeds = tastingFocus ? ingredientNeeds(tastingFocus.items, gameState.board, gameState.inventory) : [];
   const tastingReadyCount = tastingNeeds.filter(need => need.location === 'board').length;
+  const tastingReadyCells = new Set(tastingNeeds.flatMap(need => need.boardIndex === undefined ? [] : [need.boardIndex]));
   const tastingReady = tastingFocus !== null && tastingReadyCount === tastingFocus.items.length;
   const tastingStep = tastingNextStep(gameState.storyFlags ?? {});
   const tastingStepText = { 'first-tray': isAr ? 'جهّز الصينية الأولى' : 'Prepare the first tray', 'second-tray': isAr ? 'جهّز الصينية الثانية' : 'Prepare the second tray', corner: isAr ? 'اختر شكل ركن القهوة' : 'Choose the coffee corner', welcome: isAr ? 'اللمّة جاهزة · استقبل الضيوف' : 'The gathering is ready · welcome your guests', memory: isAr ? 'ذكرى جلسة فيصل ✓' : "Faisal's tasting memory ✓" }[tastingStep];
@@ -1779,6 +1780,7 @@ export default function App() {
                         selectedCell && selectedCell.index !== cell.index && !selectedCell.sandLocked && canMergeItems(selectedCell.itemId, cell.itemId)
                       )}
                       isOrderNeeded={!cell.sandLocked && cell.itemId !== null && orderItemIds.has(cell.itemId)}
+                      isRecipeNeeded={tastingReadyCells.has(cell.index)}
                       isDragSource={dragGhost?.from === cell.index}
                       isDragOver={Boolean(dragGhost && dragGhost.over === cell.index && dragGhost.from !== cell.index)}
                       onPointerDown={onCellPointerDown}

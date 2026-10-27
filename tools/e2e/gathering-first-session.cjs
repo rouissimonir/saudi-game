@@ -22,6 +22,13 @@ const { chromium } = require('playwright');
     if (!(await welcome.innerText()).includes('تم استقبال')) throw new Error('Guest welcome is missing after the gift');
     if (!(await welcome.locator('img, svg').count())) throw new Error('Guest portrait missing');
 
+    // Focus the specialty-coffee tray and identify the already available ingredient.
+    await page.getByTestId('open-tasting').click();
+    await page.getByTestId('tasting-choice-modern').locator('..').getByRole('button', { name: 'أرني على اللوحة' }).click();
+    const readyCoffee = cell(24);
+    if (await readyCoffee.getAttribute('data-recipe-needed') !== 'true') throw new Error('Ready recipe ingredient not marked');
+    if (!(await readyCoffee.getAttribute('aria-label')).includes('جاهز للوصفة المختارة')) throw new Error('Ready recipe ingredient not described');
+
     // Make sweets for the specialty-coffee tray. A lucky generator drop may already be level 2.
     for (let attempt = 0; attempt < 8; attempt++) {
       const state = await save();
@@ -41,6 +48,7 @@ const { chromium } = require('playwright');
     const first = page.getByTestId('tasting-tray-0');
     await first.getByRole('button', { name: 'جهّز', exact: true }).nth(1).click();
     await page.getByRole('dialog').getByRole('button', { name: 'إغلاق' }).click();
+    if (await page.locator('[data-recipe-needed=true]').count()) throw new Error('Completed recipe still marked on board');
 
     // Merge the two starter coffee pieces for the coffee-and-oud tray.
     let state = await save();
