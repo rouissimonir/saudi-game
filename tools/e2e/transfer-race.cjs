@@ -30,6 +30,10 @@ const { chromium } = require('playwright');
     const code = await page.getByTestId('transfer-code').inputValue();
     await page.getByRole('button', { name: 'نسخ', exact: true }).click();
     await page.getByTestId('transfer-copy-help').waitFor();
+    for (const id of ['transfer-code', 'transfer-input']) {
+      const selectable = await page.getByTestId(id).evaluate(element => getComputedStyle(element).userSelect);
+      if (selectable !== 'text') throw new Error(`${id} cannot be manually selected: ${selectable}`);
+    }
     if (await page.getByRole('button', { name: 'تم النسخ', exact: true }).count()) throw new Error('Failed copy reported success');
     await page.getByTestId('transfer-input').fill(code);
     await page.evaluate(() => { window.delayTransfer = true; });

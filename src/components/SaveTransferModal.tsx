@@ -73,7 +73,7 @@ export const SaveTransferModal: React.FC<{
           {allowExport && <section className="rounded-2xl border-2 border-[#E7D3AE] bg-white p-3 space-y-2">
             <p className="text-sm font-extrabold">{isAr ? '١. من هذا الجهاز' : '1. From this device'}</p>
             <p className="text-xs text-[#78350F]/80">{isAr ? 'انسخ الرمز وأرسله لنفسك، ثم الصقه في الجهاز الجديد.' : 'Copy the code, send it to yourself, then paste it on the new device.'}</p>
-            <textarea readOnly value={code} rows={3} data-testid="transfer-code" aria-label={isAr ? 'رمز نقل التقدم' : 'Progress transfer code'} className="w-full rounded-xl border border-[#E7D3AE] bg-[#FFFBF2] p-2 text-[10px] font-mono break-all" onFocus={(e) => e.currentTarget.select()} />
+            <textarea readOnly value={code} rows={3} data-testid="transfer-code" aria-label={isAr ? 'رمز نقل التقدم' : 'Progress transfer code'} className="select-text w-full rounded-xl border border-[#E7D3AE] bg-[#FFFBF2] p-2 text-[10px] font-mono break-all" onFocus={(e) => e.currentTarget.select()} />
             {copyFailed && <p role="status" data-testid="transfer-copy-help" className="text-xs font-bold text-[#92400E]">{isAr ? 'تعذّر النسخ تلقائياً. اضغط مطولاً على الرمز أعلاه ثم اختر نسخ.' : 'Could not copy automatically. Touch and hold the code above, then choose Copy.'}</p>}
             {exportError && <p className="text-xs font-bold text-[#B91C1C]">{isAr ? 'تعذّر إنشاء الرمز. أغلق النافذة وحاول مجدداً.' : 'Could not create the code. Close this window and try again.'}</p>}
             <div className="flex gap-2">
@@ -104,7 +104,7 @@ export const SaveTransferModal: React.FC<{
               rows={3}
               data-testid="transfer-input"
               placeholder={isAr ? 'الصق الرمز هنا (يبدأ بـ QM1.)' : 'Paste the code here (starts with QM1.)'}
-              className="w-full rounded-xl border border-[#E7D3AE] bg-[#FFFBF2] p-2 text-[10px] font-mono break-all"
+              className="select-text w-full rounded-xl border border-[#E7D3AE] bg-[#FFFBF2] p-2 text-[10px] font-mono break-all"
             />
             {error && <p className="text-xs font-bold text-[#B91C1C]">{isAr ? 'الرمز غير صالح أو ناقص.' : 'That code is not valid or is incomplete.'}</p>}
             {pending ? (
