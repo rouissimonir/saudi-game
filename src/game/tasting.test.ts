@@ -66,3 +66,17 @@ test('hospitality focus survives saves and ignores completed or invalid recipes'
   assert.equal(hospitalityFocus(normalizeSave(JSON.parse(JSON.stringify(later)))!)?.nameEn, 'Rose scent and dates');
   assert.equal(hospitalityFocus({ ...later, storyFlags: { ...later.storyFlags, taif_welcome: 'dates' } }), null);
 });
+
+test('preparing a different tray preserves the focused hospitality recipe', async () => {
+  const { hospitalityFocus, setHospitalityFocus } = await import('./hospitalityFocus');
+  let state = createInitialGameState();
+  state.board = state.board.map((cell, index) => ({ ...cell, itemId: index === 0 ? 'qahwa_2' : index === 1 ? 'sweets_2' : null, sandLocked: false }));
+  state = setHospitalityFocus(state, { kind: 'tasting', items: ['barista_2', 'sweets_1'], nameAr: '', nameEn: '' });
+  const prepared = prepareTastingTray(state, 0, 0);
+  assert.equal(prepared.storyFlags.tasting_tray_0, 'traditional');
+  assert.equal(hospitalityFocus(prepared)?.nameEn, 'Coffee and fresh dates');
+  const loaded = normalizeSave(JSON.parse(JSON.stringify(prepared)))!;
+  assert.equal(hospitalityFocus(loaded)?.nameEn, 'Coffee and fresh dates');
+  const withItems = { ...loaded, board: loaded.board.map((cell, i) => i === 0 ? { ...cell, itemId: 'barista_2' } : i === 1 ? { ...cell, itemId: 'sweets_1' } : cell) };
+  assert.equal(hospitalityFocus(prepareTastingTray(withItems, 1, 0)), null);
+});
