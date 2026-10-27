@@ -29,6 +29,15 @@ const { chromium } = require('playwright');
     const readyCoffee = cell(24);
     if (await readyCoffee.getAttribute('data-recipe-needed') !== 'true') throw new Error('Ready recipe ingredient not marked');
     if (!(await readyCoffee.getAttribute('aria-label')).includes('جاهز للوصفة المختارة')) throw new Error('Ready recipe ingredient not described');
+    // A stored ingredient is not lost: the recipe prompt points to the pantry.
+    await readyCoffee.click();
+    await page.getByRole('button', { name: 'تخزين', exact: true }).click();
+    await page.getByTestId('recipe-progress-hint').getByText('في المؤونة:', { exact: false }).waitFor();
+    await page.getByTestId('open-tasting').click();
+    await page.getByTestId('tasting-choice-modern').locator('..').getByTestId('return-pantry-item').click();
+    await page.getByRole('dialog').getByRole('button', { name: 'إغلاق' }).click();
+    if ((await page.getByTestId('recipe-progress-hint').innerText()).includes('في المؤونة')) throw new Error('Pantry prompt did not clear after retrieval');
+
 
     // Make sweets for the specialty-coffee tray. A lucky generator drop may already be level 2.
     for (let attempt = 0; attempt < 8; attempt++) {
