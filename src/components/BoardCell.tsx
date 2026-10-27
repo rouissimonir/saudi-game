@@ -62,7 +62,7 @@ export const BoardCell = memo(function BoardCell({
       data-cell-index={cell.index}
       onPointerDown={(e) => onPointerDown(e, cell.index)}
       onClick={() => onSelect(cell.index)}
-      className={`relative min-w-0 aspect-square rounded-xl flex flex-col items-center justify-center transition-transform cursor-pointer select-none touch-none ${tileSurfaceClass} ${
+      className={`relative min-w-0 aspect-square rounded-xl flex flex-col items-center justify-center transition-transform cursor-pointer select-none ${!cell.itemId || cell.sandLocked ? 'touch-pan-y' : 'touch-none'} ${tileSurfaceClass} ${
         isDragSource ? 'opacity-40' : ''
       } ${
         isDragOver ? 'ring-3 ring-[#FDE047] scale-[1.06] z-10' : ''
