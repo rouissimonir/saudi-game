@@ -78,7 +78,7 @@ export const EnergyModal: React.FC<{
       <button type="button" data-testid="buy-energy-coins" onClick={onBuyWithCoins} disabled={state.coins < coinPrice} className="w-full rounded-2xl btn-3d-amber text-[#3B2410] font-extrabold py-3 flex items-center justify-center gap-2 disabled:opacity-40">
         +{ENERGY_COIN_PACK.energy} <Zap className="w-4 h-4 fill-current" /> · {coinPrice} <Coins className="w-4 h-4" />
       </button>
-      <p className="text-[11px] text-center text-[#78350F]/70">
+      <p className="text-[11px] text-center text-[#78350F]/85">
         {isAr ? `يرتفع السعر حتى ${maxCoinPrice}، ثم يعود إلى ${ENERGY_COIN_PACK.coins} في اليوم التالي.` : `The coin price rises to a maximum of ${maxCoinPrice.toLocaleString('en-US')}, then resets to ${ENERGY_COIN_PACK.coins} the next day.`}
       </p>
       <button type="button" onClick={onOpenShop} className="w-full text-sm font-bold text-[#047857] underline">
@@ -148,7 +148,7 @@ export const QuestsModal: React.FC<{
         </button>
       </div>
       {allClaimed && !bonusDone && findNearestEmptyCell(state.board, 24) === null && <p className="text-xs text-[#78350F]">{isAr ? 'اللوحة ممتلئة؛ سيُفتح الصندوق فوراً وتُضاف كل محتوياته.' : 'The board is full; the chest will open immediately and all its contents will be added.'}</p>}
-      <p className="text-[11px] text-center text-[#78350F]/70">{isAr ? 'مهام جديدة كل يوم، ومكافآتك المكتسبة محفوظة.' : 'New quests every day; earned rewards are kept.'}</p>
+      <p className="text-[11px] text-center text-[#78350F]/85">{isAr ? 'مهام جديدة كل يوم، ومكافآتك المكتسبة محفوظة.' : 'New quests every day; earned rewards are kept.'}</p>
     </Sheet>
   );
 };

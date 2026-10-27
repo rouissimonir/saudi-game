@@ -89,7 +89,7 @@ export const DailyLoginModal: React.FC<DailyLoginModalProps> = ({ lang, day, boa
             type="button"
             onClick={onClaim}
             data-testid="daily-login-claim"
-            className="mt-4 w-full rounded-xl bg-[#D97724] hover:bg-[#EA8A35] text-white font-extrabold py-3 transition-colors"
+            className="mt-4 w-full rounded-xl bg-[#B45309] hover:bg-[#A94E08] text-white font-extrabold py-3 transition-colors"
           >
             {isAr ? 'استلم هديتي' : 'Claim reward'}
           </button>

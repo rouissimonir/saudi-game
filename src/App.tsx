@@ -1436,6 +1436,7 @@ export default function App() {
 
       {/* 2. MAIN CENTERED STAGE (Clean, Uncluttered Gossip Harbor / Travel Town Layout) */}
       <main className="game-main flex-1 max-w-4xl w-full mx-auto px-2 sm:px-5 pt-1.5 pb-[calc(6rem+env(safe-area-inset-bottom))] flex flex-col gap-1.5">
+        <h1 className="sr-only">{workspace === 'majlis' ? (isAr ? 'مجلسك' : 'Your Majlis') : isAr ? 'طاولة الدمج' : 'Merge board'}</h1>
         {tastingOpen && <CoffeeTasting onRetrieve={handleRetrieveFromPantry} lang={lang} state={gameState} onChange={setGameState} onClose={() => setTastingOpen(false)} onMajlis={() => { setTastingOpen(false); setWorkspace('majlis'); }} onWelcome={() => soundFX.playOrderComplete()} onFocusRecipe={(items, nameAr, nameEn) => { setTastingFocus({ kind: 'tasting', items, nameAr, nameEn }); setFocusedOrderId(null); setTastingOpen(false); }} />}
         {taifWelcomeOpen && <TaifWelcome onRetrieve={handleRetrieveFromPantry} lang={lang} state={gameState} onChange={setGameState} onClose={() => setTaifWelcomeOpen(false)} onFocus={(items, nameAr, nameEn) => { setTastingFocus({ kind: 'taif', items, nameAr, nameEn }); setFocusedOrderId(null); setTaifWelcomeOpen(false); setWorkspace('merge'); }} />}
         {rememberedGuest && tastingGuestMemory(gameState.storyFlags, rememberedGuest.guest) && <GuestMemoryModal lang={lang} memory={tastingGuestMemory(gameState.storyFlags, rememberedGuest.guest)!} reward={rememberedGuest} onClose={() => setRememberedGuest(null)} />}
@@ -1586,11 +1587,11 @@ export default function App() {
                   >
                     {/* Character Bust (VIP ribbon on its lower edge, clear of the name) + Name + Coin/Star Reward */}
                     <div className="flex items-center gap-1">
-                      <button type="button" onClick={() => setGuideOrderId(order.id)} aria-label={isAr ? `دليل طلب ${order.customerNameAr}` : `Order guide for ${order.customerNameEn}`} className="relative flex min-h-11 min-w-11 items-center justify-center shrink-0 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#92400E]">
+                      <button type="button" onClick={() => setGuideOrderId(order.id)} aria-label={isAr ? `دليل طلب ${order.customerNameAr}${order.isVip ? ' VIP' : ''}` : `Order guide for ${order.customerNameEn}${order.isVip ? ' VIP' : ''}`} className="relative flex min-h-11 min-w-11 items-center justify-center shrink-0 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#92400E]">
                         <CustomerPortrait avatarKey={order.customerId} size="sm" />
-                        <span aria-hidden="true" className="absolute top-0 right-0 rounded-full bg-[#78350F] text-white w-3.5 h-3.5 text-[10px] leading-[14px] font-black text-center">i</span>
+                        <span aria-hidden="true" className="absolute top-0 right-0 rounded-full bg-[#78350F] text-white w-3.5 h-3.5 flex items-center justify-center"><Info className="w-2.5 h-2.5" strokeWidth={3} /></span>
                         {order.isVip && (
-                          <span data-testid="vip-ribbon" className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-1 rounded-full bg-gradient-to-r from-[#D97706] to-[#B45309] text-white text-[8px] leading-[12px] font-black shadow">
+                          <span data-testid="vip-ribbon" className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-1 rounded-full bg-gradient-to-r from-[#B45309] to-[#92400E] text-white text-[8px] leading-[12px] font-black shadow">
                             VIP
                           </span>
                         )}
@@ -1654,7 +1655,7 @@ export default function App() {
                         className={`min-h-11 min-w-11 px-1.5 py-1 rounded-lg text-[10px] font-black transition-all cursor-pointer whitespace-nowrap text-center shrink-0 ${
                           isReady
                             ? 'btn-3d-green text-white'
-                            : 'bg-[#E6D5B8] text-[#785A3C] hover:bg-[#DBC6A4]'
+                            : 'bg-[#E6D5B8] text-[#6B4F33] hover:bg-[#DBC6A4]'
                         }`}
                       >
                         {isReady
@@ -1739,7 +1740,7 @@ export default function App() {
                   <button
                     type="button"
                     onClick={handleCyclePowerBoost}
-                    aria-label={isAr ? 'تغيير مضاعف الطاقة' : 'Toggle Power Boost Multiplier'}
+                    aria-label={`${isAr ? 'تغيير مضاعف الطاقة' : 'Toggle Power Boost Multiplier'} ×${gameState.powerMultiplier}`}
                     className={`px-2.5 py-1 rounded-xl text-xs font-black tabular-nums inline-flex items-center gap-1 transition-all cursor-pointer shadow-sm ${
                       gameState.powerMultiplier === 4
                         ? 'bg-[#DC2626] text-white border border-[#991B1B]'
@@ -2157,7 +2158,7 @@ export default function App() {
                 <span className="text-[10px] font-bold text-[#785A3C] block">
                   {isAr ? 'الإعمار' : 'ESTATE'}
                 </span>
-                <span className="text-lg tabular-nums font-black text-[#059669]">
+                <span className="text-lg tabular-nums font-black text-[#047857]">
                   {totalRenovated}/8
                 </span>
               </div>

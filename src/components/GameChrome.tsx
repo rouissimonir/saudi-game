@@ -58,11 +58,12 @@ export const GameHud: React.FC<{
           <div className="absolute inset-[5px] rounded-full bg-gradient-to-b from-[#38BDF8] to-[#0284C7] flex items-center justify-center text-white text-sm font-black tabular-nums">{p.level}</div>
         </div>
 
-        <button type="button" onClick={p.onEnergy} data-testid="hud-energy" aria-label={isAr ? 'الطاقة' : 'Energy'} className="hud-pill rounded-full flex-1 min-w-0 h-10 pl-1 pr-2 flex items-center gap-1">
+        <button type="button" onClick={p.onEnergy} data-testid="hud-energy" className="hud-pill rounded-full flex-1 min-w-0 h-10 pl-1 pr-2 flex items-center gap-1">
           <span className="w-6 h-6 min-[360px]:w-7 min-[360px]:h-7 rounded-full bg-gradient-to-b from-[#FDE047] to-[#F59E0B] border border-[#B45309] flex items-center justify-center shrink-0">
             <Zap className="w-4 h-4 text-[#78350F] fill-[#78350F]" />
           </span>
           <span className="flex flex-col leading-none min-w-0">
+            <span className="sr-only">{isAr ? 'الطاقة' : 'Energy'}</span>
             <span className="text-sm font-black tabular-nums text-[#3E2723]">{Math.round(p.energy)}</span>
             <span className="text-[9px] font-bold tabular-nums text-[#92400E] truncate">
               {energyCountdownMs === null ? (isAr ? 'ممتلئة' : 'full') : formatCountdown(energyCountdownMs)}
@@ -70,17 +71,19 @@ export const GameHud: React.FC<{
           </span>
         </button>
 
-        <button type="button" onClick={p.onCoins} aria-label={isAr ? 'الريالات' : 'Coins'} className="hud-pill rounded-full flex-1 min-w-0 h-10 pl-1 pr-2 flex items-center gap-1">
+        <button type="button" onClick={p.onCoins} className="hud-pill rounded-full flex-1 min-w-0 h-10 pl-1 pr-2 flex items-center gap-1">
           <span className="w-6 h-6 min-[360px]:w-7 min-[360px]:h-7 rounded-full bg-gradient-to-b from-[#FBBF24] to-[#D97706] border border-[#92400E] flex items-center justify-center shrink-0">
             <Coins className="w-4 h-4 text-[#FFFBEB]" />
           </span>
+          <span className="sr-only">{isAr ? 'الريالات' : 'Coins'}</span>
           <span className="text-sm font-black tabular-nums text-[#3E2723] truncate">{compact(p.coins)}</span>
         </button>
 
-        <button type="button" onClick={p.onGems} aria-label={isAr ? 'الجواهر' : 'Gems'} className="hud-pill rounded-full flex-1 min-w-0 h-10 pl-1 pr-2 flex items-center gap-1">
+        <button type="button" onClick={p.onGems} className="hud-pill rounded-full flex-1 min-w-0 h-10 pl-1 pr-2 flex items-center gap-1">
           <span className="w-6 h-6 min-[360px]:w-7 min-[360px]:h-7 rounded-full bg-gradient-to-b from-[#38BDF8] to-[#0284C7] border border-[#0369A1] flex items-center justify-center shrink-0">
             <Gem className="w-4 h-4 text-white" />
           </span>
+          <span className="sr-only">{isAr ? 'الجواهر' : 'Gems'}</span>
           <span className="text-sm font-black tabular-nums text-[#3E2723] truncate">{compact(p.gems)}</span>
         </button>
 

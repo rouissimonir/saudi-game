@@ -48,7 +48,7 @@ export const ShopAndMadaModal: React.FC<ShopAndMadaModalProps> = ({
 
   const tabClass = (on: boolean) =>
     `flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2 text-sm font-extrabold transition-colors ${
-      on ? 'bg-[#D97706] text-white shadow' : 'text-[#92400E] hover:bg-[#FEF3C7]'
+      on ? 'bg-[#B45309] text-white shadow' : 'text-[#92400E] hover:bg-[#FEF3C7]'
     }`;
 
   return (

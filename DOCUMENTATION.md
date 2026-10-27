@@ -231,6 +231,10 @@ The engine lives in `src/game/progression.ts` (pure, seeded RNG in `state.rngSee
 
 On phones the splash shown in `index.html` while the game code loads, and the title screen while its full-size key art loads, sit on a tiny blurred copy of the title painting (about 0.5 KB as a data URI, `src/utils/titlePlaceholder.ts`). Loading therefore looks like the title that follows, and the full art sharpens in over it. `python3 tools/art/make_title_placeholder.py` regenerates both copies after the key art changes. Measured on a fast-3G, 4x slower CPU profile it moves first paint by about +50 ms (1.34 to 1.39 s) with the title ready at the same time. Desktop is unchanged.
 
+### Accessibility
+
+`node tools/e2e/a11y.cjs en,ar http://localhost:4173/` (after `npm install --no-save axe-core`) audits the main screens in both languages against WCAG 2.0/2.1/2.2 A and AA. The current build passes on all 18 screen states. Fixed in the last pass: white text on the brand orange was 3.2:1, now 5.0:1 (`#B45309`); faded text on dark and cream surfaces; pinch-zoom is allowed again (the viewport no longer locks the scale, and `touch-action: manipulation` only stops double-tap zoom); a hidden page heading per screen; keyboard access to scrollable lists; and the spoken names of the energy, coin and gem buttons, the boost toggle and VIP guests now include the number or label shown on them (voice-control users say what they see). This does not replace VoiceOver, Switch Control and Voice Control testing on a device, which `codex-plan.md` lists as outstanding.
+
 ### App Store screenshots
 
 `store/screenshots/<en|ar>/` holds the five 1290x2796 store screenshots per language, captured from the real game and framed with captions by `tools/store/capture.cjs` and `tools/store/compose.cjs`. See `store/README.md` for the list, how to regenerate them, and the note that the Arabic captions need native review.
