@@ -42,7 +42,9 @@ const { chromium } = require('playwright');
     await page.getByRole('button', { name: 'تخزين', exact: true }).click();
     await page.getByTestId('recipe-progress-hint').getByText('في المؤونة:', { exact: false }).waitFor();
     await page.getByTestId('open-tasting').click();
-    await page.getByTestId('tasting-choice-modern').locator('..').getByTestId('return-pantry-item').click();
+    const returnItem = page.getByTestId('tasting-choice-modern').locator('..').getByTestId('return-pantry-item');
+    if (!(await returnItem.getAttribute('aria-label')).startsWith('أعده للوحة:')) throw new Error('Pantry action name does not include its visible label');
+    await returnItem.click();
     await page.getByRole('dialog').getByRole('button', { name: 'إغلاق' }).click();
     if ((await page.getByTestId('recipe-progress-hint').innerText()).includes('في المؤونة')) throw new Error('Pantry prompt did not clear after retrieval');
 
