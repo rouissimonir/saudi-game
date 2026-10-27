@@ -80,3 +80,14 @@ test('preparing a different tray preserves the focused hospitality recipe', asyn
   const withItems = { ...loaded, board: loaded.board.map((cell, i) => i === 0 ? { ...cell, itemId: 'barista_2' } : i === 1 ? { ...cell, itemId: 'sweets_1' } : cell) };
   assert.equal(hospitalityFocus(prepareTastingTray(withItems, 1, 0)), null);
 });
+
+test('gathering next step follows saved progress even if trays are prepared out of order', async () => {
+  const { tastingNextStep } = await import('./tasting');
+  assert.equal(tastingNextStep({}), 'first-tray');
+  assert.equal(tastingNextStep({ tasting_tray_1: 'sweet' }), 'first-tray');
+  assert.equal(tastingNextStep({ tasting_tray_0: 'modern' }), 'second-tray');
+  const trays = { tasting_tray_0: 'modern', tasting_tray_1: 'sweet' };
+  assert.equal(tastingNextStep(trays), 'corner');
+  assert.equal(tastingNextStep({ ...trays, tasting_style: 'green' }), 'welcome');
+  assert.equal(tastingNextStep({ ...trays, tasting_style: 'green', tasting_complete: 'yes' }), 'memory');
+});

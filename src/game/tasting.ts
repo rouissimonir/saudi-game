@@ -20,6 +20,16 @@ export const TASTING_STYLES = [
 
 export const TASTING_REWARD = { coins: 150, gems: 5 } as const;
 
+/** Tell returning players which part of the gathering remains, regardless of tray order. */
+export function tastingNextStep(flags: Record<string, string>): 'first-tray' | 'second-tray' | 'corner' | 'welcome' | 'memory' {
+  if (flags.tasting_complete) return 'memory';
+  if (!flags.tasting_tray_0) return 'first-tray';
+  if (!flags.tasting_tray_1) return 'second-tray';
+  if (!flags.tasting_style) return 'corner';
+  return 'welcome';
+}
+
+
 /** The gathering can be revisited without changing the save or granting another reward. */
 export function gatheringReaction(flags: Record<string, string>, guest: 'faisal' | 'noura'): { ar: string; en: string } | null {
   if (!flags.tasting_complete) return null;
