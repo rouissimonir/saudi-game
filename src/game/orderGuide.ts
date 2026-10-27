@@ -23,7 +23,7 @@ export function ingredientInstruction(need: OrderNeed, lang: Language, powerMult
     const reminder = keep ? (ar ? ` تحتاج الوصفة أيضًا إلى ${keep}؛ احتفظ بها للتحضير.` : ` Also needed for this recipe: ${keep}. Keep them for the preparation.`) : '';
     const directBoost = index === 1 && powerMultiplier >= 2 ? 2 : index === 2 && powerMultiplier >= 4 ? 4 : null;
     const direct = directBoost && generator
-      ? (ar ? ` أو اضبط المضاعف على ×${directBoost} وانقر على ${generator.nameAr}؛ المستوى الأساسي يطابق المطلوب عند توفر الطاقة، وقد تحصل على مستوى أعلى.` : ` Or set the boost to ×${directBoost} and tap ${generator.nameEn}; its base drop matches when enough energy is available, and a lucky drop can be higher.`)
+      ? (ar ? ` أو اضبط المضاعف على ×${directBoost} وانقر على ${generator.nameAr}؛ يستهلك ${directBoost} طاقة للنقرة عند توفرها، ويطابق المستوى الأساسي المطلوب، وقد تحصل على مستوى أعلى.` : ` Or set the boost to ×${directBoost} and tap ${generator.nameEn}; it costs ${directBoost} energy per tap when available, its base drop matches, and a lucky drop can be higher.`)
       : '';
     return (ar ? `ادمج قطعتين من ${previous.nameAr} للحصول عليه.` : `Merge two ${previous.nameEn} to make this.`) + direct + reminder;
   }
