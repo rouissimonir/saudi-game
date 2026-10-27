@@ -72,6 +72,7 @@ import type { Scene } from './story/types';
 import type { StoryLogEntry } from './components/story/StoryLog';
 import { MergeParticleOverlay } from './components/MergeParticleOverlay';
 import { EnergyModal, QuestsModal, WorkshopModal } from './components/ProgressionModals';
+import { bannerKey } from './game/majlisStages';
 import { BottomNav, GameHud, NavTab } from './components/GameChrome';
 import { DailyLoginModal } from './components/DailyLoginModal';
 import { ItemArtwork, preloadItemArt } from './components/ItemArtwork';
@@ -349,6 +350,18 @@ export default function App() {
     preloadItemArt();
     prefetchScreens();
   }, []);
+
+  // Fetch the Majlis banner for the current area, progress and mood while the board is idle, so opening that tab is instant.
+  const majlisBanner = bannerKey(areaInfo(gameState.areaIndex).id, gameState.renovationZones, gameState.ambiance);
+  useEffect(() => {
+    if (shellState !== 'playing' || !majlisBanner) return;
+    const t = window.setTimeout(() => {
+      const img = new Image();
+      (img as HTMLImageElement & { fetchPriority?: string }).fetchPriority = 'low';
+      img.src = assetUrl(`assets/art/majlis/${majlisBanner}.webp`);
+    }, 2500);
+    return () => window.clearTimeout(t);
+  }, [shellState, majlisBanner]);
 
   // Offer the daily login reward once per calendar day when play begins
   // New players see the opening prologue first; the daily reward waits until the scene ends.

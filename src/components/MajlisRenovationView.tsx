@@ -77,6 +77,8 @@ const MajlisStageBanner: React.FC<{ areaId: string; stage: number; stages: numbe
   const src = (key: string) => assetUrl(`assets/art/majlis/${areaId}_${key}.webp`);
   const key = `${shownStage}${mood}`;
   const [shown, setShown] = React.useState({ current: key, previous: key });
+  // A mood picture that cannot load (offline and never viewed) falls back to the stage's golden-afternoon picture.
+  const [failed, setFailed] = React.useState<string | null>(null);
   React.useEffect(() => {
     setShown((s) => (s.current === key ? s : { current: key, previous: s.current }));
     // Once the fade (1.2 s) is over, drop the old picture instead of keeping it decoded underneath.
@@ -95,7 +97,8 @@ const MajlisStageBanner: React.FC<{ areaId: string; stage: number; stages: numbe
       {shown.previous !== shown.current && <img src={src(shown.previous)} alt="" className="absolute inset-0 w-full h-full object-cover" />}
       <img
         key={shown.current}
-        src={src(shown.current)}
+        src={src(failed === shown.current ? String(shownStage) : shown.current)}
+        onError={() => setFailed(shown.current)}
         alt={isAr ? `مرحلة الترميم ${shownStage} من ${stages}` : `Restoration stage ${shownStage} of ${stages}`}
         decoding="async"
         className="absolute inset-0 w-full h-full object-cover animate-[stage-in_1.2s_ease-out_both]"
