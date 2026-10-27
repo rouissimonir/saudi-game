@@ -109,3 +109,15 @@ test('focused guest order survives save and becomes inactive after the order is 
   assert.equal(focusedGuestOrder(setFocusedGuestOrder(restored, null)), null);
   assert.equal(setFocusedGuestOrder(state, 'missing-order'), state);
 });
+
+
+test('higher boosts explain direct generator drops without promising a lucky result', () => {
+  const levelTwo = { itemId: 'qahwa_2', location: 'missing' as const, generatorId: 'gen_qahwa' };
+  assert.doesNotMatch(ingredientInstruction(levelTwo, 'en', 1), /base drop/);
+  assert.match(ingredientInstruction(levelTwo, 'en', 2), /boost to ×2.*enough energy.*lucky drop/);
+  assert.match(ingredientInstruction(levelTwo, 'ar', 4), /المضاعف على ×2.*توفر الطاقة/);
+  const levelThree = { ...levelTwo, itemId: 'qahwa_3' };
+  assert.doesNotMatch(ingredientInstruction(levelThree, 'en', 2), /base drop/);
+  assert.match(ingredientInstruction(levelThree, 'en', 4), /boost to ×4/);
+  assert.doesNotMatch(ingredientInstruction({ ...levelTwo, generatorId: null }, 'en', 4), /base drop/);
+});

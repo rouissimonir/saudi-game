@@ -21,7 +21,11 @@ export function ingredientInstruction(need: OrderNeed, lang: Language, powerMult
     }
     const keep = [...otherIngredients].map(([id, count]) => `${count} × ${ar ? ITEM_CATALOG[id].nameAr : ITEM_CATALOG[id].nameEn}`).join(ar ? '، ' : ', ');
     const reminder = keep ? (ar ? ` تحتاج الوصفة أيضًا إلى ${keep}؛ احتفظ بها للتحضير.` : ` Also needed for this recipe: ${keep}. Keep them for the preparation.`) : '';
-    return (ar ? `ادمج قطعتين من ${previous.nameAr} للحصول عليه.` : `Merge two ${previous.nameEn} to make this.`) + reminder;
+    const directBoost = index === 1 && powerMultiplier >= 2 ? 2 : index === 2 && powerMultiplier >= 4 ? 4 : null;
+    const direct = directBoost && generator
+      ? (ar ? ` أو اضبط المضاعف على ×${directBoost} وانقر على ${generator.nameAr}؛ المستوى الأساسي يطابق المطلوب عند توفر الطاقة، وقد تحصل على مستوى أعلى.` : ` Or set the boost to ×${directBoost} and tap ${generator.nameEn}; its base drop matches when enough energy is available, and a lucky drop can be higher.`)
+      : '';
+    return (ar ? `ادمج قطعتين من ${previous.nameAr} للحصول عليه.` : `Merge two ${previous.nameEn} to make this.`) + direct + reminder;
   }
   if (index === 0 && generator) {
     const boost = powerMultiplier !== 1 ? (ar ? 'غيّر مضاعف الطاقة إلى ×1، ثم ' : 'Set the power boost to ×1, then ') : '';
