@@ -1,69 +1,97 @@
-// Offline support. Pages: network-first. Other files: served from cache and refreshed in the background
-// (stale-while-revalidate), so replaced art or audio at the same URL reaches players on their next launch.
-const CACHE = 'qahwa-v5';
+// Keep each deployment's public app assets in its own cache. Never cache API responses.
+const scope = new URL(self.registration.scope);
+const prefix = `qahwa:${encodeURIComponent(scope.pathname)}:`;
+const cacheName = `${prefix}v1`;
+const shell = new URL('index.html', scope).href;
+
+function isPublicAsset(url) {
+  if (url.origin !== scope.origin || !url.pathname.startsWith(scope.pathname)) return false;
+  const path = url.pathname.slice(scope.pathname.length);
+  return /^(assets|fonts|icons)\//.test(path) || path === 'manifest.webmanifest';
+}
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE).then((c) => c.addAll(['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './fonts/cairo-arabic.woff2', './fonts/cairo-latin.woff2']))
+    caches.open(cacheName).then((cache) => cache.addAll([
+      shell, new URL('manifest.webmanifest', scope).href,
+      new URL('icons/icon-192.png', scope).href,
+      new URL('fonts/cairo-arabic.woff2', scope).href,
+      new URL('fonts/cairo-latin.woff2', scope).href,
+    ])).then(() => self.skipWaiting())
   );
-  self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim())
+    caches.keys().then((keys) => Promise.all(
+      keys.filter((key) => key.startsWith(prefix) && key !== cacheName).map((key) => caches.delete(key))
+    )).then(() => self.clients.claim())
   );
 });
 
-// The page sends the files it loaded before this worker took control; cache each one separately so a single
-// missing file cannot stop the rest (and the JS bundle) from being stored.
-self.addEventListener('message', (event) => {
-  if (event.data?.type !== 'cache-urls' || !Array.isArray(event.data.urls)) return;
-  event.waitUntil(
-    caches.open(CACHE).then((c) =>
-      Promise.allSettled(
-        event.data.urls
-          .filter((u) => typeof u === 'string' && new URL(u).origin === self.location.origin)
-          .map((u) => fetch(u).then((res) => (res.ok ? c.put(u, res) : undefined)))
-      )
-    )
-  );
-});
-
-function putIfOk(req, res) {
-  if (res.ok) {
-    const copy = res.clone();
-    caches.open(CACHE).then((c) => c.put(req, copy));
+async function fetchAndStore(request) {
+  const response = await fetch(request);
+  if (response.ok) {
+    try {
+      const cache = await caches.open(cacheName);
+      await cache.put(request, response.clone());
+    } catch {
+      // Storage can be unavailable or full; a successful network response still works.
+    }
   }
-  return res;
+  return response;
 }
 
-self.addEventListener('fetch', (event) => {
-  const req = event.request;
-  if (req.method !== 'GET') return;
-  const url = new URL(req.url);
-  if (url.origin !== self.location.origin) return;
+async function fetchAndStoreShell(request) {
+  const response = await fetch(request);
+  if (response.ok) {
+    try {
+      const cache = await caches.open(cacheName);
+      await cache.put(shell, response.clone());
+    } catch {
+      // Preserve the online response even if offline storage fails.
+    }
+  }
+  return response;
+}
 
-  if (req.mode === 'navigate') {
-    event.respondWith(
-      fetch(req)
-        .then((res) => {
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          return putIfOk(req, res);
-        })
-        .catch(() => caches.match(req).then((hit) => hit || caches.match('./index.html')))
-    );
+// Assets loaded before the worker took control are handed to it after the first launch.
+self.addEventListener('message', (event) => {
+  if (event.data?.type !== 'cache-urls' || !Array.isArray(event.data.urls)) return;
+  const urls = event.data.urls.flatMap((value) => {
+    if (typeof value !== 'string') return [];
+    try {
+      const url = new URL(value, scope);
+      return isPublicAsset(url) ? [url.href] : [];
+    } catch {
+      return [];
+    }
+  });
+  event.waitUntil(Promise.allSettled(urls.map(fetchAndStore)));
+});
+
+self.addEventListener('fetch', (event) => {
+  const request = event.request;
+  if (request.method !== 'GET') return;
+  const url = new URL(request.url);
+  if (url.origin !== scope.origin) return;
+
+  // Only the game's own entry point uses the app-shell fallback.
+  if (request.mode === 'navigate' && (url.pathname === scope.pathname || url.pathname === new URL(shell).pathname)) {
+    event.respondWith(fetchAndStoreShell(request).catch(async () => {
+      const cache = await caches.open(cacheName);
+      return cache.match(shell);
+    }));
     return;
   }
 
-  event.respondWith(
-    caches.match(req).then((hit) => {
-      const network = fetch(req).then((res) => putIfOk(req, res));
-      if (hit) {
-        event.waitUntil(network.catch(() => {}));
-        return hit;
-      }
-      return network;
-    })
-  );
+  if (!isPublicAsset(url)) return;
+  const network = fetchAndStore(request);
+  // Register background work synchronously, even when a cached response is available.
+  event.waitUntil(network.then(() => undefined, () => undefined));
+  event.respondWith(caches.open(cacheName)
+    // These are public, same-origin build assets; differing Origin headers must not break offline modules.
+    .then((cache) => cache.match(request, { ignoreVary: true }))
+    .catch(() => undefined)
+    .then((cached) => cached || network));
 });

@@ -5,7 +5,7 @@
 
 ## 1. Executive Summary & KSA iOS Market Thesis
 
-**Qahwa & Majlis Merge (قهوة ومجلس)** is a bilingual (Arabic RTL / English LTR) **Khaleeji Narrative Merge-2 & Specialty Coffee Estate Renovation Game** built with **React 19, TypeScript, Tailwind CSS, and Capacitor iOS/Android**.
+**Qahwa & Majlis Merge (قهوة ومجلس)** is a bilingual (Arabic RTL / English LTR) **Khaleeji Narrative Merge-2 & Specialty Coffee Estate Renovation Game** built with React, TypeScript, Tailwind CSS and a Capacitor iOS project. The native project has been generated and synced, but an Xcode build and device testing are still needed.
 
 ### Why This Niche Was Selected (#1 Ranked MENA Opportunity)
 1. **Zero Local Studio Competition in a Top-Grossing Genre:**
@@ -13,17 +13,28 @@
    - **0%** of those titles are built by Arab studios or feature Khaleeji culture, Saudi specialty coffee (*Qahwa*), or Najdi/Hijazi architecture.
 2. **Proven Saudi VC & Consumer Appetite for Cultural Games:**
    - Saudi venture firm **Impact46** recently led a **$53M+ investment** in *Kammelna* (#8 Top Grossing KSA), while solo-developed *Mazayen* (لعبة مزاين) surged to **#37 Top Grossing in Saudi Arabia**, out-grossing *MONOPOLY GO!* (#38) and *Clash Royale* (#41).
-3. **100% Deterministic Client-Side & Capacitor Native Packaging:**
-   - Unlike voice-AI or live-multiplayer apps that suffer from API latency or cold-start liquidity risks, a Merge-2 + Meta-Renovation game runs at **60fps offline**, uses deterministic state rules, and packages into an Xcode `.ipa` / Android `.aab` via Capacitor.
+3. **Client-side play and native packaging potential:**
+   - The game uses client-side rules and supports offline web play. Native packaging, performance and offline behavior must still be tested in a Capacitor iOS build on real devices.
 
 ---
 
 ## 2. Complete Inventory of Features Built (v1 → v3)
 
+### Faisal's coffee tasting
+- A permanent, untimed occasion opens from the merge board. Players choose and prepare two trays from unlocked board items, select a look for a coffee corner, and host Faisal and Noura. Choices and the one-time reward are saved with story flags and included in save transfers.
+- The Majlis shows an illustrated corner with the chosen items and guests after the gathering. Tap it to revisit the dialogue or change the corner's look for free. This is a separate scene card; it does not change the existing renovation bar or its bonuses.
+- The gathering can be completed from any area, including older saves. The visual uses existing item and character art and respects the reduced-motion setting.
+- After the gathering, Faisal and Noura each recall the selected tray on their next fulfilled order. Each reaction is recorded once, survives save transfers, and can be reread in the tasting corner.
+- New players are introduced to the tasting and festival after completing or dismissing the merge-and-serve coach. Festival points still accumulate during the coach, and the daily login gift is offered afterward without being claimed early.
+
+### Taif rose welcome
+- After the Taif chapter, the Majlis offers an optional welcome: prepare rose perfume for the setting and either dates or a specialty coffee. The selected items are consumed once, and a memory stays available after travel. Players already past Taif can access it too.
+- Noura remembers the chapter's drink choice when available. The harvest detail is based on [Visit Saudi's rose-water guide](https://www.visitsaudi.com/en/taif/stories/rosewater-in-saudi-arabia) and [Saudipedia](https://saudipedia.com/en/how-is-taif-rose-water-made); the dialogue and dialect still need Saudi review.
+
 ### A. Core Merge-2 Board & 4 Cultural Merge Chains (30 Items Total)
 - **7×7 Warm Sand-Parchment & Roasted Walnut Merge Board:**
   - High-contrast checkerboard tiles (`#FBF5E8` / `#F3E5AB`) inspired by *Gossip Harbor* and *Travel Town* so colorful coffee, V60, Oud, and Kunafa illustrations pop.
-  - Supports **HTML5 Drag-and-Drop**, **Tap-to-Select + Tap-to-Merge/Move/Swap**, and **1-Tap Smart Auto-Merge (`دمج تلقائي ذكي`)**.
+  - Supports pointer drag, tap-to-select and tap-to-merge/move/swap, and a one-tap auto-merge (`دمج تلقائي ذكي`). Auto-merge protects quantities needed for individual guest orders and the focused hospitality recipe; players can still merge manually.
   - **Sand-Locked Desert Dune Tiles (`خلايا رمال النفود`):** 10 perimeter tiles start locked under desert sand with a lock badge; merging a matching unlocked item onto a sand-locked tile clears the sand and upgrades the item.
   - **Order-Ready Mint Highlighting (`#DCFCE7`):** Any board tile needed by an active customer order automatically displays a green checkmark badge and emerald border.
 
@@ -68,16 +79,16 @@
 
 ### B2. Merge Feel & Progression (v4)
 1. **Timed Combo Chain (`كومبو`):** merges within 6 seconds of each other build a combo; from the 3rd merge each merge pays bonus SAR (capped at 20) and extra XP. A draining combo meter shows the remaining window.
-2. **Mega Merge (`دمج ثلاثي`):** when a third identical item touches the merge tile it is absorbed and the result jumps one extra level.
+2. **Mega Merge (`دمج ثلاثي`):** when a third identical item touches the merge tile it can be absorbed and the result jumps one extra level. The extra item is preserved, and the intermediate result is made instead, when a guest order or focused recipe needs either one.
 3. **Level-Up Rewards:** each level grants `+5💎` and tops Energy up by 15 (not a full refill), with a celebratory toast. The XP curve steepens: reaching level *n* needs `100(n-1) + 30(n-1)(n-2)` XP.
 4. **Merge Burst FX:** a golden burst on every merge (larger for Lv.4+, green for Mega Merge); honours `prefers-reduced-motion`.
 
-5. **7-Day Daily Login Streak (`غبقة اليوم`):** one reward per calendar day (Energy, SAR, Gems, Scissors, Joker, a free wheel spin, and a Gilded chest on Day 7). Missing a day resets the streak; the cycle repeats after Day 7. If the board is full on Day 7 the chest converts to 180 SAR.
+5. **Seven welcome gifts (`غبقة اليوم`):** one reward per calendar day (energy, coins, gems, scissors, joker, a free wheel spin, and a Gilded chest for the seventh gift). Missing a day preserves the player's place; the cycle repeats after gift seven. If the board is full for gift seven, the chest opens immediately and awards all its contents. Existing save progress is retained.
 6. **First-Run Coach:** a dismissible banner teaches merging first, then serving an order; existing saves that already merged skip it.
 
 7. **Saudi Cultural Calendar (`تقويم المملكة`):** Founding Day (Feb 21–23) and National Day (Sep 22–24) give ×1.5 order SAR and double prestige; Ramadan (×1.25 / ×1.5) and Eid (×2 SAR) are detected from the Umm al-Qura Hijri calendar. A banner in the merge view shows the active season.
-8. **Rub'a al-Finjan Pouring Mini-Game (`تحدي ربع الفنجال`):** each renovation upgrade earns one challenge. Hold to pour and release near the 25% mark (±4 perfect, ±10 good) for SAR, gems and a Royal Joker.
-9. **Ambient Hijaz Oud Loop:** a quiet synthesized oud phrase over a low D drone plays while the game is unmuted; no audio files.
+8. **Rub'a al-Finjan Pouring Mini-Game (`تحدي ربع الفنجال`):** each renovation upgrade earns one challenge. Hold to pour and release, or tap to start and tap again to stop, near the 25% mark (±4 perfect, ±10 good) for coins, gems and a Royal Joker. The cup exposes its fill level as a progress indicator. Interrupted or cancelled touches reset the pour without spending the challenge.
+9. **Ambient Hijaz Oud Loop:** bundled ambient audio plays while the game is unmuted, with a synthesized oud phrase as a fallback. Muting silences active audio and is remembered between launches; haptics have a separate setting.
 10. **Blender-rendered art:** seven hero props (`tools/blender/make_art.py` into `public/assets/art/`, the title emblem uses the dallah) and all 30 board item icons (`tools/blender/make_items.py` into `public/assets/art/items/`, 256px, shown by `ItemArtwork` with the SVG as fallback), plus six 3D character busts (`tools/blender/make_characters.py` into `public/assets/art/characters/`, shown in the order strip and story dialogue). See `docs/ASSETS.md` for extending them and for where to source the remaining art, music and voice.
 11. **Generated music:** `tools/audio/make_music.py` renders a seamless 60 s Hijaz oud loop (`ambient.mp3`) plus `order_complete.mp3` and `level_up.mp3` stingers into `public/assets/audio/` (physically-modelled oud, darbuka, reverb; numeric checks in `verify_music.py`). The game loops the file gaplessly via WebAudio and falls back to the synthesized oud and chimes if a file is missing, so any file can be replaced by a human recording.
 12. **Character voice lines:** 32 dialect lines for the six characters (`src/game/voiceLines.ts`), spoken when an order is served and when a story chapter opens. Recorded with ElevenLabs Saudi-accent voices into `public/assets/audio/voice/<id>.mp3` (verified word-for-word by speech-to-text, loudness-matched; not yet listened to by a human). Playback uses the file, else the device's Arabic text-to-speech tuned per character, else silence; music ducks while a character speaks. `tools/voice/generate_elevenlabs.py` regenerates the files (see `docs/ASSETS.md`, section 4) and `docs/VOICE_LINES.md` is a recording sheet for a human actor.
@@ -86,17 +97,17 @@
 The engine lives in `src/game/progression.ts` (pure, seeded RNG in `state.rngSeed`, tested in `progression.test.ts`).
 1. **Endless areas:** after Diriyah the player travels through Jeddah, AlUla, Taif, Abha, Al-Ahsa, Riyadh and Al-Khobar, each with 4 wings, 3 styles and its own story chapter, then repeats as prestige laps (✦2, ✦3…). Wing star costs rise per area. Restoring every wing shows a **Travel now** card in the Majlis tab (`+25💎 +40⚡`); the Kingdom trail shows finished, current and locked areas.
 2. **Generated orders:** served orders are replaced by a new guest whose item levels follow progress (`orderLevelBand`), with stars = value / 18 and occasional VIPs (+1 level, ×2 SAR, +2⭐).
-3. **Energy pressure:** 1⚡ per minute, also while closed (timestamp-based). Running out opens the Energy sheet: 50⚡ for 20💎, or 30⚡ for SAR at a price that rises by 300 per purchase each day.
+3. **Energy pressure:** 1⚡ per minute, also while closed (timestamp-based). Running out opens the Energy sheet: 50⚡ for 20💎, or 30⚡ for coins at a price that rises by 300 per purchase to a daily maximum of 3,400 and resets the next day.
 4. **Coin sinks:** Generator Workshop (5 levels, +7% lucky-spawn chance each, 250→3200 SAR), clearing sand tiles (40×n SAR), and changing a wing style (50×area SAR).
-5. **Daily quests:** three per day of different kinds plus a royal chest for finishing all three.
+5. **Daily quests:** three per day of different kinds plus a royal chest for finishing all three. Completed, unclaimed rewards are delivered when the next day's quests begin, with a receipt retained in the quest panel. The bonus chest goes to the board or opens for its contents if the board is full.
 6. **Phone-first layout:** a single-row HUD (level ring, energy with countdown, SAR, gems, menu), a fixed bottom navigation (Board, Majlis, Quests, Workshop, Shop), floating toasts that never push the board down, and pointer-based drag with a ghost item that works on touch screens. On a 390×664 viewport the whole 7×7 board is visible above the navigation.
 7. **Save migration:** older saves are filled in from a fresh state so new fields never break existing players (`saveMigration.test.ts`).
-8. **Economy simulator:** `npx tsx tools/sim/playtest.ts [areas] [runs]` plays the real rules with a greedy bot. Current pacing per area (minutes of active play): about 4, 19, 27, 59, 152, 353, 667, 294.
+8. **Economy simulator:** `npx tsx tools/sim/playtest.ts [areas] [runs] [--rewards]` runs a greedy continuous-play bot against the rules. The optional scenario claims daily gifts, quests, festival and story rewards, discoveries and a good pour, but does not model human breaks, gems, boosters, wheel spins or player choices. On ten fixed seeds, capping coin energy at 3,400 reduced mean simulated waiting in Riyadh from 175 minutes to zero and in Al-Khobar from 301 to 54 minutes. This is a diagnostic comparison, not a prediction of human pacing; player tests and economy monitoring are still required.
 9. **Collection book:** the first time an item appears it can be claimed in the Chains guide for 10 SAR × level, plus gems from Lv.3 (`discoveryReward`). Badges on the Chains button and chain tabs show unclaimed finds; starting items and generators pay nothing.
-10. **Installable and offline (PWA):** `public/manifest.webmanifest`, icons in `public/icons/` (rendered from the Blender dallah) and `public/sw.js` (network-first pages, cache-first assets). The build uses a relative base, so the same `dist/` runs from a domain root, a subpath such as GitHub Pages, or a Capacitor shell; files in `public/` are referenced through `assetUrl()`.
+10. **Installable web app and offline return:** `public/manifest.webmanifest`, icons in `public/icons/` and `public/sw.js` support an offline return after an online launch. The worker caches the game shell and loaded or prefetched public assets, so content that has never been downloaded may still need a connection. Its cache is isolated by deployment path. The build uses a relative base for a domain root or subpath; Capacitor uses bundled assets instead of the web service worker. Native offline behavior still needs testing on an iOS device.
 11. **Hosting:** `.github/workflows/deploy-pages.yml` tests, builds and publishes `dist/` to the `gh-pages` branch on every push to `main`. One-time setup: repository Settings → Pages → Source "Deploy from a branch" → `gh-pages` / root. The game is then at `https://<owner>.github.io/<repo>/`.
-12. **Rotating festivals (`src/game/events.ts`):** a new three-day festival every three local days (Khawlani Coffee Festival ☕, Date Harvest 🌴, Lantern Nights 🏮, Specialty Coffee Week 🫖). Merges earn the result level in points (double for the featured chain) and every order +10. An eight-step milestone track (30 → 1000 points) pays coins, energy, gems, scissors and jokers. The bar under the HUD shows progress, claimable rewards and the time left; progress resets with each new festival.
-13. **Save transfer:** HUD menu → Transfer progress shows a gzip-compressed code (`QM1.…`, about 4–5k characters) to copy or share, and loads a pasted code after a confirmation (`src/utils/saveTransfer.ts`). This moves progress between phones without an account until a real cloud save exists.
+12. **Rotating festivals (`src/game/events.ts`):** a new three-day festival every three local days (Khawlani Coffee Festival ☕, Date Harvest 🌴, Lantern Nights 🏮, Specialty Coffee Week 🫖). Merges earn the result level in points (double for the featured chain) and every order +10. An eight-step milestone track (30 → 1000 points) pays coins, energy, gems, scissors and jokers. Points reset with each new festival, but earned unclaimed milestones are delivered automatically at rollover, with a persistent receipt in the event panel. The bar shows progress, rewards and time left.
+13. **Save transfer and local recovery:** HUD menu → Transfer progress shows a gzip-compressed code (`QM1.…`) to copy or share and loads a pasted code after confirmation. Compression has a JavaScript fallback for WebViews without compression streams. Each successful local save retains the previous valid save as a backup; unreadable primary data can recover from it, and unreadable saves are not automatically replaced. Storage failures show a warning. This is local protection and manual transfer, not a cloud save.
 14. **Small phones:** the HUD shrinks and abbreviates large numbers below 360 px, and board toolbar labels collapse to icons, so nothing scrolls sideways at 320 px.
 15. **Performance pass:** measured on an iPhone 13 profile with fast-3G throttling and a 4× slower CPU, before → after: title screen 4.7 s → 3.3 s, board 6.1 s → 4.4 s, largest paint 4.4 s → 3.2 s, idle script time 175 → 71 ms per 10 s.
     - Board icons and portraits are WebP (1,441 KB → 192 KB; `tools/art/to_webp.py` converts new Blender renders).
@@ -173,23 +184,22 @@ The engine lives in `src/game/progression.ts` (pure, seeded RNG in `state.rngSee
 2. **Kingdom Trail (`رحلة المملكة`):**
    - The diorama follows the current area's region: **Historic Diriyah (`الدرعية التاريخية`)**, **Jeddah Al-Balad (`جدة التاريخية - البلد`)** with Hijazi Rawasheen latticework, or **AlUla (`واحة العلا`)** with rose-red monoliths. See B3 for the full eight-area journey.
 3. **Dynamic Courtyard Weather & Ambiance Toggle (`أجواء الحوش`):**
-   - Toggle between **Golden Afternoon (`عصاري نجد`)**, **Lantern Night (`ليالي الفوانيس`)**, and **Courtyard Rain (`مطر الحوش`)** with live SVG rain streaks and procedural Oud chimes.
-4. **"Diwan Al-Karam" Saudi Prestige Leaderboard (`صدارة ديوان الكرم`):**
-   - Ranks the player's Majlis against top rival cafés across Diriyah, Riyadh, Jeddah, AlUla, and Al-Khobar.
-5. **Weekly "Mazayen Al-Majlis" Showcase Contest (`مسابقة مزاين المجالس`):**
-   - Players vote on rival Saudi cafés to earn instant `+25 SAR` and `+20 Prestige Points` per vote.
-6. **Daily "Finjan Al-Sabah" Lucky Dallah Spin Wheel (`عجلة فنجال الصباح`):**
-   - 6-wedge interactive SVG wheel with 1 free spin (and `15💎` respins) awarding Energy, Gold Riyals, Gems, Golden Scissors, Royal Joker, or a Majlis Sadu Chest.
+   - Toggle between **Golden Afternoon (`عصاري نجد`)**, **Lantern Night (`ليالي الفوانيس`)**, and **Courtyard Rain (`مطر الحوش`)**. Painted scenes show corresponding light and weather effects; rain animation stops under reduced motion. The selection is saved.
+4. **Majlis showcase:**
+   - Compares the player's prestige against fictional local examples. It is not an online ranking.
+5. **Local Majlis choices:**
+   - Players choose from fictional designs to earn `+25 coins` and `+20 prestige` per choice. Choices are stored locally and do not reset weekly.
+6. **Finjan lucky wheel (`عجلة فنجال الصباح`):**
+   - Six wedges award energy, coins, gems, tools, or a chest. The pointer lands on the awarded wedge. A spin requires a free board tile so a chest can always be placed.
 7. **Diriyah Souq shop (`ShopAndMadaModal.tsx`):**
    - **Shop tab:**
      - A free daily hospitality gift (+40 energy, +25 coins), once per calendar day (`claimShopGift`, `shopGiftDay`).
-     - A roastery energy crate (SAR 14.99).
-     - The Majlis Sheikh pass (SAR 44.99): energy cap 150 and luckier generators.
+     - Existing saves with the Majlis Sheikh pass retain its energy cap and generator benefit.
    - **Milestones tab:** the four Majlis-point rewards.
-   - **Purchases:** paid packs are granted directly. Store billing (StoreKit / Play Billing) still has to be wired in the native build before release. App Store rules require in-app purchase for digital goods, so the shop no longer offers a Mada / STC Pay selector.
+   - **Purchases:** no real-money offers are shown until a real store purchase flow is implemented and tested. The previous simulated paid buttons have been removed.
    - **Collection:** the item collection lives in the Chains book.
 8. **Procedural WebAudio Hijaz Maqam Synthesizer (`soundAndHaptics.ts`):**
-   - Zero external audio file dependencies—synthesizes authentic Hijaz scale Oud & Najdi brass mortar (`نجر`) harmonics and triggers native haptic vibrations.
+   - Uses bundled audio when available and synthesized fallback sounds. Capacitor Haptics provides native impact feedback; browsers use vibration when supported. The menu has a separate persistent haptics toggle.
 
 ---
 
@@ -197,7 +207,7 @@ The engine lives in `src/game/progression.ts` (pure, seeded RNG in `state.rngSee
 
 ```text
 /
-├── capacitor.config.ts                       # Capacitor iOS & Android native configuration (com.diriyah.qahwamajlis)
+├── capacitor.config.json                     # Capacitor configuration (sa.qahwamajlis.merge)
 ├── metadata.json                             # App metadata & capabilities
 ├── index.html                                # Bilingual Cairo + Plus Jakarta Sans typography & SEO meta tags
 ├── DOCUMENTATION.md                          # Complete product, engineering & roadmap documentation
@@ -213,22 +223,28 @@ The engine lives in `src/game/progression.ts` (pure, seeded RNG in `state.rngSee
         ├── ItemArtwork.tsx                   # 30 bespoke SVG illustrations (4 generators, 24 chain items, 2 treasure chests)
         ├── CompetitorModalsAndPortraits.tsx  # Illustrated Khaleeji character portraits, 4-Chain Evolution Tree, KSA Leaderboard, Mazayen & Spin Wheel
         ├── MajlisRenovationView.tsx          # Interactive architectural SVG diorama, Kingdom Map (Diriyah/Jeddah/AlUla) & Weather Ambiance
-        └── ShopAndMadaModal.tsx              # Diriyah Souq: daily gift, energy crate, VIP pass, Majlis-point milestones
+        └── ShopAndMadaModal.tsx              # Diriyah Souq: daily gift, existing pass status, Majlis-point milestones
 ```
 
 ### Running Tests & Building for iOS / Android
+The repository includes the Capacitor iOS project and matching runtime, CLI and platform packages. The native project uses Swift Package Manager and has been synced on Windows, but has not been built in Xcode. Building and testing locally for iOS requires macOS and Xcode; see the [official setup requirements](https://capacitorjs.com/docs/getting-started/environment-setup).
 ```bash
-# 1. Run pure game logic unit tests
-npx tsx --test src/game/rules.test.ts
+# 1. Install the locked dependencies
+npm ci
 
-# 2. Build production web bundle
+# 2. Run tests and check TypeScript
+npm test
+npm run lint
+
+# 3. Build production web bundle
 npm run build
 
-# 3. Package for iOS App Store via Capacitor
-npx cap add ios
+# 4. Sync the existing iOS project and open it on a Mac
 npx cap sync ios
+npm run check:ios-assets
 npx cap open ios
 ```
+Subsequent web builds need `npm run build` and `npx cap sync ios`; run `npm run check:ios-assets` after syncing to detect missing or stale bundled files and accidental remote server configuration. This check does not replace an Xcode build or offline testing on a physical device. Do not run `cap add ios` again for the existing native project. The haptics plugin is included in the iOS project, but the feedback still needs verification on a physical iPhone. Splash Screen and Status Bar configuration does not install those plugins by itself.
 
 ---
 

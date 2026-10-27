@@ -12,7 +12,7 @@ export default defineConfig(() => {
       // Preact's React-compatible layer replaces react/react-dom at build time (~4 KB instead of ~60 KB gzipped).
       // Source code and types stay React; only the shipped runtime changes.
       alias: [
-        { find: '@', replacement: path.resolve(__dirname, '.') },
+        { find: '@', replacement: path.resolve(import.meta.dirname, '.') },
         { find: /^react-dom\/client$/, replacement: 'preact/compat/client' },
         { find: /^react\/jsx-runtime$/, replacement: 'preact/compat/jsx-runtime' },
         { find: /^react\/jsx-dev-runtime$/, replacement: 'preact/compat/jsx-dev-runtime' },
@@ -23,8 +23,8 @@ export default defineConfig(() => {
     build: {
       rollupOptions: {
         input: {
-          main: path.resolve(__dirname, 'index.html'),
-          fasih: path.resolve(__dirname, 'fasih.html'),
+          main: path.resolve(import.meta.dirname, 'index.html'),
+          fasih: path.resolve(import.meta.dirname, 'fasih.html'),
         },
       },
     },

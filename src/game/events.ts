@@ -107,7 +107,7 @@ export interface EventProgress {
   claimed: number[];
 }
 
-/** The player's progress in the current festival; progress from an earlier festival is dropped. */
+/** The player's progress in the current festival. Earlier earned rewards are settled separately. */
 export function eventProgress(state: GameState, now: number): EventProgress {
   const { instanceId } = activeLiveEvent(now);
   const saved = state.liveEvent;
@@ -119,10 +119,51 @@ export function mergeEventPoints(chain: string, resultLevel: number, featured: C
   return chain === featured ? resultLevel * 2 : resultLevel;
 }
 
+/** Deliver earned, unclaimed rewards when a later festival starts, including after an offline break. */
+export function settleExpiredEvent(state: GameState, now: number): GameState {
+  const saved = state.liveEvent;
+  const current = activeLiveEvent(now);
+  if (!saved || saved.instanceId === current.instanceId) return state;
+  const slot = (id: string) => Number(id.split('@')[1]);
+  const oldSlot = slot(saved.instanceId), newSlot = slot(current.instanceId);
+  // A clock or time-zone change backwards must not overwrite progress from a later festival.
+  if (!Number.isSafeInteger(oldSlot) || !Number.isSafeInteger(newSlot) || oldSlot >= newSlot) return state;
+  const delivery = { milestones: 0, coins: 0, gems: 0, energy: 0, scissors: 0, joker: 0 };
+  EVENT_MILESTONES.forEach((milestone, index) => {
+    if (saved.points < milestone.points || saved.claimed.includes(index)) return;
+    delivery.milestones++;
+    delivery.coins += milestone.reward.coins ?? 0;
+    delivery.gems += milestone.reward.gems ?? 0;
+    delivery.energy += milestone.reward.energy ?? 0;
+    delivery.scissors += milestone.reward.scissors ?? 0;
+    delivery.joker += milestone.reward.joker ?? 0;
+  });
+  const old = state.festivalDelivery;
+  return {
+    ...state,
+    coins: state.coins + delivery.coins,
+    diamonds: state.diamonds + delivery.gems,
+    energy: state.energy + delivery.energy,
+    scissorsCount: state.scissorsCount + delivery.scissors,
+    jokerCount: state.jokerCount + delivery.joker,
+    liveEvent: { instanceId: current.instanceId, points: 0, claimed: [] },
+    festivalDelivery: delivery.milestones ? {
+      milestones: (old?.milestones ?? 0) + delivery.milestones,
+      coins: (old?.coins ?? 0) + delivery.coins,
+      gems: (old?.gems ?? 0) + delivery.gems,
+      energy: (old?.energy ?? 0) + delivery.energy,
+      scissors: (old?.scissors ?? 0) + delivery.scissors,
+      joker: (old?.joker ?? 0) + delivery.joker,
+    } : old,
+  };
+}
+
 export function addEventPoints(state: GameState, now: number, points: number): GameState {
   if (points <= 0) return state;
-  const p = eventProgress(state, now);
-  return { ...state, liveEvent: { ...p, points: p.points + points } };
+  const settled = settleExpiredEvent(state, now);
+  const p = eventProgress(settled, now);
+  if (settled.liveEvent && settled.liveEvent.instanceId !== p.instanceId) return settled;
+  return { ...settled, liveEvent: { ...p, points: p.points + points } };
 }
 
 export function claimableMilestones(state: GameState, now: number): number[] {

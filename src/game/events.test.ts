@@ -23,7 +23,10 @@ test('a festival lasts three local days, ends at local midnight and rotates thro
   assert.equal(changes, 8, '24 days = 8 festivals');
   assert.equal(seen.size, E.LIVE_EVENTS.length);
   const a = E.activeLiveEvent(day(2026, 10, 25, 0));
-  assert.ok(a.endsAt > day(2026, 10, 25, 0) && a.endsAt - day(2026, 10, 25, 0) <= 3 * 86_400_000);
+  // A local calendar day can be 23 or 25 hours across a daylight-saving change.
+  const latestEnd = new Date(2026, 9, 25);
+  latestEnd.setDate(latestEnd.getDate() + 3);
+  assert.ok(a.endsAt > day(2026, 10, 25, 0) && a.endsAt <= latestEnd.getTime());
 });
 
 test('featured chain merges earn double, generators and chests earn nothing', () => {
@@ -45,4 +48,34 @@ test('milestones are claimed once, pay their reward and reset with the next fest
   const later = E.activeLiveEvent(now).endsAt + 1000;
   assert.equal(E.eventProgress(s, later).points, 0);
   assert.deepEqual(E.claimableMilestones(s, later), []);
+});
+
+test('unclaimed earned milestones are delivered once when a player returns after a festival', () => {
+  const now = day(2026, 10, 25);
+  let state = E.addEventPoints(createInitialGameState(), now, 160);
+  state = E.claimEventMilestone(state, now, 0).state;
+  const later = E.activeLiveEvent(now).endsAt + 1000;
+  const delivered = E.settleExpiredEvent(state, later);
+  assert.equal(delivered.coins, state.coins, 'the claimed coin milestone is not paid twice');
+  assert.equal(delivered.energy, state.energy + 25);
+  assert.equal(delivered.diamonds, state.diamonds + 5);
+  assert.deepEqual(delivered.festivalDelivery, { milestones: 2, coins: 0, gems: 5, energy: 25, scissors: 0, joker: 0 });
+  assert.equal(E.eventProgress(delivered, later).points, 0);
+  assert.equal(E.settleExpiredEvent(delivered, later), delivered);
+  const afterMerge = E.addEventPoints(state, later, 3);
+  assert.equal(afterMerge.energy, delivered.energy);
+  assert.equal(E.eventProgress(afterMerge, later).points, 3);
+});
+
+test('festival delivery survives further rollovers and a backward clock does not erase progress', () => {
+  const now = day(2026, 10, 25);
+  const state = E.addEventPoints(createInitialGameState(), now, 30);
+  const later = E.activeLiveEvent(now).endsAt + 1000;
+  const first = E.settleExpiredEvent(state, later);
+  const withNewPoints = E.addEventPoints(first, later, 80);
+  const final = E.settleExpiredEvent(withNewPoints, E.activeLiveEvent(later).endsAt + 1000);
+  assert.equal(final.festivalDelivery?.milestones, 3);
+  assert.equal(final.festivalDelivery?.coins, 200);
+  assert.equal(final.festivalDelivery?.energy, 25);
+  assert.equal(E.addEventPoints(state, now - 10 * 86_400_000, 10), state);
 });

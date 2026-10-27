@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import {
   ChainCategory,
+  CHEST_REWARDS,
   ITEM_CATALOG,
   KSA_LEADERBOARD_RIVALS,
   Language,
@@ -23,6 +24,7 @@ import {
 } from '../game/rules';
 import { discoveryReward } from '../game/progression';
 import { ItemArtwork } from './ItemArtwork';
+import { rotationForWedge } from '../game/wheelRotation';
 
 export const ChainTreeModal: React.FC<{
   lang: Language;
@@ -87,7 +89,7 @@ export const ChainTreeModal: React.FC<{
       role="dialog"
       aria-modal="true"
       aria-label={isAr ? 'شجرة تطور الدمج' : 'Merge Chain Evolution Tree'}
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/80"
+      className="safe-dialog fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/80"
     >
       <div className="w-full max-w-2xl rounded-2xl border-2 border-[#D99B26] bg-[#221711] text-[#FBF7F0] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         <div className="h-2 w-full sadu-trim" />
@@ -237,9 +239,7 @@ export const ChainTreeModal: React.FC<{
 
 /**
  * Unified Hub Modal for:
- * 1) Diwan Al-Karam Saudi Prestige Leaderboard
- * 2) Weekly "Mazayen Al-Majlis" Showcase Voting Contest (Mazayen #37 KSA benchmark)
- * 3) Daily "Finjan Al-Sabah" Lucky Dallah Spin Wheel
+ * Local fictional showcase, local choices, and a prize wheel.
  */
 export const LeaderboardModal: React.FC<{
   lang: Language;
@@ -249,10 +249,12 @@ export const LeaderboardModal: React.FC<{
   ordersCompleted: number;
   totalRenovated: number;
   freeSpinsAvailable: number;
+  lastWheelPrize: { wedgeId: string; openedChest: boolean } | null;
   diamonds: number;
+  boardFull: boolean;
   mazayenVotesRemaining: number;
   votedRivalIds: string[];
-  onSpinWheel: () => WheelWedge | null;
+  onSpinWheel: () => { wedge: WheelWedge; openedChest: boolean } | null;
   onVoteMazayen: (rivalId: string) => void;
   onClose: () => void;
 }> = ({
@@ -263,7 +265,9 @@ export const LeaderboardModal: React.FC<{
   ordersCompleted,
   totalRenovated,
   freeSpinsAvailable,
+  lastWheelPrize,
   diamonds,
+  boardFull,
   mazayenVotesRemaining,
   votedRivalIds,
   onSpinWheel,
@@ -271,15 +275,22 @@ export const LeaderboardModal: React.FC<{
   onClose,
 }) => {
   const [section, setSection] = useState<'leaderboard' | 'mazayen' | 'wheel'>(initialSection);
-  const [lastWonWedge, setLastWonWedge] = useState<WheelWedge | null>(null);
-  const [wheelRotation, setWheelRotation] = useState<number>(0);
+  const [wheelRotation, setWheelRotation] = useState<number>(() => {
+    const index = LUCKY_WHEEL_WEDGES.findIndex(wedge => wedge.id === lastWheelPrize?.wedgeId);
+    return index < 0 ? 0 : rotationForWedge(0, index, LUCKY_WHEEL_WEDGES.length);
+  });
+  const [spinning, setSpinning] = useState(false);
+  const spinningRef = React.useRef(false);
+  const spinTimer = React.useRef<number | null>(null);
 
   React.useEffect(() => {
     setSection(initialSection);
   }, [initialSection]);
+  React.useEffect(() => () => { if (spinTimer.current !== null) window.clearTimeout(spinTimer.current); }, []);
 
   if (!isOpen) return null;
   const isAr = lang === 'ar';
+  const lastWonWedge = !spinning ? LUCKY_WHEEL_WEDGES.find(wedge => wedge.id === lastWheelPrize?.wedgeId) : undefined;
 
   const combinedEntries = [
     ...KSA_LEADERBOARD_RIVALS.map((r) => ({
@@ -303,10 +314,15 @@ export const LeaderboardModal: React.FC<{
   ].sort((a, b) => b.prestigePoints - a.prestigePoints);
 
   const handleSpinClick = () => {
-    const won = onSpinWheel();
-    if (won) {
-      setWheelRotation((prev) => prev + 720 + Math.floor(Math.random() * 360));
-      setLastWonWedge(won);
+    if (spinningRef.current) return;
+    const prize = onSpinWheel();
+    if (prize) {
+      const index = LUCKY_WHEEL_WEDGES.findIndex(w => w.id === prize.wedge.id);
+      if (index < 0) return;
+      spinningRef.current = true;
+      setSpinning(true);
+      setWheelRotation(prev => rotationForWedge(prev, index, LUCKY_WHEEL_WEDGES.length));
+      spinTimer.current = window.setTimeout(() => { spinningRef.current = false; setSpinning(false); spinTimer.current = null; }, 700);
     }
   };
 
@@ -315,7 +331,7 @@ export const LeaderboardModal: React.FC<{
       role="dialog"
       aria-modal="true"
       aria-label={isAr ? 'ديوان الكرم ومزاين المجالس وعجلة الحظ' : 'Diwan Al-Karam, Mazayen & Lucky Wheel'}
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/80"
+      className="safe-dialog fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/80"
     >
       <div className="w-full max-w-2xl rounded-2xl border-2 border-[#D99B26] bg-[#221711] text-[#FBF7F0] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         <div className="h-2 w-full sadu-trim" />
@@ -328,7 +344,7 @@ export const LeaderboardModal: React.FC<{
             </div>
             <div>
               <span className="text-[11px] font-bold uppercase tracking-wider text-[#FBBF24] block">
-                {isAr ? 'منافسات المجالس ومكافآت فنجال الصباح' : 'SAUDI PRESTIGE LEAGUE, MAZAYEN & DAILY WHEEL'}
+                {isAr ? 'مجالس داخل اللعبة وعجلة فنجال الصباح' : 'IN-GAME MAJLIS SHOWCASE & WHEEL'}
               </span>
               <h2 className="text-lg sm:text-xl font-bold">
                 {isAr ? 'ديوان الكرم ومزاين المجالس' : 'Diwan Al-Karam & Mazayen Hub'}
@@ -357,7 +373,7 @@ export const LeaderboardModal: React.FC<{
                 : 'bg-[#2B1D14] text-[#D4A373] hover:text-white'
             }`}
           >
-            {isAr ? 'صدارة ديوان الكرم' : 'KSA Prestige Rank'}
+            {isAr ? 'مجالس الضيافة' : 'Majlis Showcase'}
           </button>
           <button
             type="button"
@@ -369,7 +385,7 @@ export const LeaderboardModal: React.FC<{
             }`}
           >
             <Sparkles className="w-3.5 h-3.5" />
-            <span>{isAr ? `مزاين المجالس (${mazayenVotesRemaining} أصوات)` : `Mazayen Contest (${mazayenVotesRemaining})`}</span>
+            <span>{isAr ? `اختر مجلساً (${mazayenVotesRemaining})` : `Choose a Majlis (${mazayenVotesRemaining})`}</span>
           </button>
           <button
             type="button"
@@ -393,6 +409,7 @@ export const LeaderboardModal: React.FC<{
         <div className="p-4 sm:p-5 overflow-y-auto space-y-3 flex-1">
           {section === 'leaderboard' && (
             <>
+              <p className="text-xs text-[#E5DEC9]" data-testid="local-showcase-note">{isAr ? 'هذه مجالس خيالية داخل اللعبة، وليست ترتيباً للاعبين عبر الإنترنت.' : 'These are fictional in-game Majlis examples, not an online player ranking.'}</p>
               <div className="rounded-xl bg-gradient-to-r from-[#D97724]/30 to-[#2A9D8F]/25 border border-[#FBBF24]/50 p-3.5 flex items-center justify-between">
                 <div>
                   <div className="text-xs text-[#FDE68A] font-semibold">
@@ -467,13 +484,13 @@ export const LeaderboardModal: React.FC<{
                 <div>
                   <div className="text-xs sm:text-sm font-bold text-[#FBBF24]">
                     {isAr
-                      ? 'مسابقة مزاين المجالس الأسبوعية (صوّت واربح فوراً!)'
-                      : 'Weekly Mazayen Al-Majlis Showcase (Vote & Earn!)'}
+                      ? 'اختر مجالسك المفضلة'
+                      : 'Choose your favourite Majlis designs'}
                   </div>
                   <p className="text-xs text-[#E5DEC9]/80 mt-0.5">
                     {isAr
-                      ? 'صوّت لأجمل المجالس السعودية المشاركة هذا الأسبوع لربح +25 ريال ذهبي و+20 نقطة هيبة لكل صوت!'
-                      : 'Vote for the best-designed Saudi cafés this week to earn +25 SAR & +20 Prestige Points per vote!'}
+                      ? 'هذه تصاميم خيالية داخل اللعبة. يُحفظ اختيارك على هذا الجهاز، ولكل اختيار +25 ريال و+20 نقطة هيبة.'
+                      : 'These designs are fictional. Your choices are saved on this device; each earns +25 coins and +20 prestige.'}
                   </p>
                 </div>
                 <span className="px-3 py-1.5 rounded-xl bg-[#1C1410] border border-[#FBBF24] text-xs font-extrabold tabular-nums text-[#FBBF24] shrink-0">
@@ -504,10 +521,7 @@ export const LeaderboardModal: React.FC<{
                       </div>
 
                       <div className="flex items-center justify-between pt-2 border-t border-white/10">
-                        <span className="text-xs tabular-nums text-[#E5DEC9] inline-flex items-center gap-1">
-                          <Heart className="w-3.5 h-3.5 text-[#F43F5E] fill-[#F43F5E]" />
-                          {(rival.votes || 50) + (hasVoted ? 1 : 0)}
-                        </span>
+                        <span className="text-xs text-[#E5DEC9] inline-flex items-center gap-1"><Heart className="w-3.5 h-3.5 text-[#F43F5E]" />{isAr ? 'تصميم داخل اللعبة' : 'In-game design'}</span>
 
                         <button
                           type="button"
@@ -546,7 +560,8 @@ export const LeaderboardModal: React.FC<{
 
                 <svg
                   viewBox="0 0 200 200"
-                  className="w-full h-full transition-transform duration-700 ease-out"
+                  data-testid="wheel-face"
+                  className="w-full h-full transition-transform duration-700 ease-out motion-reduce:transition-none"
                   style={{ transform: `rotate(${wheelRotation}deg)` }}
                 >
                   <circle cx="100" cy="100" r="95" fill="#2B1D14" stroke="#FBBF24" strokeWidth="5" />
@@ -581,17 +596,20 @@ export const LeaderboardModal: React.FC<{
               </div>
 
               {lastWonWedge && (
-                <div className="px-4 py-2 rounded-xl bg-[#10B981]/20 border border-[#10B981] text-xs sm:text-sm font-bold text-[#34D399]">
+                <div data-testid="wheel-result" data-winner-id={lastWonWedge.id} className="px-4 py-2 rounded-xl bg-[#10B981]/20 border border-[#10B981] text-xs sm:text-sm font-bold text-[#34D399]">
                   {isAr
-                    ? `مبروك! ربحت من عجلة فنجال الصباح: ${lastWonWedge.labelAr}`
-                    : `Congratulations! You won: ${lastWonWedge.labelEn}`}
+                    ? `آخر جائزة أُضيفت إلى رصيدك: ${lastWonWedge.labelAr}`
+                    : `Last prize, already added: ${lastWonWedge.labelEn}`}
+                  {lastWheelPrize?.openedChest && <p data-testid="wheel-chest-opened" className="mt-1">{isAr ? 'اللوحة ممتلئة، فُتح الصندوق وأُضيفت محتوياته:' : 'The board was full, so the chest was opened and its contents added:'} +{CHEST_REWARDS.wooden.coins} 🪙 · +{CHEST_REWARDS.wooden.gems} 💎 · +{CHEST_REWARDS.wooden.energy} ⚡ · +{CHEST_REWARDS.wooden.prestige} {isAr ? 'نقطة سمعة' : 'prestige'}</p>}
                 </div>
               )}
 
               <button
                 type="button"
                 onClick={handleSpinClick}
-                className="px-8 py-3.5 rounded-xl bg-gradient-to-r from-[#D97724] to-[#F59E0B] hover:opacity-95 text-[#1C1410] font-extrabold text-sm shadow-xl inline-flex items-center gap-2 cursor-pointer"
+                disabled={spinning || (freeSpinsAvailable <= 0 && diamonds < 15)}
+                aria-busy={spinning}
+                className="px-8 py-3.5 rounded-xl bg-gradient-to-r from-[#D97724] to-[#F59E0B] hover:opacity-95 text-[#1C1410] font-extrabold text-sm shadow-xl inline-flex items-center gap-2 cursor-pointer disabled:opacity-40"
               >
                 {freeSpinsAvailable > 0 ? (
                   <>
@@ -605,6 +623,8 @@ export const LeaderboardModal: React.FC<{
                   </>
                 )}
               </button>
+              {boardFull && <p className="text-xs font-bold text-[#FDE68A]">{isAr ? 'اللوحة ممتلئة؛ إذا ربحت صندوقاً فسيُفتح فوراً وتُضاف محتوياته.' : 'The board is full. Any chest you win will open immediately and its contents will be added.'}</p>}
+              {freeSpinsAvailable <= 0 && diamonds < 15 && <p className="text-xs font-bold text-[#FDE68A]">{isAr ? 'تحتاج ١٥ جوهرة للتدوير.' : 'You need 15 gems to spin.'}</p>}
 
               {/* Wedge Legend */}
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 w-full pt-2">

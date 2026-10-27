@@ -1,0 +1,31 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+import { verifyIOSBundle } from './check-ios-assets.mjs';
+
+test('iOS bundle audit detects missing, stale and remote-hosted builds', async t => {
+  const root = await mkdtemp(path.join(os.tmpdir(), 'qahwa-ios-audit-'));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const dist = path.join(root, 'dist');
+  const app = path.join(root, 'ios', 'App', 'App');
+  await mkdir(path.join(dist, 'assets'), { recursive: true });
+  await mkdir(path.join(app, 'public', 'assets'), { recursive: true });
+  const config = JSON.stringify({ appId: 'test.app', server: { iosScheme: 'capacitor' } });
+  await writeFile(path.join(root, 'capacitor.config.json'), config);
+  await writeFile(path.join(app, 'capacitor.config.json'), config);
+  await writeFile(path.join(dist, 'index.html'), 'shell');
+  await writeFile(path.join(dist, 'assets', 'game.js'), 'current');
+  await writeFile(path.join(app, 'public', 'index.html'), 'shell');
+  let result = await verifyIOSBundle(root);
+  assert.match(result.issues.join(), /Missing or unreadable iOS asset/);
+  await writeFile(path.join(app, 'public', 'assets', 'game.js'), 'old');
+  result = await verifyIOSBundle(root);
+  assert.match(result.issues.join(), /Stale iOS asset/);
+  await writeFile(path.join(app, 'public', 'assets', 'game.js'), 'current');
+  assert.deepEqual(await verifyIOSBundle(root), { filesChecked: 2, issues: [] });
+  await writeFile(path.join(app, 'capacitor.config.json'), JSON.stringify({ appId: 'test.app', server: { iosScheme: 'capacitor', url: 'https://example.com' } }));
+  result = await verifyIOSBundle(root);
+  assert.match(result.issues.join(), /remote server URL/);
+});

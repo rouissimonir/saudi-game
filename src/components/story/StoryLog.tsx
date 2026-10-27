@@ -36,7 +36,7 @@ export const StoryLog: React.FC<StoryLogProps> = ({ lang, prologueSeen, entries,
   const watched = rows.filter((r) => r.unlocked).length;
   const title = isAr ? 'حكاية المجلس' : 'Story episodes';
   return (
-    <div role="dialog" aria-modal="true" aria-label={title} data-testid="story-log" className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/55 p-3" onClick={onClose}>
+    <div role="dialog" aria-modal="true" aria-label={title} data-testid="story-log" className="safe-dialog fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/55 p-3" onClick={onClose}>
       <div className="w-full max-w-md rounded-3xl bg-[#FFFDF9] border-[3px] border-[#D97706] shadow-2xl overflow-hidden text-[#2C1E14]" onClick={(e) => e.stopPropagation()}>
         <div className="h-2 w-full sadu-trim" />
         <div className="flex items-center justify-between px-4 pt-3 pb-1">

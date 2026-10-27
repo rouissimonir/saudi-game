@@ -7,6 +7,7 @@ import {
   LEVEL_UP_GEMS,
   styleChangeCost,
 } from './progression';
+import { recordTastingVisit, type TastingGuest } from './guestMemories';
 
 export type Language = 'ar' | 'en';
 
@@ -194,6 +195,8 @@ export interface GameState {
   scissorsCount: number;
   jokerCount: number;
   freeSpinsAvailable: number;
+  /** The most recent wheel prize has already been credited and can be reviewed after reopening. */
+  lastWheelPrize: { wedgeId: string; openedChest: boolean } | null;
   mazayenVotesRemaining: number;
   votedRivalIds: string[];
   activeRegion: MajlisRegion;
@@ -238,9 +241,13 @@ export interface GameState {
     claimed: string[];
     bonusClaimed: boolean;
   } | null;
+  /** Already-delivered daily quest rewards awaiting acknowledgement. */
+  questDelivery: { quests: number; bonuses: number; chests: number; openedChests: number; coins: number; gems: number; energy: number; scissors: number; joker: number; prestige: number } | null;
   lastMergedItemId: string | null;
   /** Progress in the current rotating festival (see events.ts); reset when a new festival starts. */
   liveEvent: { instanceId: string; points: number; claimed: number[] } | null;
+  /** Already-delivered festival rewards awaiting acknowledgement in the event panel. */
+  festivalDelivery: { milestones: number; coins: number; gems: number; energy: number; scissors: number; joker: number } | null;
   /** Animated story scenes already watched (see src/story). */
   seenScenes: string[];
   /** Flags set by story choices, e.g. { rivalry: 'firm' }. */
@@ -263,8 +270,8 @@ export const KSA_LEADERBOARD_RIVALS: LeaderboardEntry[] = [
   },
   {
     id: 'riv_2',
-    nameAr: 'محمصة خطوة جمل',
-    nameEn: 'Camel Step Roasters',
+    nameAr: 'محمصة فوانيس الرياض',
+    nameEn: 'Riyadh Lantern Roastery',
     cityAr: 'الرياض',
     cityEn: 'Riyadh',
     prestigePoints: 440,
@@ -853,7 +860,7 @@ export const ORDER_TEMPLATES: Omit<CustomerOrder, 'id'>[] = [
     customerNameEn: 'Sheikh Tariq',
     customerRoleAr: 'موكب كبار الشخصيات VIP',
     customerRoleEn: 'VIP Royal Convoy',
-    quoteAr: 'أكرمونا بدلة رسلان مذهبة مع مبخرة جمر نحاسية وكليجا قصيمية.',
+    quoteAr: 'أكرمونا بدلة رسلان مذهبة مع مبخرة جمر نحاسية.',
     quoteEn: 'Honor our Diwan with a Gilded Raslan Dallah and Brass Mabkhara.',
     requiredItemIds: ['qahwa_4', 'oud_2'],
     rewardCoins: 95,
@@ -1081,6 +1088,7 @@ export function createInitialGameState(): GameState {
     scissorsCount: 2,
     jokerCount: 1,
     freeSpinsAvailable: 1,
+    lastWheelPrize: null,
     mazayenVotesRemaining: 3,
     votedRivalIds: [],
     activeRegion: 'diriyah',
@@ -1115,6 +1123,7 @@ export function createInitialGameState(): GameState {
     ],
     claimedDiscoveryIds: [],
     liveEvent: null,
+    festivalDelivery: null,
     seenScenes: [],
     storyFlags: {},
     completedStoryIds: [],
@@ -1136,6 +1145,7 @@ export function createInitialGameState(): GameState {
     shopGiftDay: '',
     lastEnergyTick: 0,
     dailyQuests: null,
+    questDelivery: null,
     lastMergedItemId: null,
   };
 }
@@ -1353,6 +1363,11 @@ export function useJokerUpgrade(
 /**
  * Opens a Mergeable Majlis Treasure Chest (chest_1 or chest_2) on the board!
  */
+export const CHEST_REWARDS = {
+  wooden: { coins: 60, gems: 12, energy: 25, scissors: 0, joker: 0, prestige: 15 },
+  royal: { coins: 180, gems: 35, energy: 65, scissors: 1, joker: 1, prestige: 45 },
+} as const;
+
 export function openBoardChest(
   state: GameState,
   cellIndex: number
@@ -1367,9 +1382,7 @@ export function openBoardChest(
   }
 
   const isRoyal = def.level >= 2;
-  const coinsGain = isRoyal ? 180 : 60;
-  const gemsGain = isRoyal ? 35 : 12;
-  const energyGain = isRoyal ? 65 : 25;
+  const reward = isRoyal ? CHEST_REWARDS.royal : CHEST_REWARDS.wooden;
 
   const nextBoard = state.board.map((c, idx) =>
     idx === cellIndex ? { ...c, itemId: null } : c
@@ -1379,12 +1392,12 @@ export function openBoardChest(
     state: {
       ...state,
       board: nextBoard,
-      coins: state.coins + coinsGain,
-      diamonds: state.diamonds + gemsGain,
-      energy: state.energy + energyGain,
-      scissorsCount: state.scissorsCount + (isRoyal ? 1 : 0),
-      jokerCount: state.jokerCount + (isRoyal ? 1 : 0),
-      prestigePoints: state.prestigePoints + (isRoyal ? 45 : 15),
+      coins: state.coins + reward.coins,
+      diamonds: state.diamonds + reward.gems,
+      energy: state.energy + reward.energy,
+      scissorsCount: state.scissorsCount + reward.scissors,
+      jokerCount: state.jokerCount + reward.joker,
+      prestigePoints: state.prestigePoints + reward.prestige,
       selectedCellIndex: null,
     },
     opened: true,
@@ -1398,13 +1411,12 @@ export function openBoardChest(
 export function spinLuckyWheel(
   state: GameState,
   deterministicIndex?: number
-): { state: GameState; spun: boolean; wedge: WheelWedge | null; reason?: string } {
+): { state: GameState; spun: boolean; wedge: WheelWedge | null; openedChest?: boolean; reason?: string } {
   const isFree = state.freeSpinsAvailable > 0;
   const gemCost = isFree ? 0 : 15;
   if (!isFree && state.diamonds < gemCost) {
     return { state, spun: false, wedge: null, reason: 'NO_GEMS' };
   }
-
   const idx =
     deterministicIndex !== undefined
       ? deterministicIndex % LUCKY_WHEEL_WEDGES.length
@@ -1412,13 +1424,14 @@ export function spinLuckyWheel(
   const wedge = LUCKY_WHEEL_WEDGES[idx];
 
   let nextBoard = state.board;
+  let openedChest = false;
   if (wedge.rewardType === 'chest') {
     const emptyIdx = findNearestEmptyCell(state.board, 24);
     if (emptyIdx !== null) {
       nextBoard = state.board.map((c, i) =>
         i === emptyIdx ? { ...c, itemId: 'chest_1' } : c
       );
-    }
+    } else openedChest = true;
   }
 
   return {
@@ -1426,22 +1439,24 @@ export function spinLuckyWheel(
       ...state,
       board: nextBoard,
       freeSpinsAvailable: isFree ? state.freeSpinsAvailable - 1 : 0,
+      lastWheelPrize: { wedgeId: wedge.id, openedChest },
       diamonds:
         state.diamonds -
         gemCost +
-        (wedge.rewardType === 'diamonds' ? wedge.amount : 0),
+        (wedge.rewardType === 'diamonds' ? wedge.amount : 0) + (openedChest ? CHEST_REWARDS.wooden.gems : 0),
       energy:
-        state.energy + (wedge.rewardType === 'energy' ? wedge.amount : 0),
-      coins: state.coins + (wedge.rewardType === 'coins' ? wedge.amount : 0),
+        state.energy + (wedge.rewardType === 'energy' ? wedge.amount : 0) + (openedChest ? CHEST_REWARDS.wooden.energy : 0),
+      coins: state.coins + (wedge.rewardType === 'coins' ? wedge.amount : 0) + (openedChest ? CHEST_REWARDS.wooden.coins : 0),
       scissorsCount:
         state.scissorsCount +
-        (wedge.rewardType === 'scissors' ? wedge.amount : 0),
+        (wedge.rewardType === 'scissors' ? wedge.amount : 0) + (openedChest ? CHEST_REWARDS.wooden.scissors : 0),
       jokerCount:
-        state.jokerCount + (wedge.rewardType === 'joker' ? wedge.amount : 0),
-      prestigePoints: state.prestigePoints + 15,
+        state.jokerCount + (wedge.rewardType === 'joker' ? wedge.amount : 0) + (openedChest ? CHEST_REWARDS.wooden.joker : 0),
+      prestigePoints: state.prestigePoints + 15 + (openedChest ? CHEST_REWARDS.wooden.prestige : 0),
     },
     spun: true,
     wedge,
+    openedChest,
   };
 }
 
@@ -1507,13 +1522,18 @@ export function findNearestEmptyCell(board: BoardCell[], originIndex: number): n
   return bestIndex;
 }
 
-/**
- * Spawns a new item from a generator tile onto the nearest empty cell, respecting Power Boost (x1, x2, x4)!
- */
+/** Strongest supported boost affordable with the available energy. */
+export function effectiveGeneratorBoost(multiplier: 1 | 2 | 4, energy: number): 0 | 1 | 2 | 4 {
+  if (energy <= 0) return 0;
+  return multiplier >= 4 && energy >= 4 ? 4 : multiplier >= 2 && energy >= 2 ? 2 : 1;
+}
+
+/** Spawn an item on the nearest empty cell, using the affordable power boost. */
 export function spawnFromGenerator(
   state: GameState,
   generatorCellIndex: number,
-  deterministicRoll?: number
+  deterministicRoll?: number,
+  now: number = Date.now()
 ): { state: GameState; spawnedCellIndex: number | null; spawnedItemId: string | null; reason?: string } {
   const cell = state.board[generatorCellIndex];
   if (!cell || !cell.itemId) {
@@ -1524,11 +1544,10 @@ export function spawnFromGenerator(
     return { state, spawnedCellIndex: null, spawnedItemId: null, reason: 'NOT_GENERATOR' };
   }
 
-  const mult = state.powerMultiplier || 1;
-  const energyCost = Math.min(mult, Math.max(1, state.energy));
   if (state.energy <= 0) {
     return { state, spawnedCellIndex: null, spawnedItemId: null, reason: 'NO_ENERGY' };
   }
+  const energyCost = effectiveGeneratorBoost(state.powerMultiplier || 1, state.energy);
   const emptyIdx = findNearestEmptyCell(state.board, generatorCellIndex);
   if (emptyIdx === null) {
     return { state, spawnedCellIndex: null, spawnedItemId: null, reason: 'BOARD_FULL' };
@@ -1558,6 +1577,7 @@ export function spawnFromGenerator(
       ...state,
       board: nextBoard,
       energy: state.energy - energyCost,
+      lastEnergyTick: state.energy >= state.maxEnergy && state.energy - energyCost < state.maxEnergy ? now : state.lastEnergyTick,
       selectedCellIndex: emptyIdx,
       discoveredItemIds: discovered,
       totalSpawns: (state.totalSpawns ?? 0) + 1,
@@ -1585,6 +1605,15 @@ export function getLevelFromXp(xp: number): number {
   return levelFromXp(xp);
 }
 
+/** All XP sources pay the same reward for every level crossed. */
+function awardExperience(state: GameState, amount: number): { xp: number; level: number; diamonds: number; energy: number; levelUp?: LevelUpReward } {
+  const xp = state.xp + amount;
+  const level = getLevelFromXp(xp);
+  const gained = Math.max(0, level - state.level);
+  const levelUp = gained ? { fromLevel: state.level, toLevel: level, gems: LEVEL_UP_GEMS * gained, energy: LEVEL_UP_ENERGY * gained } : undefined;
+  return { xp, level, diamonds: state.diamonds + (levelUp?.gems ?? 0), energy: state.energy + (levelUp?.energy ?? 0), levelUp };
+}
+
 function getAdjacentMatchIndex(board: BoardCell[], targetIndex: number, excludeIndex: number, itemId: string): number | null {
   const target = board[targetIndex];
   const neighbours = [
@@ -1602,11 +1631,26 @@ function getAdjacentMatchIndex(board: BoardCell[], targetIndex: number, excludeI
   return null;
 }
 
+function safeMegaSource(board: BoardCell[], source: BoardCell, target: BoardCell, reserved: Readonly<Record<string, number>>): number | null {
+  const itemId = source.itemId;
+  if (!itemId) return null;
+  const next = getNextMergedItemId(itemId);
+  if (!next || !getNextMergedItemId(next)) return null;
+  const third = getAdjacentMatchIndex(board, target.index, source.index, itemId);
+  if (third === null) return null;
+  const available = (id: string) => board.filter(cell => !cell.sandLocked && cell.itemId === id).length;
+  const remainingAfterPair = available(itemId) - (target.sandLocked ? 1 : 2);
+  if (remainingAfterPair - 1 < Math.min(remainingAfterPair, reserved[itemId] ?? 0)) return null;
+  if (available(next) < (reserved[next] ?? 0)) return null;
+  return third;
+}
+
 export function mergeOrMoveCells(
   state: GameState,
   fromIndex: number,
   toIndex: number,
-  now: number = Date.now()
+  now: number = Date.now(),
+  focusedItems: readonly string[] = []
 ): {
   state: GameState;
   action: 'MERGED' | 'MOVED' | 'SWAPPED' | 'INVALID';
@@ -1633,7 +1677,10 @@ export function mergeOrMoveCells(
     if (!nextItemId) return { state, action: 'INVALID' };
 
     // Mega Merge: a third matching item touching the merge tile is absorbed for a free extra level.
-    const megaSourceIndex = getAdjacentMatchIndex(state.board, toIndex, fromIndex, fromCell.itemId);
+    const reserved = autoMergeReservations(state.activeOrders, focusedItems, state.inventory);
+    // The two selected items are intentional; never also consume an ingredient the player needs,
+    // or skip the next level if an order or focused recipe still needs it.
+    const megaSourceIndex = safeMegaSource(state.board, fromCell, toCell, reserved);
     const megaItemId = megaSourceIndex !== null ? getNextMergedItemId(nextItemId) : null;
     const megaMerge = megaSourceIndex !== null && megaItemId !== null;
     const resultItemId = megaMerge ? (megaItemId as string) : nextItemId;
@@ -1644,18 +1691,7 @@ export function mergeOrMoveCells(
     const comboBonusCoins = getComboBonusCoins(comboCount);
 
     const gainedXp = (nextDef ? nextDef.mergeXp : 5) + Math.min(comboCount - 1, 10);
-    const newXp = state.xp + gainedXp;
-    const newLevel = getLevelFromXp(newXp);
-
-    let levelUp: LevelUpReward | undefined;
-    if (newLevel > state.level) {
-      levelUp = {
-        fromLevel: state.level,
-        toLevel: newLevel,
-        gems: LEVEL_UP_GEMS * (newLevel - state.level),
-        energy: LEVEL_UP_ENERGY * (newLevel - state.level),
-      };
-    }
+    const { levelUp, ...xpRewards } = awardExperience(state, gainedXp);
 
     const nextBoard = state.board.map((cell, idx) => {
       if (idx === fromIndex || (megaMerge && idx === megaSourceIndex)) {
@@ -1684,11 +1720,8 @@ export function mergeOrMoveCells(
         ...state,
         board: nextBoard,
         selectedCellIndex: toIndex,
-        xp: newXp,
-        level: newLevel,
+        ...xpRewards,
         coins: state.coins + bonusCoins,
-        diamonds: state.diamonds + (levelUp ? levelUp.gems : 0),
-        energy: levelUp ? state.energy + levelUp.energy : state.energy,
         comboCount,
         lastMergeAt: now,
         totalMerges: state.totalMerges + 1,
@@ -1743,12 +1776,36 @@ export function mergeOrMoveCells(
   };
 }
 
-export function findBestMergePair(board: BoardCell[]): [number, number] | null {
+/** Reserve board pieces still needed after accounting for copies safely stored in the pantry. */
+export function autoMergeReservations(orders: readonly CustomerOrder[], focusedItems: readonly string[] = [], inventory: readonly string[] = []): Record<string, number> {
+  const reserved: Record<string, number> = {};
+  for (const items of [...orders.map(order => order.requiredItemIds), focusedItems]) {
+    const counts: Record<string, number> = {};
+    for (const id of items) counts[id] = (counts[id] ?? 0) + 1;
+    for (const [id, count] of Object.entries(counts)) reserved[id] = Math.max(reserved[id] ?? 0, count);
+  }
+  for (const id of inventory) {
+    if (reserved[id] > 0) reserved[id] -= 1;
+  }
+  return reserved;
+}
+
+export function findBestMergePair(board: BoardCell[], reserved: Readonly<Record<string, number>> = {}): [number, number] | null {
   const unlockedCells = board.filter((c) => c.itemId !== null && !c.sandLocked);
+  const available = new Map<string, number>();
+  for (const cell of unlockedCells) available.set(cell.itemId!, (available.get(cell.itemId!) ?? 0) + 1);
+  const safe = (source: BoardCell, target: BoardCell) => {
+    const itemId = source.itemId;
+    if (!itemId || !canMergeItems(itemId, target.itemId)) return false;
+    const mega = safeMegaSource(board, source, target, reserved) !== null;
+    const consumed = (target.sandLocked ? 1 : 2) + (mega ? 1 : 0);
+    const count = available.get(itemId) ?? 0;
+    return count - consumed >= Math.min(count, reserved[itemId] ?? 0);
+  };
 
   for (const src of unlockedCells) {
     for (const target of board) {
-      if (target.index !== src.index && target.sandLocked && canMergeItems(src.itemId, target.itemId)) {
+      if (target.index !== src.index && target.sandLocked && safe(src, target)) {
         return [src.index, target.index];
       }
     }
@@ -1756,9 +1813,10 @@ export function findBestMergePair(board: BoardCell[]): [number, number] | null {
 
   for (let i = 0; i < unlockedCells.length; i++) {
     for (let j = i + 1; j < unlockedCells.length; j++) {
-      if (canMergeItems(unlockedCells[i].itemId, unlockedCells[j].itemId)) {
+      if (safe(unlockedCells[i], unlockedCells[j])) {
         return [unlockedCells[i].index, unlockedCells[j].index];
       }
+      if (safe(unlockedCells[j], unlockedCells[i])) return [unlockedCells[j].index, unlockedCells[i].index];
     }
   }
 
@@ -1795,21 +1853,30 @@ export function findCellsForOrder(board: BoardCell[], requiredItemIds: string[])
   return usedIndices;
 }
 
+/** A VIP guest also leaves gems and a hospitality chest on a consumed item's space. */
+export const VIP_ORDER_GEMS = 10;
+
+/** Coins shown on the order card and awarded on service use the same calculation. */
+export function orderCoinReward(state: GameState, order: CustomerOrder, season: Season | null = null): { base: number; restoration: number; area: number; seasonal: number; total: number } {
+  const restoration = state.renovationZones.reduce((sum, z) => sum + (z.unlockedLevel > 0 ? z.coinBonusPerOrder * z.unlockedLevel : 0), 0);
+  const area = 8 * (state.areaIndex ?? 0);
+  const subtotal = order.rewardCoins + restoration + area;
+  const total = Math.round(subtotal * (season?.coinMultiplier ?? 1));
+  return { base: order.rewardCoins, restoration, area, seasonal: total - subtotal, total };
+}
+
 export function fulfillCustomerOrder(
   state: GameState,
   orderId: string,
   season: Season | null = null
-): { state: GameState; fulfilled: boolean; spawnedChest?: boolean } {
+): { state: GameState; fulfilled: boolean; spawnedChest?: boolean; rememberedGuest?: TastingGuest | null; levelUp?: LevelUpReward } {
   const order = state.activeOrders.find((o) => o.id === orderId);
   if (!order) return { state, fulfilled: false };
 
   const matchedIndices = findCellsForOrder(state.board, order.requiredItemIds);
   if (!matchedIndices) return { state, fulfilled: false };
 
-  const prestigeBonus = state.renovationZones.reduce(
-    (sum, z) => sum + (z.unlockedLevel > 0 ? z.coinBonusPerOrder * z.unlockedLevel : 0),
-    0
-  );
+  const payout = orderCoinReward(state, order, season);
 
   let nextBoard = state.board.map((cell) =>
     matchedIndices.includes(cell.index) ? { ...cell, itemId: null } : cell
@@ -1828,28 +1895,31 @@ export function fulfillCustomerOrder(
   const remaining = { ...state, activeOrders: state.activeOrders.filter((o) => o.id !== orderId) };
   const generated = generateOrder(remaining);
   const nextOrders = state.activeOrders.map((o) => (o.id === orderId ? generated.order : o));
-  const newXp = state.xp + order.rewardXp;
-  const vipGemBonus = order.isVip ? 10 : 0;
+  const { levelUp, ...xpRewards } = awardExperience(state, order.rewardXp);
+  const vipGemBonus = order.isVip ? VIP_ORDER_GEMS : 0;
 
-  return {
-    state: {
+  const resultState: GameState = {
       ...state,
       board: nextBoard,
-      coins: state.coins + Math.round((order.rewardCoins + prestigeBonus + 8 * (state.areaIndex ?? 0)) * (season ? season.coinMultiplier : 1)),
+      coins: state.coins + payout.total,
       rngSeed: generated.seed,
       stars: state.stars + order.rewardStars,
-      diamonds: state.diamonds + vipGemBonus,
-      xp: newXp,
-      level: getLevelFromXp(newXp),
+      ...xpRewards,
+      diamonds: xpRewards.diamonds + vipGemBonus,
       ordersCompleted: state.ordersCompleted + 1,
       prestigePoints:
         state.prestigePoints + Math.round((order.isVip ? 55 : 35) * (season ? season.prestigeMultiplier : 1)),
       liveOpsPoints: state.liveOpsPoints + (order.isVip ? 25 : 15),
       activeOrders: nextOrders,
       selectedCellIndex: null,
-    },
+  };
+  const visit = recordTastingVisit(resultState, order.customerId);
+  return {
+    state: visit.state,
     fulfilled: true,
     spawnedChest,
+    rememberedGuest: visit.guest,
+    levelUp,
   };
 }
 
@@ -1857,12 +1927,16 @@ export function upgradeRenovationZone(
   state: GameState,
   zoneId: string,
   styleIndex?: number
-): { state: GameState; upgraded: boolean; triggeredStoryId: string | null } {
+): { state: GameState; upgraded: boolean; triggeredStoryId: string | null; levelUp?: LevelUpReward } {
   const zone = state.renovationZones.find((z) => z.id === zoneId);
   if (!zone) return { state, upgraded: false, triggeredStoryId: null };
 
-  if (styleIndex !== undefined && zone.unlockedLevel > 0 && zone.selectedStyle !== styleIndex) {
-    const cost = styleChangeCost(state);
+  if (styleIndex !== undefined) {
+    if (!Number.isInteger(styleIndex) || styleIndex < 0 || styleIndex >= zone.styles.length || zone.selectedStyle === styleIndex) {
+      return { state, upgraded: false, triggeredStoryId: null };
+    }
+    // Selecting a future style is free; changing an already-restored wing costs coins.
+    const cost = zone.unlockedLevel > 0 ? styleChangeCost(state) : 0;
     if (state.coins < cost) return { state, upgraded: false, triggeredStoryId: null };
     return {
       state: {
@@ -1890,16 +1964,17 @@ export function upgradeRenovationZone(
   const storyChap = zone.storyChapterIndex >= 0 ? STORY_CHAPTERS[zone.storyChapterIndex] : undefined;
   const triggeredStoryId =
     storyChap && !state.completedStoryIds.includes(storyChap.id) ? storyChap.id : null;
+  const { levelUp, ...xpRewards } = awardExperience(state, 40);
 
   return {
     state: {
       ...state,
       stars: state.stars - cost,
-      xp: state.xp + 40,
-      level: getLevelFromXp(state.xp + 40),
+      ...xpRewards,
       prestigePoints: state.prestigePoints + 60,
       pourTokens: state.pourTokens + 1,
       wingUpgrades: (state.wingUpgrades ?? 0) + 1,
+      storyFlags: { ...state.storyFlags, restoration_reveal_area: String(state.areaIndex), restoration_reveal_wing: zoneId },
       liveOpsPoints: state.liveOpsPoints + 25,
       activeStoryId: triggeredStoryId || state.activeStoryId,
       renovationZones: state.renovationZones.map((z) =>
@@ -1907,18 +1982,19 @@ export function upgradeRenovationZone(
           ? {
               ...z,
               unlockedLevel: nextLevel,
-              selectedStyle: styleIndex !== undefined ? styleIndex : z.selectedStyle,
+              selectedStyle: z.selectedStyle,
             }
           : z
       ),
     },
     upgraded: true,
     triggeredStoryId,
+    levelUp,
   };
 }
 
 // ---------------------------------------------------------------------------
-// Daily Login Streak ("Ghabga Al-Yawm") & First-Run Coaching
+// Daily Welcome Gifts ("Ghabga Al-Yawm") & First-Run Coaching
 // ---------------------------------------------------------------------------
 
 export interface DailyReward {
@@ -1955,13 +2031,14 @@ function daysBetweenKeys(fromKey: string, toKey: string): number {
   return Math.round((b - a) / 86_400_000);
 }
 
-/** Streak day (1..7) the player would be on if they claimed today, or null if already claimed. */
+/** Gift position (1..7); missed days keep progress and only one gift is available per day. */
 export function getDailyLoginDay(state: GameState, todayKey: string): number | null {
   if (state.lastLoginDay === todayKey) return null;
   const gap = state.lastLoginDay ? daysBetweenKeys(state.lastLoginDay, todayKey) : Infinity;
   if (gap < 0) return null; // clock moved backwards: never pay twice
-  const streak = gap === 1 ? state.loginStreak + 1 : 1;
-  return ((streak - 1) % DAILY_LOGIN_REWARDS.length) + 1;
+  // Keep the existing save field so current players retain their position on the track.
+  const visits = state.lastLoginDay ? Math.max(0, state.loginStreak) + 1 : 1;
+  return ((visits - 1) % DAILY_LOGIN_REWARDS.length) + 1;
 }
 
 export function claimDailyLoginReward(
@@ -1971,17 +2048,16 @@ export function claimDailyLoginReward(
   const day = getDailyLoginDay(state, todayKey);
   if (day === null) return { state, claimed: false, reward: null, day: state.loginStreak };
   const reward = DAILY_LOGIN_REWARDS[day - 1];
-  const gap = state.lastLoginDay ? daysBetweenKeys(state.lastLoginDay, todayKey) : Infinity;
-  const streak = gap === 1 ? state.loginStreak + 1 : 1;
+  const visits = state.lastLoginDay ? Math.max(0, state.loginStreak) + 1 : 1;
 
   let board = state.board;
-  let bonusCoins = 0;
+  let openedChest = false;
   if (reward.chest) {
     const emptyIdx = findNearestEmptyCell(board, 24);
     if (emptyIdx !== null) {
       board = board.map((c, i) => (i === emptyIdx ? { ...c, itemId: 'chest_2' } : c));
     } else {
-      bonusCoins = 180; // board full: pay out the chest's coins instead of losing it
+      openedChest = true; // Board full: award everything the royal chest would contain.
     }
   }
 
@@ -1989,13 +2065,14 @@ export function claimDailyLoginReward(
     state: {
       ...state,
       board,
-      loginStreak: streak,
+      loginStreak: visits,
       lastLoginDay: todayKey,
-      energy: state.energy + reward.energy,
-      coins: state.coins + reward.coins + bonusCoins,
-      diamonds: state.diamonds + reward.gems,
-      scissorsCount: state.scissorsCount + reward.scissors,
-      jokerCount: state.jokerCount + reward.joker,
+      energy: state.energy + reward.energy + (openedChest ? CHEST_REWARDS.royal.energy : 0),
+      coins: state.coins + reward.coins + (openedChest ? CHEST_REWARDS.royal.coins : 0),
+      diamonds: state.diamonds + reward.gems + (openedChest ? CHEST_REWARDS.royal.gems : 0),
+      scissorsCount: state.scissorsCount + reward.scissors + (openedChest ? CHEST_REWARDS.royal.scissors : 0),
+      jokerCount: state.jokerCount + reward.joker + (openedChest ? CHEST_REWARDS.royal.joker : 0),
+      prestigePoints: state.prestigePoints + (openedChest ? CHEST_REWARDS.royal.prestige : 0),
       freeSpinsAvailable: state.freeSpinsAvailable + reward.freeSpins,
     },
     claimed: true,
@@ -2011,6 +2088,11 @@ export function getTutorialStep(state: GameState): TutorialStep {
   if (state.totalMerges === 0) return 'merge';
   if (state.ordersCompleted === 0) return 'serve';
   return null;
+}
+
+/** Defer the login popup until a new player has served a guest or skipped coaching. */
+export function dailyLoginAfterTutorial(state: GameState, todayKey: string): number | null {
+  return getTutorialStep(state) ? null : getDailyLoginDay(state, todayKey);
 }
 
 // ---------------------------------------------------------------------------
@@ -2110,6 +2192,7 @@ export const POUR_REWARDS: Record<PourGrade, { coins: number; gems: number; joke
   short: { coins: 20, gems: 0, joker: 0 },
   overflow: { coins: 20, gems: 0, joker: 0 },
 };
+export const pourPrestige = (grade: PourGrade): number => grade === 'perfect' ? 20 : 5;
 
 export function completePour(
   state: GameState,
@@ -2125,7 +2208,7 @@ export function completePour(
       coins: state.coins + reward.coins,
       diamonds: state.diamonds + reward.gems,
       jokerCount: state.jokerCount + reward.joker,
-      prestigePoints: state.prestigePoints + (grade === 'perfect' ? 20 : 5),
+      prestigePoints: state.prestigePoints + pourPrestige(grade),
     },
     poured: true,
     grade,

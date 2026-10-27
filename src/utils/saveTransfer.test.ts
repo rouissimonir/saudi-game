@@ -21,3 +21,25 @@ test('garbage and truncated codes are rejected', async () => {
   assert.equal(await importSaveCode(code.slice(0, code.length - 30)), null);
   assert.equal(await importSaveCode('QM1.' + btoa('{"board":[]}')), null);
 });
+
+test('transfer codes work without browser compression streams and stay compatible', async () => {
+  const originalCompression = Object.getOwnPropertyDescriptor(globalThis, 'CompressionStream');
+  const originalDecompression = Object.getOwnPropertyDescriptor(globalThis, 'DecompressionStream');
+  const state = { ...createInitialGameState(), coins: 9876 };
+  const browserCode = await exportSaveCode(state);
+  try {
+    Object.defineProperty(globalThis, 'CompressionStream', { configurable: true, value: undefined });
+    Object.defineProperty(globalThis, 'DecompressionStream', { configurable: true, value: undefined });
+    assert.equal((await importSaveCode(browserCode))?.coins, 9876);
+    const fallbackCode = await exportSaveCode(state);
+    assert.ok(fallbackCode.startsWith('QM1.'));
+    assert.equal((await importSaveCode(fallbackCode))?.coins, 9876);
+    if (originalDecompression) Object.defineProperty(globalThis, 'DecompressionStream', originalDecompression);
+    assert.equal((await importSaveCode(fallbackCode))?.coins, 9876);
+  } finally {
+    if (originalCompression) Object.defineProperty(globalThis, 'CompressionStream', originalCompression);
+    else Reflect.deleteProperty(globalThis, 'CompressionStream');
+    if (originalDecompression) Object.defineProperty(globalThis, 'DecompressionStream', originalDecompression);
+    else Reflect.deleteProperty(globalThis, 'DecompressionStream');
+  }
+});

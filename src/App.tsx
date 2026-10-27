@@ -1,4 +1,5 @@
 import React, { Suspense, lazy, useEffect, useState, useCallback, useMemo, useRef } from 'react';
+import { usePageVisible } from './utils/usePageVisible';
 import {
   Star,
   Check,
@@ -26,11 +27,15 @@ import {
   Language,
   STORY_CHAPTERS,
   spawnFromGenerator,
+  effectiveGeneratorBoost,
   mergeOrMoveCells,
   findBestMergePair,
-  sellBoardItem,
+  autoMergeReservations,
+  findNearestEmptyCell,
   findCellsForOrder,
   fulfillCustomerOrder,
+  orderCoinReward,
+  VIP_ORDER_GEMS,
   upgradeRenovationZone,
   canMergeItems,
   cyclePowerMultiplier,
@@ -47,10 +52,10 @@ import {
   WheelWedge,
   buildMergeParticleBurst,
   claimDailyLoginReward,
+  dailyLoginAfterTutorial,
   completePour,
   dayKeyFromDate,
   getActiveSeason,
-  getDailyLoginDay,
   getTutorialStep,
   COMBO_WINDOW_MS,
   type LevelUpReward,
@@ -59,8 +64,9 @@ import {
 } from './game/rules';
 import {
   soundFX,
+  loadMuted,
+  saveMuted,
   saveGameState,
-  loadSavedGameState,
   clearSavedGameState,
 } from './utils/soundAndHaptics';
 import { CustomerPortrait } from './components/CustomerPortrait';
@@ -75,8 +81,18 @@ import { EnergyModal, QuestsModal, WorkshopModal } from './components/Progressio
 import { BottomNav, GameHud, NavTab } from './components/GameChrome';
 import { DailyLoginModal } from './components/DailyLoginModal';
 import { ItemArtwork, preloadItemArt } from './components/ItemArtwork';
-import { EVENT_ORDER_POINTS, activeLiveEvent, addEventPoints, claimEventMilestone, mergeEventPoints } from './game/events';
+import { EVENT_ORDER_POINTS, activeLiveEvent, addEventPoints, claimEventMilestone, mergeEventPoints, settleExpiredEvent } from './game/events';
 import { LiveEventBar, LiveEventModal } from './components/LiveEventUI';
+import { CoffeeTasting } from './components/CoffeeTasting';
+import { canUndoSale, sellWithReceipt, undoSale, type SaleReceipt } from './game/saleUndo';
+import { focusCells, ingredientNeeds, orderNeeds, tutorialMergePair } from './game/orderGuide';
+import { OrderGuide } from './components/OrderGuide';
+import { saveHapticsEnabled } from './utils/haptics';
+import { tastingGuestMemory, type TastingGuest } from './game/guestMemories';
+import { GuestMemoryModal } from './components/GuestMemoryModal';
+import { TaifWelcome } from './components/TaifWelcome';
+import { taifWelcomeAvailable } from './game/taifWelcome';
+import { loadSave } from './utils/saveStorage';
 
 // Screens opened from a button are split into their own chunks and fetched when the page is idle,
 // so the first screen downloads and parses less code.
@@ -175,6 +191,7 @@ type ShellState = 'title' | 'playing' | 'paused' | 'gameover';
 type ActiveWorkspace = 'merge' | 'majlis';
 
 export default function App() {
+  const pageVisible = usePageVisible();
   const [lang, setLang] = useState<Language>(loadLanguage);
   const isAr = lang === 'ar';
 
@@ -188,8 +205,13 @@ export default function App() {
     return 'title';
   });
 
+  const [initialSave] = useState(loadSave);
+  const [saveBlocked, setSaveBlocked] = useState(initialSave.status === 'corrupt' || initialSave.status === 'unavailable');
+  const [saveFailed, setSaveFailed] = useState(false);
+  const [showRecovered, setShowRecovered] = useState(initialSave.status === 'recovered');
+  const [confirmFresh, setConfirmFresh] = useState(false);
   const [gameState, setGameState] = useState<GameState>(() => {
-    const saved = loadSavedGameState();
+    const saved = initialSave.state;
     const initial = createInitialGameState();
     if (!saved) return initial;
     return {
@@ -211,11 +233,27 @@ export default function App() {
   });
 
   const [workspace, setWorkspace] = useState<ActiveWorkspace>('merge');
-  const [muted, setMuted] = useState<boolean>(false);
-  const [hintPair, setHintPair] = useState<[number, number] | null>(null);
+  const [tastingOpen, setTastingOpen] = useState(false);
+  const [taifWelcomeOpen, setTaifWelcomeOpen] = useState(false);
+  const [rememberedGuest, setRememberedGuest] = useState<TastingGuest | null>(null);
+  const [saleReceipt, setSaleReceipt] = useState<SaleReceipt | null>(null);
+  const [guideOrderId, setGuideOrderId] = useState<string | null>(null);
+  const [focusedOrderId, setFocusedOrderId] = useState<string | null>(null);
+  const [showBoostHelp, setShowBoostHelp] = useState(false);
+  const [hideFirstRestorationPrompt, setHideFirstRestorationPrompt] = useState(false);
+  const boardGridRef = useRef<HTMLDivElement>(null);
+  const [tastingFocus, setTastingFocus] = useState<{ kind: 'tasting' | 'taif'; items: readonly string[]; nameAr: string; nameEn: string } | null>(null);
+  const [muted, setMuted] = useState<boolean>(() => {
+    const saved = loadMuted();
+    soundFX.muted = saved;
+    return saved;
+  });
+  const [hapticsEnabled, setHapticsEnabled] = useState(() => soundFX.hapticsEnabled);
   const [dragGhost, setDragGhost] = useState<{ itemId: string; x: number; y: number; from: number; over: number | null } | null>(null);
   const dropRef = useRef<((from: number, to: number) => void) | null>(null);
   const suppressClickRef = useRef(false);
+  const activeDragCleanupRef = useRef<(() => void) | null>(null);
+  useEffect(() => () => activeDragCleanupRef.current?.(), []);
   const [feedbackBanner, setFeedbackBanner] = useState<string | null>(null);
 
   const [shopModalOpen, setShopModalOpen] = useState<boolean>(false);
@@ -242,11 +280,12 @@ export default function App() {
   const [workshopOpen, setWorkshopOpen] = useState(false);
   const [sandPromptIndex, setSandPromptIndex] = useState<number | null>(null);
   const [dailyLoginDay, setDailyLoginDay] = useState<number | null>(null);
+  const [localDay, setLocalDay] = useState(() => dayKeyFromDate(new Date()));
   const [levelUpToast, setLevelUpToast] = useState<LevelUpReward | null>(null);
   const [comboLive, setComboLive] = useState(false);
   const comboTimeoutRef = useRef<number | null>(null);
   const [pourOpen, setPourOpen] = useState(false);
-  const activeSeason = React.useMemo(() => getActiveSeason(new Date()), []);
+  const activeSeason = React.useMemo(() => getActiveSeason(new Date()), [localDay]);
   const burstSeqRef = useRef<number>(1);
   const [mergeBursts, setMergeBursts] = useState<MergeParticleBurst[]>([]);
   const [celebratingCells, setCelebratingCells] = useState<Record<number, boolean>>({});
@@ -281,12 +320,14 @@ export default function App() {
   );
 
   // Level-up toast and fanfare, plus the live combo meter, after any merge
-  const handleMergeExtras = (res: { levelUp?: LevelUpReward; comboCount?: number }) => {
-    if (res.levelUp) {
-      setLevelUpToast(res.levelUp);
+  const showLevelUp = (levelUp?: LevelUpReward) => {
+    if (levelUp) {
+      setLevelUpToast(levelUp);
       soundFX.playLevelUp();
-      window.setTimeout(() => setLevelUpToast(null), 3200);
     }
+  };
+  const handleMergeExtras = (res: { levelUp?: LevelUpReward; comboCount?: number }) => {
+    showLevelUp(res.levelUp);
     setComboLive(true);
     if (comboTimeoutRef.current) window.clearTimeout(comboTimeoutRef.current);
     comboTimeoutRef.current = window.setTimeout(() => setComboLive(false), COMBO_WINDOW_MS);
@@ -322,47 +363,66 @@ export default function App() {
 
   // Save game state automatically on change
   useEffect(() => {
-    saveGameState(gameState);
-  }, [gameState]);
+    if (!saveBlocked) setSaveFailed(!saveGameState(gameState));
+  }, [gameState, saveBlocked]);
+
+  useEffect(() => {
+    if (!saleReceipt) return;
+    const timer = window.setTimeout(() => setSaleReceipt(null), 8000);
+    return () => window.clearTimeout(timer);
+  }, [saleReceipt]);
+
+  // Keep level rewards visible until a story, guest memory or daily gift is dismissed.
+  useEffect(() => {
+    if (!levelUpToast || shellState !== 'playing' || activeScene || gameState.activeStoryId || rememberedGuest || dailyLoginDay !== null) return;
+    const timer = window.setTimeout(() => setLevelUpToast(null), 3200);
+    return () => window.clearTimeout(timer);
+  }, [levelUpToast, shellState, activeScene, gameState.activeStoryId, rememberedGuest, dailyLoginDay]);
 
   // Energy regenerates from timestamps (also while the app was closed); quests roll over at midnight
   useEffect(() => {
     const tick = () => {
       const t = Date.now();
+      const day = dayKeyFromDate(new Date(t));
+      setLocalDay(day);
       setGameState((prev) => {
         const regen = applyEnergyRegen(prev, t);
-        return ensureDailyQuests(regen, dayKeyFromDate(new Date(t)));
+        return settleExpiredEvent(ensureDailyQuests(regen, day), t);
       });
     };
     tick();
     const timer = window.setInterval(tick, 1000);
-    return () => window.clearInterval(timer);
+    const onVisibility = () => { if (document.visibilityState !== 'hidden') tick(); };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => { window.clearInterval(timer); document.removeEventListener('visibilitychange', onVisibility); };
   }, []);
 
   // Background music while playing, warm the item-art cache once
   useEffect(() => {
-    if (shellState === 'playing' && !muted) soundFX.startAmbient();
+    if (pageVisible && shellState === 'playing' && !muted) soundFX.startAmbient();
     else soundFX.stopAmbient();
     return () => soundFX.stopAmbient();
-  }, [shellState, muted]);
+  }, [shellState, muted, pageVisible]);
   useEffect(() => {
     preloadItemArt();
     prefetchScreens();
   }, []);
 
-  // Offer the daily login reward once per calendar day when play begins
-  // New players see the opening prologue first; the daily reward waits until the scene ends.
+  // Let new players learn the board and serve a guest before introducing the daily reward.
+  // The reward remains available and is shown once the tutorial is completed or skipped.
   useEffect(() => {
-    if (shellState !== 'playing') return;
+    if (shellState !== 'playing' || saveBlocked || !pageVisible) return;
     const pending = forcedSceneRef.current ?? (gameState.seenScenes.includes('prologue') ? null : 'prologue');
     if (pending) {
       forcedSceneRef.current = null;
-      setActiveScene(pending);
+      if (activeScene !== pending) setActiveScene(pending);
       return;
     }
-    setDailyLoginDay(getDailyLoginDay(gameState, dayKeyFromDate(new Date())));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [shellState]);
+    if (activeScene || gameState.activeStoryId || replayChapterId || endingOpen || storyLogOpen || rememberedGuest ||
+        tastingOpen || taifWelcomeOpen || guideOrderId || shopModalOpen || chainModalOpen || leaderboardOpen ||
+        transferOpen || eventOpen || energyOpen || questsOpen || workshopOpen || pourOpen || dragGhost) return;
+    setDailyLoginDay(dailyLoginAfterTutorial(gameState, localDay));
+  }, [shellState, saveBlocked, pageVisible, activeScene, gameState.activeStoryId, gameState.seenScenes, gameState.tutorialDismissed, gameState.totalMerges, gameState.ordersCompleted, gameState.lastLoginDay, gameState.loginStreak, localDay, replayChapterId, endingOpen, storyLogOpen, rememberedGuest, tastingOpen, taifWelcomeOpen, guideOrderId, shopModalOpen, chainModalOpen, leaderboardOpen, transferOpen, eventOpen, energyOpen, questsOpen, workshopOpen, pourOpen, dragGhost]);
 
   // Warm the prologue's art while a new player is still on the title screen.
   useEffect(() => {
@@ -376,7 +436,6 @@ export default function App() {
       setActiveScene(null);
       const next = applySceneResult(gameState, play);
       setGameState(next);
-      setDailyLoginDay(getDailyLoginDay(next, dayKeyFromDate(new Date())));
     },
     [gameState]
   );
@@ -402,6 +461,7 @@ export default function App() {
     setMuted((prev) => {
       const next = !prev;
       soundFX.muted = next;
+      saveMuted(next);
       return next;
     });
   }, []);
@@ -411,12 +471,18 @@ export default function App() {
     setShellState((prev) => (prev === 'playing' ? 'paused' : prev === 'paused' ? 'playing' : prev));
   }, []);
 
+  const handleToggleHaptics = useCallback(() => {
+    const enabled = !soundFX.hapticsEnabled;
+    soundFX.hapticsEnabled = enabled;
+    saveHapticsEnabled(enabled);
+    setHapticsEnabled(enabled);
+  }, []);
+
   const handleResetGame = useCallback((e?: React.MouseEvent<HTMLButtonElement>) => {
     e?.currentTarget.blur();
-    clearSavedGameState();
+    if (!clearSavedGameState()) { setSaveFailed(true); return; }
     const fresh = createInitialGameState();
     setGameState(fresh);
-    setHintPair(null);
     setShellState('playing');
     showFeedback(isAr ? 'تمت إعادة ضبط المجلس بنجاح!' : 'Majlis reset to fresh state!');
   }, [isAr, showFeedback]);
@@ -464,7 +530,6 @@ export default function App() {
 
   // Cell Click / Tap Interaction
   const handleCellClick = (index: number) => {
-    setHintPair(null);
     const clickedCell = gameState.board[index];
     if (!clickedCell) return;
 
@@ -479,8 +544,8 @@ export default function App() {
         setGameState(res.state);
         showFeedback(
           isAr
-            ? `أنتج المولّد (×${gameState.powerMultiplier}): ${spawnedDef.nameAr} (L${spawnedDef.level})`
-            : `Spawned (×${gameState.powerMultiplier}): ${spawnedDef.nameEn} (Lv.${spawnedDef.level})`
+            ? `أنتج المولّد (×${gameState.energy - res.state.energy}): ${spawnedDef.nameAr} (L${spawnedDef.level})`
+            : `Spawned (×${gameState.energy - res.state.energy}): ${spawnedDef.nameEn} (Lv.${spawnedDef.level})`
         );
       } else if (res.reason === 'NO_ENERGY') {
         soundFX.playError();
@@ -535,7 +600,7 @@ export default function App() {
       return;
     }
 
-    const moveRes = mergeOrMoveCells(gameState, gameState.selectedCellIndex, index);
+    const moveRes = mergeOrMoveCells(gameState, gameState.selectedCellIndex, index, Date.now(), tastingFocus?.items);
     if (moveRes.action === 'MERGED' && moveRes.mergedItemId) {
       const mergedDef = ITEM_CATALOG[moveRes.mergedItemId];
       soundFX.playMerge(mergedDef?.level || 2);
@@ -563,7 +628,7 @@ export default function App() {
   // Pointer drag (works for touch, pen and mouse; HTML5 drag-and-drop never fires on phones)
   const handleDropOnCell = (fromIndex: number, targetIndex: number) => {
     if (fromIndex === targetIndex) return;
-    const moveRes = mergeOrMoveCells(gameState, fromIndex, targetIndex);
+    const moveRes = mergeOrMoveCells(gameState, fromIndex, targetIndex, Date.now(), tastingFocus?.items);
     if (moveRes.action === 'MERGED' && moveRes.mergedItemId) {
       const mergedDef = ITEM_CATALOG[moveRes.mergedItemId];
       soundFX.playMerge(mergedDef?.level || 2);
@@ -587,7 +652,8 @@ export default function App() {
 
   const handleCellPointerDown = (e: React.PointerEvent<HTMLButtonElement>, index: number) => {
     const cell = gameState.board[index];
-    if (!cell?.itemId || cell.sandLocked || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    if (activeDragCleanupRef.current || !cell?.itemId || cell.sandLocked || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    const pointerId = e.pointerId;
     const startX = e.clientX;
     const startY = e.clientY;
     const itemId = cell.itemId;
@@ -597,14 +663,29 @@ export default function App() {
       return el ? Number((el as HTMLElement).dataset.cellIndex) : null;
     };
     const move = (ev: PointerEvent) => {
+      if (ev.pointerId !== pointerId) return;
       if (!started && Math.hypot(ev.clientX - startX, ev.clientY - startY) < 8) return;
       started = true;
       setDragGhost({ itemId, x: ev.clientX, y: ev.clientY, from: index, over: cellAt(ev.clientX, ev.clientY) });
     };
-    const end = (ev: PointerEvent) => {
+    const cleanup = () => {
       window.removeEventListener('pointermove', move);
       window.removeEventListener('pointerup', end);
       window.removeEventListener('pointercancel', end);
+      window.removeEventListener('blur', cancel);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      activeDragCleanupRef.current = null;
+    };
+    const cancel = () => {
+      cleanup();
+      setDragGhost(null);
+    };
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') cancel();
+    };
+    const end = (ev: PointerEvent) => {
+      if (ev.pointerId !== pointerId) return;
+      cleanup();
       setDragGhost(null);
       if (!started || ev.type === 'pointercancel') return;
       suppressClickRef.current = true;
@@ -615,23 +696,24 @@ export default function App() {
     window.addEventListener('pointermove', move);
     window.addEventListener('pointerup', end);
     window.addEventListener('pointercancel', end);
+    window.addEventListener('blur', cancel);
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    activeDragCleanupRef.current = cleanup;
   };
 
   // Auto-Merge / Smart Hint Action
   const handleAutoMergeOrHint = () => {
-    const pair = findBestMergePair(gameState.board);
+    const pair = findBestMergePair(gameState.board, autoMergeReservations(gameState.activeOrders, tastingFocus?.items, gameState.inventory));
     if (!pair) {
       soundFX.playError();
-      showFeedback(
-        isAr
-          ? 'لا توجد عناصر متطابقة حالياً! انقر على المولّدات في الصف العلوي لإنتاج عناصر جديدة.'
-          : 'No matching pairs on board! Tap a Generator in the top row to spawn new items.'
-      );
+      const reservedMatch = findBestMergePair(gameState.board) !== null;
+      showFeedback(reservedMatch
+        ? (isAr ? 'العناصر المتطابقة مطلوبة لطلب أو وصفة مختارة. يمكنك تقديمها أو دمجها يدوياً إذا أردت.' : 'Matching items are needed for an order or focused recipe. You can use them or merge them manually if you prefer.')
+        : (isAr ? 'لا توجد عناصر متطابقة حالياً! انقر على المولّدات لإنتاج عناصر جديدة.' : 'No matching pairs on the board. Tap a generator to make more items.'));
       return;
     }
     const [fromIdx, toIdx] = pair;
-    setHintPair(pair);
-    const res = mergeOrMoveCells(gameState, fromIdx, toIdx);
+    const res = mergeOrMoveCells(gameState, fromIdx, toIdx, Date.now(), tastingFocus?.items);
     if (res.action === 'MERGED' && res.mergedItemId) {
       const mergedDef = ITEM_CATALOG[res.mergedItemId];
       soundFX.playMerge(mergedDef?.level || 2);
@@ -656,8 +738,8 @@ export default function App() {
       const next = cyclePowerMultiplier(prev);
       showFeedback(
         isAr
-          ? `مضاعف التحميص الآن ⚡×${next.powerMultiplier} (ينتج عناصر أعلى مباشرة!)`
-          : `Roastery Overdrive set to ⚡×${next.powerMultiplier} (Spawns higher-level items!)`
+          ? `المضاعف ×${next.powerMultiplier}: يستهلك حتى ${next.powerMultiplier} طاقة لكل نقرة.`
+          : `Boost ×${next.powerMultiplier}: costs up to ${next.powerMultiplier} energy per tap.`
       );
       return next;
     });
@@ -807,22 +889,22 @@ export default function App() {
   // Fulfill Customer Order
   const handleFulfillOrder = (orderId: string) => {
     const servedOrder = gameState.activeOrders.find((o) => o.id === orderId);
-    const res = fulfillCustomerOrder(gameState, orderId, activeSeason);
+    const res = fulfillCustomerOrder(gameState, orderId, getActiveSeason(new Date()));
     if (res.fulfilled) {
       soundFX.playOrderComplete();
-      if (servedOrder && isVoiceCharacter(servedOrder.customerId)) {
+      if (!res.rememberedGuest && servedOrder && isVoiceCharacter(servedOrder.customerId)) {
         soundFX.playVoice(servedOrder.customerId, servedOrder.isVip ? 'vip' : 'served');
       }
       setGameState(addEventPoints(res.state, Date.now(), EVENT_ORDER_POINTS));
-      showFeedback(
-        res.spawnedChest
-          ? isAr
-            ? 'تم تقديم ضيافة الموكب الملكي VIP! ربحت جواهر وصندوق ضيافة السدو على اللوحة!'
-            : 'VIP Royal Order Served! Earned Bonus Gems & dropped a Majlis Chest on board!'
-          : isAr
-          ? 'تم تقديم الضيافة بنجاح! ربحت ريالات ذهبية ونجوم إعمار الدرعية'
-          : 'Order Served! Earned Gold Riyals & Diriyah Renovation Stars'
-      );
+      if (res.rememberedGuest) setRememberedGuest(res.rememberedGuest);
+      showLevelUp(res.levelUp);
+      const guest = servedOrder ? (isAr ? servedOrder.customerNameAr : servedOrder.customerNameEn) : (isAr ? 'الضيف' : 'your guest');
+      const coins = res.state.coins - gameState.coins;
+      const stars = res.state.stars - gameState.stars;
+      const vipReward = servedOrder?.isVip ? ` · +${VIP_ORDER_GEMS} 💎` : '';
+      showFeedback(isAr
+        ? `تم استقبال ${guest} · +${coins} 🪙 · +${stars} ⭐${vipReward}${res.spawnedChest ? ' · صندوق ضيافة' : ''}`
+        : `Welcomed ${guest} · +${coins} 🪙 · +${stars} ⭐${vipReward}${res.spawnedChest ? ' · hospitality chest' : ''}`);
     } else {
       soundFX.playError();
       showFeedback(
@@ -834,12 +916,12 @@ export default function App() {
   };
 
   // Spin Daily Finjan Al-Sabah Wheel
-  const handleSpinWheel = (): WheelWedge | null => {
+  const handleSpinWheel = (): { wedge: WheelWedge; openedChest: boolean } | null => {
     const res = spinLuckyWheel(gameState);
     if (res.spun && res.wedge) {
       soundFX.playOrderComplete();
       setGameState(res.state);
-      return res.wedge;
+      return { wedge: res.wedge, openedChest: Boolean(res.openedChest) };
     }
     soundFX.playError();
     showFeedback(isAr ? 'رصيد الجواهر غير كافٍ للتدوير!' : 'Not enough Gems to spin!');
@@ -866,6 +948,11 @@ export default function App() {
     if (res.upgraded) {
       soundFX.playOrderComplete();
       setGameState(res.state);
+      showLevelUp(res.levelUp);
+      if (styleIndex !== undefined) {
+        showFeedback(isAr ? 'تم اختيار طراز الجناح.' : 'Wing style selected.');
+        return;
+      }
       showFeedback(
         isAr
           ? 'تم ترميم وتحديث جناح المجلس بنجاح! زادت هيبة المقهى ومكافآت الطلبات.'
@@ -895,25 +982,6 @@ export default function App() {
       };
       return nextState;
     });
-  };
-
-  // Buy Pack in Mada / Apple Pay Store
-  const handleBuyShopPack = (
-    _packId: string,
-    energyGain: number,
-    diamondsGain: number,
-    coinsGain: number,
-    activateVip?: boolean
-  ) => {
-    soundFX.playOrderComplete();
-    setGameState((prev) => ({
-      ...prev,
-      energy: prev.energy + energyGain,
-      maxEnergy: activateVip ? 150 : prev.maxEnergy,
-      diamonds: prev.diamonds + diamondsGain,
-      coins: prev.coins + coinsGain,
-      vipPassActive: activateVip ? true : prev.vipPassActive,
-    }));
   };
 
   const handleClaimShopGift = () => {
@@ -1012,7 +1080,7 @@ export default function App() {
     if (!res.claimed) return;
     soundFX.playOrderComplete();
     setGameState(res.state);
-    showFeedback(isAr ? `استلمت هدية اليوم ${res.day}!` : `Claimed Day ${res.day} reward!`);
+    showFeedback(isAr ? `استلمت الهدية ${res.day}!` : `Claimed gift ${res.day}!`);
   };
   const handleFinishPour = (fillPercent: number) => {
     const res = completePour(gameState, fillPercent);
@@ -1020,7 +1088,7 @@ export default function App() {
     soundFX.playOrderComplete();
     setGameState(res.state);
   };
-  const claimableQuests = questProgress(gameState).filter((r) => r.done && !r.claimed).length;
+  const claimableQuests = questProgress(gameState).filter((r) => r.done && !r.claimed).length + (gameState.questDelivery ? 1 : 0);
   const newDiscoveries = unclaimedDiscoveries(gameState);
   const discoveryCountRef = useRef(newDiscoveries.length);
   useEffect(() => {
@@ -1036,16 +1104,23 @@ export default function App() {
     gameState.renovationZones.some(
       (z) => z.unlockedLevel < 2 && gameState.stars >= (z.unlockedLevel === 0 ? z.starCostLevel1 : z.starCostLevel2)
     );
+  const showFirstRestoration = gameState.areaIndex === 0 && gameState.ordersCompleted > 0 && gameState.wingUpgrades === 0 && gameState.renovationZones.some(zone => zone.unlockedLevel === 0 && gameState.stars >= zone.starCostLevel1);
+  const pendingRestoredWing = gameState.storyFlags?.restoration_reveal_area === String(gameState.areaIndex)
+    ? gameState.renovationZones.find(zone => zone.id === gameState.storyFlags?.restoration_reveal_wing && zone.unlockedLevel > 0)
+    : undefined;
 
   // Stable cell callbacks so memoised BoardCells only re-render when their own data changes.
   const cellHandlersRef = useRef({ down: handleCellPointerDown, click: handleCellClick });
   cellHandlersRef.current = { down: handleCellPointerDown, click: handleCellClick };
   const onCellPointerDown = useCallback((e: React.PointerEvent<HTMLButtonElement>, index: number) => cellHandlersRef.current.down(e, index), []);
   const onCellClick = useCallback((index: number) => {
-    if (suppressClickRef.current) return;
+    if (suppressClickRef.current || activeDragCleanupRef.current) return;
     cellHandlersRef.current.click(index);
   }, []);
   const orderItemIds = new Set(gameState.activeOrders.flatMap((o) => o.requiredItemIds));
+  const focusedOrder = gameState.activeOrders.find(order => order.id === focusedOrderId);
+  const guideOrder = gameState.activeOrders.find(order => order.id === guideOrderId);
+  const focusedCells = focusedOrder ? focusCells(orderNeeds(focusedOrder, gameState.board, gameState.inventory), gameState.board) : tastingFocus ? focusCells(ingredientNeeds(tastingFocus.items, gameState.board, gameState.inventory), gameState.board) : new Set<number>();
 
   const selectedCell =
     gameState.selectedCellIndex !== null ? gameState.board[gameState.selectedCellIndex] : null;
@@ -1102,6 +1177,25 @@ export default function App() {
   };
 
   const tutorialStep = getTutorialStep(gameState);
+  const generatorBoost = effectiveGeneratorBoost(gameState.powerMultiplier, gameState.energy);
+  const generatorTier = generatorBoost === 4 ? 3 : generatorBoost === 2 ? 2 : 1;
+  const tutorialPair = tutorialStep === 'merge' ? tutorialMergePair(gameState) : null;
+  const tutorialReady = tutorialStep === 'serve' && gameState.activeOrders.some(order => findCellsForOrder(gameState.board, order.requiredItemIds) !== null);
+
+  if (saveBlocked) {
+    return <main dir={isAr ? 'rtl' : 'ltr'} className="min-h-screen bg-[#241812] text-[#FBF7F0] p-5 flex items-center justify-center">
+      <div className="w-full max-w-md rounded-2xl border-2 border-[#D99B26] bg-[#302116] p-5 space-y-4" role="alert" data-testid="save-recovery">
+        <button type="button" onClick={handleToggleLanguage} className="text-xs font-bold underline text-[#FBBF24]">{isAr ? 'English' : 'العربية'}</button>
+        <h1 className="text-xl font-black">{isAr ? 'تعذّر فتح التقدم المحفوظ' : 'Unable to open saved progress'}</h1>
+        <p className="text-sm leading-relaxed">{initialSave.status === 'unavailable' ? (isAr ? 'التخزين غير متاح حالياً. أعد المحاولة قبل البدء حتى لا تفقد تقدمك.' : 'Storage is unavailable. Try again before starting so your progress is not overwritten.') : (isAr ? 'تعذّر قراءة التقدم أو نسخته الاحتياطية. لم نستبدلهما. يمكنك استيراد رمز نقل محفوظ.' : 'The save and its backup could not be read. They have not been replaced. You can import a saved transfer code.')}</p>
+        {saveFailed && <p className="text-sm font-bold text-[#FCA5A5]">{isAr ? 'تعذّر تحديث التخزين. أعد المحاولة.' : 'Storage could not be updated. Please try again.'}</p>}
+        <button type="button" onClick={() => window.location.reload()} className="w-full rounded-xl btn-3d-amber py-3 font-bold text-[#241812]">{isAr ? 'إعادة المحاولة' : 'Try again'}</button>
+        <button type="button" onClick={() => setTransferOpen(true)} className="w-full rounded-xl border border-[#D99B26] py-3 font-bold">{isAr ? 'استيراد رمز التقدم' : 'Import a transfer code'}</button>
+        {initialSave.status === 'corrupt' && (confirmFresh ? <div className="space-y-2"><p className="text-xs text-[#FCA5A5]">{isAr ? 'سيُحذف التقدم غير المقروء ونسخته الاحتياطية.' : 'This deletes the unreadable save and its backup.'}</p><button type="button" onClick={() => { if (!clearSavedGameState()) { setSaveFailed(true); return; } setGameState(createInitialGameState()); setSaveBlocked(false); setSaveFailed(false); setShellState('title'); }} className="w-full rounded-xl bg-[#B91C1C] py-3 font-bold">{isAr ? 'نعم، ابدأ من جديد' : 'Yes, start a new game'}</button><button type="button" onClick={() => setConfirmFresh(false)} className="w-full text-sm underline">{isAr ? 'إلغاء' : 'Cancel'}</button></div> : <button type="button" onClick={() => setConfirmFresh(true)} className="w-full text-sm underline">{isAr ? 'ابدأ لعبة جديدة' : 'Start a new game'}</button>)}
+      </div>
+      {transferOpen && <Suspense fallback={null}><SaveTransferModal lang={lang} state={gameState} allowExport={false} onClose={() => setTransferOpen(false)} onImport={imported => { setGameState(imported); setSaveBlocked(false); setTransferOpen(false); setSaveFailed(false); setShellState('title'); }} /></Suspense>}
+    </main>;
+  }
 
   // ============================================================================
   // 1. TITLE SCREEN ('title')
@@ -1246,6 +1340,7 @@ export default function App() {
         coins={gameState.coins}
         gems={gameState.diamonds}
         muted={muted}
+        hapticsEnabled={hapticsEnabled}
         freeSpins={gameState.freeSpinsAvailable}
         onEnergy={() => setEnergyOpen(true)}
         onCoins={() => setWorkshopOpen(true)}
@@ -1262,11 +1357,13 @@ export default function App() {
         }}
         onToggleLanguage={handleToggleLanguage}
         onToggleMute={() => handleToggleMute()}
+        onToggleHaptics={handleToggleHaptics}
         onPause={() => handleTogglePause()}
         onTransfer={() => setTransferOpen(true)}
         onReplayStory={() => setStoryLogOpen(true)}
         overlay={
           <>
+            {(saveFailed || showRecovered) && <div role="status" data-testid="save-notice" className="pointer-events-auto max-w-[440px] w-full rounded-2xl bg-[#7F1D1D] border-2 border-[#FCA5A5] px-3 py-2 text-xs font-bold text-white shadow-lg flex gap-2 items-center"><span className="flex-1">{saveFailed ? (isAr ? 'تعذّر حفظ التقدم. افتح نقل التقدم لنسخ رمزك وحاول لاحقاً.' : 'Progress could not be saved. Open Transfer progress to copy your code and try again.') : (isAr ? 'استعدنا النسخة الاحتياطية. قد تكون آخر خطوة غير محفوظة.' : 'A backup was restored. Your most recent action may be missing.')}</span><button type="button" onClick={() => saveFailed ? setTransferOpen(true) : setShowRecovered(false)} className="underline shrink-0">{saveFailed ? (isAr ? 'نقل التقدم' : 'Transfer') : (isAr ? 'حسناً' : 'OK')}</button></div>}
             {levelUpToast && (
               <div role="status" data-testid="level-up-toast" className="level-up-toast px-4 py-2 rounded-2xl bg-[#10B981] text-white text-sm font-extrabold shadow-lg">
                 {isAr ? `ارتقيت للمستوى ${levelUpToast.toLevel}! +${levelUpToast.gems}💎 +${levelUpToast.energy}⚡` : `Level ${levelUpToast.toLevel}! +${levelUpToast.gems}💎 +${levelUpToast.energy}⚡`}
@@ -1279,32 +1376,30 @@ export default function App() {
               </div>
             )}
             {feedbackBanner && (
-              <div role="status" className="max-w-[440px] text-center px-3 py-1 rounded-full bg-[#3E2723]/95 border border-[#FBBF24] text-[11px] font-bold text-[#FEF3C7] shadow truncate">
+              <div role="status" className="max-w-[440px] text-center px-3 py-1 rounded-2xl bg-[#3E2723]/95 border border-[#FBBF24] text-[11px] leading-snug font-bold text-[#FEF3C7] shadow break-words">
                 {feedbackBanner}
-              </div>
-            )}
-            {workspace === 'merge' && tutorialStep === 'merge' && (
-              <div data-testid="tutorial-coach" className="pointer-events-auto max-w-[440px] w-full flex items-start gap-2 rounded-2xl bg-[#ECFDF5] border-2 border-[#10B981] shadow-lg px-3 py-2 text-xs font-bold text-[#065F46]">
-                <span className="flex-1 leading-relaxed">
-                  {isAr
-                    ? 'اسحب عنصراً فوق عنصر مطابق (أو انقر الاثنين) لدمجهما. الإطار الأخضر يعني دمجاً ممكناً.'
-                    : 'Drag an item onto a matching one (or tap both) to merge. A green ring means a match.'}
-                </span>
-                <button type="button" onClick={() => setGameState((prev) => ({ ...prev, tutorialDismissed: true }))} className="shrink-0 underline">
-                  {isAr ? 'تخطي' : 'Skip'}
-                </button>
               </div>
             )}
           </>
         }
-        below={<LiveEventBar lang={lang} state={gameState} onOpen={() => setEventOpen(true)} />}
+        below={!tutorialStep && <div className={workspace === 'merge' ? 'header-event-merge' : undefined}><LiveEventBar lang={lang} state={gameState} onOpen={() => setEventOpen(true)} /></div>}
       />
 
       {/* 2. MAIN CENTERED STAGE (Clean, Uncluttered Gossip Harbor / Travel Town Layout) */}
-      <main className="flex-1 max-w-4xl w-full mx-auto px-2 sm:px-5 pt-1.5 pb-24 flex flex-col gap-1.5">
+      <main className="game-main flex-1 max-w-4xl w-full mx-auto px-2 sm:px-5 pt-1.5 pb-[calc(6rem+env(safe-area-inset-bottom))] flex flex-col gap-1.5">
+        {tastingOpen && <CoffeeTasting onRetrieve={handleRetrieveFromPantry} lang={lang} state={gameState} onChange={setGameState} onClose={() => setTastingOpen(false)} onMajlis={() => { setTastingOpen(false); setWorkspace('majlis'); }} onPrepared={() => setTastingFocus(null)} onFocusRecipe={(items, nameAr, nameEn) => { setTastingFocus({ kind: 'tasting', items, nameAr, nameEn }); setFocusedOrderId(null); setTastingOpen(false); }} />}
+        {taifWelcomeOpen && <TaifWelcome onRetrieve={handleRetrieveFromPantry} lang={lang} state={gameState} onChange={setGameState} onClose={() => setTaifWelcomeOpen(false)} onPrepared={() => setTastingFocus(null)} onFocus={(items, nameAr, nameEn) => { setTastingFocus({ kind: 'taif', items, nameAr, nameEn }); setFocusedOrderId(null); setTaifWelcomeOpen(false); setWorkspace('merge'); }} />}
+        {rememberedGuest && tastingGuestMemory(gameState.storyFlags, rememberedGuest) && <GuestMemoryModal lang={lang} memory={tastingGuestMemory(gameState.storyFlags, rememberedGuest)!} onClose={() => setRememberedGuest(null)} />}
+        {guideOrder && <OrderGuide order={guideOrder} state={gameState} season={activeSeason} lang={lang} focused={focusedOrderId === guideOrder.id} onClose={() => setGuideOrderId(null)} onRetrieve={handleRetrieveFromPantry} onServe={() => { handleFulfillOrder(guideOrder.id); setGuideOrderId(null); }} onFocus={() => { setFocusedOrderId(current => current === guideOrder.id ? null : guideOrder.id); setTastingFocus(null); setGuideOrderId(null); }} />}
 
         {/* Persistent prompts sit just above the bottom navigation */}
-        <div className="fixed bottom-[64px] inset-x-0 z-30 flex flex-col items-center gap-1.5 px-3 pointer-events-none">
+        <div className="fixed bottom-[calc(64px+env(safe-area-inset-bottom))] inset-x-0 z-30 flex flex-col items-center gap-1.5 px-3 pointer-events-none">
+          {workspace === 'merge' && saleReceipt && canUndoSale(gameState, saleReceipt) && (
+            <div role="status" data-testid="sale-undo" className="pointer-events-auto max-w-[440px] w-full flex items-center gap-2 rounded-2xl bg-[#241812] border-2 border-[#D99B26] shadow-xl px-3 py-2 text-[#FFF8E8]">
+              <span className="flex-1 text-xs font-bold">{isAr ? `تم بيع ${ITEM_CATALOG[saleReceipt.itemId].nameAr}` : `Sold ${ITEM_CATALOG[saleReceipt.itemId].nameEn}`} · +{saleReceipt.value} 🪙</span>
+              <button type="button" onClick={() => { setGameState(prev => undoSale(prev, saleReceipt)); setSaleReceipt(null); }} className="rounded-xl bg-[#FBBF24] px-3 py-2 text-xs font-black text-[#3B2410]">{isAr ? 'تراجع' : 'Undo'}</button>
+            </div>
+          )}
           {/* B. FLOATING GOLDEN BONUS BUBBLE DEAL (When Active) */}
           {workspace === 'merge' && gameState.bonusBubble && (
             <div data-testid="bonus-bubble" className="pointer-events-auto max-w-[440px] level-up-toast w-full rounded-2xl bg-gradient-to-r from-[#FEF3C7] via-[#FDE68A] to-[#FEF3C7] border-2 border-[#D97706] px-3 py-1.5 flex items-center justify-between gap-2 shadow-xl">
@@ -1352,18 +1447,6 @@ export default function App() {
               <button type="button" onClick={() => setSandPromptIndex(null)} className="text-xs font-bold text-[#92400E] px-1">✕</button>
             </div>
           )}
-          {workspace === 'merge' && tutorialStep === 'serve' && (
-            <div data-testid="tutorial-coach" className="pointer-events-auto max-w-[440px] w-full flex items-start gap-2 rounded-2xl bg-[#ECFDF5] border-2 border-[#10B981] shadow-lg px-3 py-2 text-xs font-bold text-[#065F46]">
-              <span className="flex-1 leading-relaxed">
-                {isAr
-                  ? 'ممتاز! جهّز العناصر ذات علامة ✓ ثم اضغط «تقديم» في بطاقة الضيف.'
-                  : 'Nice! Gather the items marked ✓, then press Serve on the guest card.'}
-              </span>
-              <button type="button" onClick={() => setGameState((prev) => ({ ...prev, tutorialDismissed: true }))} className="shrink-0 underline">
-                {isAr ? 'تخطي' : 'Skip'}
-              </button>
-            </div>
-          )}
         </div>
 
         {workspace === 'majlis' ? (
@@ -1372,7 +1455,23 @@ export default function App() {
             lang={lang}
             storyOpen={Boolean(activeScene || gameState.activeStoryId || endingOpen || replayChapterId)}
             zones={gameState.renovationZones}
+            tastingFlags={gameState.storyFlags}
+            onOpenTasting={() => setTastingOpen(true)}
+            taifAvailable={taifWelcomeAvailable(gameState)}
+            taifWelcome={gameState.storyFlags?.taif_welcome}
+            onOpenTaif={() => setTaifWelcomeOpen(true)}
             stars={gameState.stars}
+            showFirstRestoration={showFirstRestoration}
+            pourTokens={gameState.pourTokens}
+            pourUnlocked={gameState.wingUpgrades > 0}
+            onOpenPour={() => setPourOpen(true)}
+            restoredWing={pendingRestoredWing?.id}
+            onDismissRestorationReveal={() => setGameState(prev => {
+              const flags = { ...prev.storyFlags };
+              delete flags.restoration_reveal_area;
+              delete flags.restoration_reveal_wing;
+              return { ...prev, storyFlags: flags };
+            })}
             activeRegion={gameState.activeRegion}
             ambiance={gameState.ambiance}
             completedStoryIds={gameState.completedStoryIds}
@@ -1393,7 +1492,24 @@ export default function App() {
           </Suspense>
         ) : (
           /* FOCUSED SINGLE-COLUMN MERGE-2 STAGE (Exact Gossip Harbor / Travel Town Proportions) */
-          <div className="w-full max-w-[430px] mx-auto flex flex-col items-center gap-1.5">
+          <div className="merge-stage w-full max-w-[430px] mx-auto flex flex-col items-center gap-1.5">
+            <div className="merge-context w-full flex flex-col gap-1.5">
+            {!tutorialStep && <div className="landscape-event-merge"><LiveEventBar lang={lang} state={gameState} onOpen={() => setEventOpen(true)} /></div>}
+            {tutorialStep && <div data-testid="tutorial-coach" className="w-full flex items-center gap-2 rounded-xl bg-[#ECFDF5] border-2 border-[#10B981] px-3 py-1.5 text-xs font-bold text-[#065F46]">
+              <span className="flex-1 leading-snug">{tutorialStep === 'merge'
+                ? tutorialPair
+                  ? (isAr ? `اسحب أو انقر قطعتي ${ITEM_CATALOG[tutorialPair.itemId].nameAr} المحددتين لتحضير طلب الضيف.` : `Drag together or tap both highlighted ${ITEM_CATALOG[tutorialPair.itemId].nameEn} pieces for a guest.`)
+                  : (isAr ? 'اسحب عنصرين متطابقين أو انقرهما لدمجهما.' : 'Drag two matching items together, or tap both to merge.')
+                : tutorialReady
+                  ? (isAr ? 'طلب جاهز! اضغط «تقديم» لاستقبال الضيف.' : 'An order is ready! Tap Serve to welcome your guest.')
+                  : (isAr ? 'اضغط «دليل» بجانب الضيف لمعرفة طريقة تجهيز العناصر الناقصة.' : 'Tap Guide beside a guest to find the missing items.')}</span>
+              <button type="button" onClick={() => setGameState(prev => ({ ...prev, tutorialDismissed: true }))} className="min-h-11 shrink-0 underline">{isAr ? 'تخطي' : 'Skip'}</button>
+            </div>}
+            {!tutorialStep && <div className="w-full flex items-center gap-1 rounded-xl border border-[#C68B59] bg-[#3E2723] text-[#FEF3C7]"><button type="button" onClick={() => tastingFocus?.kind === 'taif' ? setTaifWelcomeOpen(true) : setTastingOpen(true)} data-testid="open-tasting" className="flex-1 min-w-0 px-3 py-1.5 text-start text-xs font-bold truncate">
+              ☕ {tastingFocus ? (isAr ? `تحضير: ${tastingFocus.nameAr}` : `Preparing: ${tastingFocus.nameEn}`) : gameState.storyFlags?.tasting_complete ? (isAr ? 'ذكرى جلسة فيصل ✓' : "Faisal's tasting memory ✓") : (isAr ? 'جلسة تذوق فيصل · جهّز الضيافة' : "Faisal's tasting · prepare the gathering")}
+            </button>{tastingFocus && <button type="button" onClick={() => setTastingFocus(null)} aria-label={isAr ? 'إلغاء التركيز على الصينية' : 'Stop focusing on this tray'} className="px-3 py-1.5 text-xs font-bold">✕</button>}</div>}
+            {!tutorialStep && showFirstRestoration && !hideFirstRestorationPrompt && <div className="w-full flex items-center rounded-xl border border-[#D99B26] bg-[#FFF3D4] text-[#78350F]"><button type="button" data-testid="first-restoration-prompt" onClick={() => setWorkspace('majlis')} className="flex-1 min-h-11 px-3 py-1.5 text-start text-xs font-bold">⭐ {isAr ? 'نجوم الضيافة تكفي لترميم جناح في المجلس · افتح المجلس' : 'Your hospitality stars can restore a Majlis wing · Open the Majlis'}</button><button type="button" onClick={() => setHideFirstRestorationPrompt(true)} aria-label={isAr ? 'إخفاء تلميح الترميم' : 'Hide restoration hint'} className="min-h-11 min-w-11 font-bold">✕</button></div>}
+            {!tutorialStep && pendingRestoredWing && <button type="button" data-testid="pending-restoration-prompt" onClick={() => setWorkspace('majlis')} className="w-full min-h-11 rounded-xl border border-[#D99B26] bg-[#FFF3D4] px-3 py-1.5 text-start text-xs font-bold text-[#78350F]">✨ {isAr ? `ترميم «${pendingRestoredWing.nameAr}» ينتظرك في المجلس` : `Your restored ${pendingRestoredWing.nameEn} is ready to see in the Majlis`}</button>}
             {/* A. GOSSIP HARBOR-STYLE CUSTOMER ORDER TRAY (Directly Above the Board) */}
             <section
               aria-label={isAr ? 'شريط طلبات الضيوف العلوي' : 'Top Customer Order Dock'}
@@ -1405,11 +1521,13 @@ export default function App() {
                   order.requiredItemIds
                 );
                 const isReady = readyIndices !== null;
+                const needs = orderNeeds(order, gameState.board, gameState.inventory);
+                const reward = orderCoinReward(gameState, order, activeSeason);
 
                 return (
                   <div
                     key={order.id}
-                    className={`relative rounded-2xl p-1.5 sm:p-2 border-2 flex flex-col justify-between transition-all shadow-md overflow-hidden ${
+                    className={`relative rounded-2xl p-1.5 sm:p-2 border-2 flex flex-col justify-between transition-all shadow-md overflow-hidden ${focusedOrder?.id === order.id ? 'ring-2 ring-[#F59E0B]' : ''} ${
                       isReady
                         ? 'bg-gradient-to-b from-[#ECFDF5] to-[#D1FAE5] border-[#059669] ring-2 ring-[#10B981]/40'
                         : order.isVip
@@ -1419,37 +1537,38 @@ export default function App() {
                   >
                     {/* Character Bust (VIP ribbon on its lower edge, clear of the name) + Name + Coin/Star Reward */}
                     <div className="flex items-center gap-1">
-                      <span className="relative shrink-0">
+                      <button type="button" onClick={() => setGuideOrderId(order.id)} aria-label={isAr ? `دليل طلب ${order.customerNameAr}` : `Order guide for ${order.customerNameEn}`} className="relative flex min-h-11 min-w-11 items-center justify-center shrink-0 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#92400E]">
                         <CustomerPortrait avatarKey={order.customerId} size="sm" />
+                        <span aria-hidden="true" className="absolute top-0 right-0 rounded-full bg-[#78350F] text-white w-3.5 h-3.5 text-[10px] leading-[14px] font-black text-center">i</span>
                         {order.isVip && (
                           <span data-testid="vip-ribbon" className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-1 rounded-full bg-gradient-to-r from-[#D97706] to-[#B45309] text-white text-[8px] leading-[12px] font-black shadow">
                             VIP
                           </span>
                         )}
-                      </span>
+                      </button>
                       <div className="min-w-0 flex-1">
                         <div className="text-[10px] sm:text-[11px] leading-tight font-extrabold text-[#2C1E14] line-clamp-2 break-words">
                           {isAr ? order.customerNameAr : order.customerNameEn}
                         </div>
                         <div className="inline-flex items-center gap-0.5 text-[9px] sm:text-[10px] font-black tabular-nums text-[#B45309]">
-                          <span>+{order.rewardCoins}</span>
+                          <span data-testid={`order-coins-${order.id}`}>+{reward.total}</span>
                           <span>·</span>
                           <span className="inline-flex items-center gap-0.5 text-[#D97706]">
                             <Star className="w-2.5 h-2.5 fill-current" />
                             {order.rewardStars}
                           </span>
                         </div>
+                        {order.isVip && <div data-testid={`vip-rewards-${order.id}`} className="text-[9px] leading-tight font-black text-[#0369A1]" aria-label={isAr ? `مكافأة إضافية ${VIP_ORDER_GEMS} جواهر${order.requiredItemIds.length > 0 ? ' وصندوق ضيافة' : ''}` : `Bonus ${VIP_ORDER_GEMS} gems${order.requiredItemIds.length > 0 ? ' and a hospitality chest' : ''}`}>+{VIP_ORDER_GEMS} 💎 {order.requiredItemIds.length > 0 && '🎁'}</div>}
+                        {focusedOrder?.id === order.id && <button type="button" onClick={() => setFocusedOrderId(null)} aria-label={isAr ? 'إلغاء التركيز على الطلب' : 'Stop focusing on this order'} className="min-h-6 text-[10px] font-black text-[#92400E] underline">{isAr ? 'إلغاء التركيز ×' : 'Unfocus ×'}</button>}
                       </div>
                     </div>
 
                     {/* Speech-Bubble Recipe Tray + Serve CTA */}
                     <div className="mt-1 pt-1 border-t border-[#D4B483]/50 flex flex-row items-center justify-between gap-1">
-                      <div className="flex items-center justify-start gap-0.5 min-w-0">
+                      <div className="flex flex-1 items-center justify-start gap-0.5 min-w-0 overflow-x-auto">
                         {order.requiredItemIds.map((reqId, idx) => {
                           const reqDef = ITEM_CATALOG[reqId];
-                          const hasItem = gameState.board.some(
-                            (c) => !c.sandLocked && c.itemId === reqId
-                          );
+                          const hasItem = needs[idx]?.location === 'board';
                           return (
                             <button
                               key={`${order.id}_top_${reqId}_${idx}`}
@@ -1461,13 +1580,13 @@ export default function App() {
                                 }
                               }}
                               title={isAr ? reqDef?.nameAr : reqDef?.nameEn}
-                              className={`relative w-7 h-7 rounded-lg border-2 flex items-center justify-center cursor-pointer transition-transform hover:scale-105 shrink-0 ${
+                              className={`relative w-6 h-6 rounded-lg border-2 flex items-center justify-center cursor-pointer shrink-0 ${
                                 hasItem
                                   ? 'bg-[#DCFCE7] border-[#10B981] shadow-sm'
                                   : 'bg-[#F8EFE0] border-[#D4B483]'
                               }`}
                             >
-                              <ItemArtwork itemId={reqId} size="sm" />
+                              <ItemArtwork itemId={reqId} size="xs" />
                               {hasItem && (
                                 <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-[#10B981] border border-white text-white flex items-center justify-center shadow">
                                   <Check className="w-2 h-2 stroke-[3.5]" />
@@ -1480,7 +1599,7 @@ export default function App() {
 
                       <button
                         type="button"
-                        onClick={() => handleFulfillOrder(order.id)}
+                        onClick={() => isReady ? handleFulfillOrder(order.id) : setGuideOrderId(order.id)}
                         className={`px-1.5 py-1 rounded-lg text-[10px] font-black transition-all cursor-pointer whitespace-nowrap text-center shrink-0 ${
                           isReady
                             ? 'btn-3d-green text-white'
@@ -1492,8 +1611,8 @@ export default function App() {
                             ? 'تقديم!'
                             : 'Serve!'
                           : isAr
-                          ? 'تحضير'
-                          : 'Craft'}
+                          ? 'دليل'
+                          : 'Guide'}
                       </button>
                     </div>
                   </div>
@@ -1501,10 +1620,12 @@ export default function App() {
               })}
             </section>
 
+            </div>
             {/* C. CARVED NAJDI WOOD & SUN-LIT IVORY 7×7 MERGE BOARD */}
-            <div className="w-full rounded-3xl board-wood-frame p-2 sm:p-2.5 border-2 border-[#563216]">
+            <div className="merge-play w-full flex flex-col items-center gap-1.5">
+            <div className={`w-full rounded-3xl board-wood-frame p-2 sm:p-2.5 border-2 border-[#563216] ${tutorialStep ? 'tutorial-board' : ''}`}>
               {/* Top Bezel Booster Bar */}
-              <div className="flex items-center justify-between mb-1.5 px-1 gap-1">
+              <div className="board-toolbar flex items-center justify-between mb-1.5 px-1 gap-1">
                 <div className="flex items-center gap-1.5">
                   <button
                     aria-label={isAr ? 'دمج تلقائي' : 'Auto-Merge'}
@@ -1513,7 +1634,7 @@ export default function App() {
                     className="px-2.5 py-1 rounded-xl btn-3d-green text-white text-[11px] font-extrabold inline-flex items-center gap-1 cursor-pointer whitespace-nowrap"
                   >
                     <Sparkles className="w-3 h-3" />
-                    <span className="hidden min-[360px]:inline">{isAr ? 'دمج تلقائي' : 'Auto-Merge'}</span>
+                    <span className="tutorial-toolbar-label hidden min-[360px]:inline">{isAr ? 'دمج تلقائي' : 'Auto-Merge'}</span>
                   </button>
 
                   <button
@@ -1533,7 +1654,7 @@ export default function App() {
                     className="px-2.5 py-1 rounded-xl bg-[#FFFDF9] hover:bg-[#FEF3C7] border border-[#D4B483] text-[#5C3A21] text-[11px] font-extrabold inline-flex items-center gap-1 cursor-pointer whitespace-nowrap shadow-sm"
                   >
                     <Info className="w-3 h-3 text-[#D97706]" />
-                    <span className="hidden min-[360px]:inline">{isAr ? 'دليل السلاسل' : 'Chains'}</span>
+                    <span className="tutorial-toolbar-label hidden min-[360px]:inline">{isAr ? 'دليل السلاسل' : 'Chains'}</span>
                     {newDiscoveries.length > 0 && (
                       <span data-testid="discovery-badge" className="min-w-[16px] h-4 px-1 rounded-full bg-[#EF4444] text-white text-[10px] font-black flex items-center justify-center">
                         {newDiscoveries.length}
@@ -1582,11 +1703,16 @@ export default function App() {
                 </div>
               </div>
 
+              <div className="mb-1 px-1 text-[#FFF4DA]"><div className="flex items-center justify-between gap-2"><button type="button" data-testid="show-board" onClick={() => { boardGridRef.current?.scrollIntoView({ block: 'center' }); boardGridRef.current?.focus({ preventScroll: true }); }} className="min-h-8 text-[11px] font-bold underline">{isAr ? 'إظهار اللوحة كاملة' : 'Show the whole board'}</button>{!tutorialStep && <button type="button" onClick={() => setShowBoostHelp(value => !value)} aria-expanded={showBoostHelp} aria-controls="boost-explanation" className="min-h-8 text-[11px] font-bold underline">{isAr ? 'كيف يعمل المضاعف؟' : 'How does the boost work?'}</button>}</div>{!tutorialStep && showBoostHelp && <p id="boost-explanation" data-testid="boost-explanation" className="text-[10px] leading-snug font-bold">{generatorBoost === 0 ? (isAr ? 'لا توجد طاقة للمولّد الآن.' : 'No energy available for a generator yet.') : (isAr ? `كل نقرة: ${generatorBoost} طاقة · المستوى الأساسي ${generatorTier}، وقد ينتج مستوى أعلى${generatorBoost < gameState.powerMultiplier ? ' · خُفّض المضاعف مؤقتاً لقلة الطاقة' : ''}.` : `Per tap: ${generatorBoost} energy · base level ${generatorTier}; a lucky drop can be higher${generatorBoost < gameState.powerMultiplier ? ' · boost reduced while energy is low' : ''}.`)}</p>}</div>
+
               {/* 7×7 Inner Recessed Board Well + High-Level Merge Particle Overlay */}
               <div className="relative w-full">
                 <div
+                  ref={boardGridRef}
+                  tabIndex={-1}
+                  aria-label={isAr ? 'لوحة الدمج' : 'Merge board'}
                   data-testid="merge-board-grid"
-                  className="grid grid-cols-7 gap-1 sm:gap-1.5 aspect-square w-full board-inner-well p-1.5 sm:p-2 rounded-2xl"
+                  className="grid grid-cols-[repeat(7,minmax(0,1fr))] gap-1 sm:gap-1.5 aspect-square w-full board-inner-well p-1.5 sm:p-2 rounded-2xl"
                 >
                   {gameState.board.map((cell) => (
                     <BoardCell
@@ -1595,7 +1721,8 @@ export default function App() {
                       isAr={isAr}
                       isSelected={gameState.selectedCellIndex === cell.index}
                       isCelebrating={Boolean(celebratingCells[cell.index])}
-                      isHinted={hintPair !== null && (hintPair[0] === cell.index || hintPair[1] === cell.index)}
+                      isFocused={focusedCells.has(cell.index)}
+                      isTutorialTarget={Boolean(tutorialPair?.indices.includes(cell.index))}
                       isMergeTarget={Boolean(
                         selectedCell && selectedCell.index !== cell.index && !selectedCell.sandLocked && canMergeItems(selectedCell.itemId, cell.itemId)
                       )}
@@ -1639,7 +1766,7 @@ export default function App() {
                         {/* D. BOTTOM INSPECTOR & 4-SLOT SADU PANTRY TRAY (Clean Single-Row/Card Dock Below Board) */}
             <section
               aria-label={isAr ? 'تفاصيل العنصر وخزانة المؤونة' : 'Item Inspector & Sadu Pantry'}
-              className="w-full rounded-2xl bg-[#FFFDF9] border-2 border-[#C8AF87] p-3 shadow-md flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3"
+              className="item-inspector w-full rounded-2xl bg-[#FFFDF9] border-2 border-[#C8AF87] p-3 shadow-md flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3"
             >
               {/* Left: Selected Item Inspector */}
               <div className="flex items-center justify-between gap-2.5 flex-1 min-w-0">
@@ -1684,15 +1811,16 @@ export default function App() {
                           </button>
                           <button
                             type="button"
-                            onClick={() =>
-                              gameState.selectedCellIndex !== null &&
-                              setGameState((prev) =>
-                                sellBoardItem(prev, prev.selectedCellIndex!)
-                              )
-                            }
+                            onClick={() => {
+                              if (gameState.selectedCellIndex === null) return;
+                              const result = sellWithReceipt(gameState, gameState.selectedCellIndex);
+                              if (!result) return;
+                              setGameState(result.state);
+                              setSaleReceipt(result.receipt);
+                            }}
                             className="px-2.5 py-1.5 rounded-xl bg-[#FEF3C7] hover:bg-[#FDE68A] border border-[#D97706] text-[#92400E] text-xs font-extrabold cursor-pointer whitespace-nowrap"
                           >
-                            +{selectedItemDef.sellValue}
+                            {isAr ? 'بيع' : 'Sell'} · +{selectedItemDef.sellValue}
                           </button>
                         </>
                       ) : null}
@@ -1748,6 +1876,7 @@ export default function App() {
                 })}
               </div>
             </section>
+            </div>
           </div>
         )}
       </main>
@@ -1794,7 +1923,7 @@ export default function App() {
       )}
 
       {eventOpen && (
-        <LiveEventModal lang={lang} state={gameState} onClose={() => setEventOpen(false)} onClaim={handleClaimEventMilestone} />
+        <LiveEventModal lang={lang} state={gameState} onClose={() => setEventOpen(false)} onClaim={handleClaimEventMilestone} onAcknowledge={() => setGameState(prev => ({ ...prev, festivalDelivery: null }))} />
       )}
 
       {energyOpen && (
@@ -1811,12 +1940,12 @@ export default function App() {
         />
       )}
       {questsOpen && (
-        <QuestsModal lang={lang} state={gameState} onClose={() => setQuestsOpen(false)} onClaim={handleClaimQuest} onClaimBonus={handleClaimQuestBonus} />
+        <QuestsModal lang={lang} state={gameState} onClose={() => setQuestsOpen(false)} onClaim={handleClaimQuest} onClaimBonus={handleClaimQuestBonus} onAcknowledge={() => setGameState(prev => ({ ...prev, questDelivery: null }))} />
       )}
       {workshopOpen && (
         <WorkshopModal lang={lang} state={gameState} onClose={() => setWorkshopOpen(false)} onUpgrade={handleUpgradeGenerator} />
       )}
-      <DailyLoginModal lang={lang} day={gameState.activeStoryId ? null : dailyLoginDay} onClaim={handleClaimDailyLogin} />
+      <DailyLoginModal lang={lang} day={gameState.activeStoryId ? null : dailyLoginDay} boardFull={findNearestEmptyCell(gameState.board, 24) === null} onClaim={handleClaimDailyLogin} />
       {pourOpen && (
         <Suspense fallback={null}>
         <FinjanPourModal lang={lang} isOpen={pourOpen} tokens={gameState.pourTokens} onFinish={handleFinishPour} onClose={() => setPourOpen(false)} />
@@ -1901,7 +2030,9 @@ export default function App() {
             ordersCompleted={gameState.ordersCompleted}
             totalRenovated={totalRenovated}
             freeSpinsAvailable={gameState.freeSpinsAvailable}
+            lastWheelPrize={gameState.lastWheelPrize}
             diamonds={gameState.diamonds}
+            boardFull={findNearestEmptyCell(gameState.board, 24) === null}
             mazayenVotesRemaining={gameState.mazayenVotesRemaining}
             votedRivalIds={gameState.votedRivalIds}
             onSpinWheel={handleSpinWheel}
@@ -1922,7 +2053,6 @@ export default function App() {
             vipPassActive={gameState.vipPassActive}
             onClose={() => setShopModalOpen(false)}
             onClaimGift={handleClaimShopGift}
-            onBuyPack={handleBuyShopPack}
             onClaimMilestone={handleClaimMilestone}
           />
         </Suspense>
@@ -1934,7 +2064,7 @@ export default function App() {
           role="dialog"
           aria-modal="true"
           aria-label={shellState === 'gameover' ? 'Majlis Restoration Complete' : 'Game Paused'}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75"
+          className="safe-dialog fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75"
         >
           <div className="w-full max-w-md rounded-3xl border-4 border-[#C68B59] bg-[#FFFDF9] text-[#2C1E14] p-6 shadow-2xl text-center space-y-5">
             <div className="h-2 w-full sadu-trim rounded" />

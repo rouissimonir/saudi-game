@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as P from './progression';
-import { createInitialGameState, fulfillCustomerOrder, spawnFromGenerator, ITEM_CATALOG, GameState } from './rules';
+import { createInitialGameState, fulfillCustomerOrder, spawnFromGenerator, ITEM_CATALOG, ORDER_TEMPLATES, GameState } from './rules';
 
 const fresh = () => createInitialGameState();
 
@@ -25,6 +25,47 @@ test('energy regenerates from timestamps, including while the app was closed, an
   assert.equal(P.msUntilNextEnergy(s, t0), null);
   const over = { ...fresh(), energy: 150, lastEnergyTick: t0 };
   assert.equal(P.applyEnergyRegen(over, t0 + 10 * P.ENERGY_REGEN_MS).energy, 150, 'bonus energy above the cap is kept, not clipped');
+});
+
+test('spending from full energy starts a fresh refill timer while partial energy keeps its progress', () => {
+  const now = 1_000_000;
+  const base = { ...fresh(), energy: 100, maxEnergy: 100, lastEnergyTick: now - 59_000 };
+  const spent = spawnFromGenerator(base, 1, 0, now).state;
+  assert.equal(spent.energy, 99);
+  assert.equal(P.msUntilNextEnergy(spent, now), P.ENERGY_REGEN_MS);
+  assert.equal(P.applyEnergyRegen(spent, now + 59_000).energy, 99);
+  assert.equal(P.applyEnergyRegen(spent, now + 60_000).energy, 100);
+  const partial = spawnFromGenerator({ ...base, energy: 50 }, 1, 0, now).state;
+  assert.equal(P.msUntilNextEnergy(partial, now), 1000);
+  const bonus = spawnFromGenerator({ ...base, energy: 101, powerMultiplier: 4 }, 1, 0, now).state;
+  assert.equal(bonus.energy, 97);
+  assert.equal(P.msUntilNextEnergy(bonus, now), P.ENERGY_REGEN_MS);
+});
+
+test('a backwards device clock restarts the refill timer without granting or losing energy', () => {
+  const now = 1_000_000;
+  const state = { ...fresh(), energy: 20, lastEnergyTick: now + 300_000 };
+  assert.equal(P.msUntilNextEnergy(state, now), P.ENERGY_REGEN_MS);
+  const corrected = P.applyEnergyRegen(state, now);
+  assert.equal(corrected.energy, 20);
+  assert.equal(corrected.lastEnergyTick, now);
+  assert.equal(P.applyEnergyRegen(corrected, now + P.ENERGY_REGEN_MS).energy, 21);
+});
+
+test('guest wording matches the actual order and does not suggest tasting fragrance', () => {
+  assert.doesNotMatch(ORDER_TEMPLATES[2].quoteAr, /كليجا/);
+  let found = false;
+  for (let seed = 1; seed <= 2000 && !found; seed++) {
+    const state = { ...fresh(), areaIndex: 4, rngSeed: seed, activeOrders: [] };
+    const order = P.generateOrder(state).order;
+    if (order.customerId === 'ghabga' && order.requiredItemIds.some(id => ITEM_CATALOG[id].chain === 'oud')) {
+      assert.doesNotMatch(order.quoteEn, /tasting/i);
+      assert.doesNotMatch(order.quoteAr, /تذوق/);
+      assert.ok(order.requiredItemIds.every(id => order.quoteEn.includes(ITEM_CATALOG[id].nameEn)));
+      found = true;
+    }
+  }
+  assert.ok(found, 'exercise a fragrance order for the festival jury');
 });
 
 test('generated orders scale with progress, never duplicate an active order, and are reproducible', () => {
@@ -120,6 +161,53 @@ test('daily quests: three different kinds per day, progress from the day start, 
   assert.deepEqual(next.dailyQuests!.claimed, []);
 });
 
+test('a full board opens the daily quest chest and grants all its contents exactly once', () => {
+  const initial = createInitialGameState();
+  let state = P.ensureDailyQuests(initial, '2026-10-26');
+  state = { ...state, totalMerges: 500, totalSpawns: 500, ordersCompleted: 50, wingUpgrades: 10, board: state.board.map(c => ({ ...c, itemId: c.itemId ?? 'qahwa_1', sandLocked: false })) };
+  for (const row of P.questProgress(state)) state = P.claimQuest(state, row.quest.id).state;
+  const result = P.claimQuestBonus(state);
+  assert.ok(result.claimed);
+  assert.equal(result.state.coins, state.coins + 180);
+  assert.equal(result.state.diamonds, state.diamonds + P.QUEST_BONUS.gems + 35);
+  assert.equal(result.state.energy, state.energy + P.QUEST_BONUS.energy + 65);
+  assert.equal(result.state.scissorsCount, state.scissorsCount + 1);
+  assert.equal(result.state.jokerCount, state.jokerCount + 1);
+  assert.equal(P.claimQuestBonus(result.state).claimed, false);
+});
+
+test('completed daily quests and the bonus are delivered once after a missed day', () => {
+  let state = P.ensureDailyQuests(fresh(), '2026-10-25');
+  state = { ...state, totalMerges: 500, totalSpawns: 500, ordersCompleted: 50, wingUpgrades: 10 };
+  const rows = P.questProgress(state);
+  state = P.claimQuest(state, rows[0].quest.id).state;
+  const expectedCoins = rows.slice(1).reduce((n, row) => n + row.quest.reward.coins, 0);
+  const expectedGems = rows.slice(1).reduce((n, row) => n + row.quest.reward.gems, P.QUEST_BONUS.gems);
+  const expectedEnergy = rows.slice(1).reduce((n, row) => n + row.quest.reward.energy, P.QUEST_BONUS.energy);
+  const result = P.ensureDailyQuests(state, '2026-10-30');
+  assert.equal(result.coins, state.coins + expectedCoins);
+  assert.equal(result.diamonds, state.diamonds + expectedGems);
+  assert.equal(result.energy, state.energy + expectedEnergy);
+  assert.equal(result.questDelivery?.quests, 2);
+  assert.equal(result.questDelivery?.bonuses, 1);
+  assert.equal(result.questDelivery?.chests, 1);
+  assert.ok(result.board.some(cell => cell.itemId === 'chest_2'));
+  assert.equal(P.ensureDailyQuests(result, '2026-10-30'), result);
+  assert.equal(P.ensureDailyQuests(result, '2026-10-29'), result, 'backward clock preserves current quests');
+  assert.deepEqual(P.ensureDailyQuests(result, '2026-10-31').questDelivery, result.questDelivery);
+});
+
+test('daily quest rollover opens the bonus chest if the board is full', () => {
+  let state = P.ensureDailyQuests(fresh(), '2026-10-25');
+  state = { ...state, totalMerges: 500, totalSpawns: 500, ordersCompleted: 50, wingUpgrades: 10, board: state.board.map(c => ({ ...c, itemId: c.itemId ?? 'qahwa_1', sandLocked: false })) };
+  const result = P.ensureDailyQuests(state, '2026-10-26');
+  assert.equal(result.questDelivery?.openedChests, 1);
+  assert.equal(result.questDelivery?.chests, 0);
+  assert.equal(result.questDelivery?.scissors, 1);
+  assert.equal(result.questDelivery?.joker, 1);
+  assert.equal(result.questDelivery?.prestige, 45);
+});
+
 test('energy can be bought with gems', () => {
   const s = { ...fresh(), diamonds: 25, energy: 0 };
   const r = P.buyEnergyWithGems(s);
@@ -138,6 +226,12 @@ test('coins can buy energy, and each purchase on the same day costs more; the pr
   assert.equal(P.coinEnergyPrice(s, day), 700);
   assert.equal(P.coinEnergyPrice(s, '2026-10-26'), 400);
   assert.equal(P.buyEnergyWithCoins({ ...s, coins: 100 }, day).bought, false);
+  const longSession = { ...s, coins: 10000, coinEnergyToday: { dayKey: day, count: 20 } };
+  assert.equal(P.coinEnergyPrice(longSession, day), 3400);
+  const capped = P.buyEnergyWithCoins(longSession, day);
+  assert.equal(capped.state.coins, 6600);
+  assert.equal(P.coinEnergyPrice(capped.state, day), 3400);
+  assert.equal(P.coinEnergyPrice(capped.state, '2026-10-26'), 400);
 });
 
 test('the free shop gift can be claimed once a day', () => {

@@ -1,9 +1,9 @@
 import { GameState } from '../game/rules';
-import { normalizeSave } from '../game/normalizeSave';
+import { loadSave, persistSave, removeSave } from './saveStorage';
 import { assetUrl } from './assetUrl';
 import { VoiceCharacter, VoiceEvent, VoiceProfile, pickVoiceLine, voiceFileUrl } from '../game/voiceLines';
+import { loadHapticsEnabled, triggerDeviceHaptic } from './haptics';
 
-const STORAGE_KEY = 'qahwa_majlis_merge_save_v3';
 
 /** D Hijaz maqam (D Eb F# G A Bb C# D) in Hz, one octave. */
 export const HIJAZ_SCALE_HZ = [293.66, 311.13, 369.99, 392.0, 440.0, 466.16, 554.37, 587.33];
@@ -14,10 +14,42 @@ const AMBIENT_STEP_MS = 520;
 const AMBIENT_URL = assetUrl('assets/audio/ambient.mp3');
 const ORDER_COMPLETE_URL = assetUrl('assets/audio/order_complete.mp3');
 const LEVEL_UP_URL = assetUrl('assets/audio/level_up.mp3');
+const MUTE_KEY = 'qahwa_sound_muted';
 
-class SoundAndHapticsManager {
+export function loadMuted(): boolean {
+  try { return localStorage.getItem(MUTE_KEY) === 'true'; } catch { return false; }
+}
+
+export function saveMuted(muted: boolean): void {
+  try { localStorage.setItem(MUTE_KEY, String(muted)); } catch { /* The setting remains active for this session. */ }
+}
+
+export class SoundAndHapticsManager {
   private ctx: AudioContext | null = null;
-  public muted: boolean = false;
+  private masterGain: GainNode | null = null;
+  private isMuted = false;
+  private audioGeneration = 0;
+  private voiceSource: AudioBufferSourceNode | null = null;
+  private speaking = false;
+  public get muted(): boolean { return this.isMuted; }
+  public set muted(value: boolean) {
+    if (this.isMuted === value) return;
+    this.isMuted = value;
+    if (this.ctx && this.masterGain) this.masterGain.gain.setValueAtTime(value ? 0 : 1, this.ctx.currentTime);
+    if (value) {
+      this.audioGeneration++;
+      this.stopStoryLine();
+      if (this.voiceSource) {
+        try { this.voiceSource.stop(); } catch { /* already stopped */ }
+        this.voiceSource = null;
+      }
+      if (this.speaking && typeof window !== 'undefined' && 'speechSynthesis' in window) window.speechSynthesis.cancel();
+      this.speaking = false;
+      this.setDuck(false);
+      this.stopAmbient();
+    }
+  }
+  public hapticsEnabled = loadHapticsEnabled();
   private ambientTimer: number | null = null;
   private ambientStep = 0;
 
@@ -82,17 +114,19 @@ class SoundAndHapticsManager {
     const count = this.voiceCounts.get(key) ?? 0;
     this.voiceCounts.set(key, count + 1);
     const { id, line, profile } = pickVoiceLine(character, event, count);
+    const generation = this.audioGeneration;
 
     void this.loadBuffer(voiceFileUrl(id)).then((buf) => {
-      if (this.muted) return;
+      if (this.muted || generation !== this.audioGeneration) return;
       const ctx = this.ensureContext();
       if (buf && ctx) {
         const src = ctx.createBufferSource();
         src.buffer = buf;
-        src.connect(ctx.destination);
+        src.connect(this.output(ctx));
         this.setDuck(true);
-        src.onended = () => this.setDuck(false);
+        src.onended = () => { if (this.voiceSource === src) { this.voiceSource = null; this.setDuck(false); } };
         src.start();
+        this.voiceSource = src;
         return;
       }
       this.speakArabic(line.ar, profile);
@@ -100,6 +134,7 @@ class SoundAndHapticsManager {
   }
 
   private storySource: AudioBufferSourceNode | null = null;
+  private storyRequest = 0;
 
   /** Fetch and decode a story line ahead of its beat, so it starts with its text even on a slow connection. */
   public preloadStoryLine(id: string) {
@@ -120,17 +155,20 @@ class SoundAndHapticsManager {
   public playStoryLine(id: string) {
     this.stopStoryLine();
     if (this.muted || typeof window === 'undefined') return;
+    const request = this.storyRequest;
     void this.trackStoryLoad(this.loadBuffer(assetUrl(`assets/audio/story/${id}.mp3`))).then((buf) => {
+      if (request !== this.storyRequest) return;
       const ctx = this.ensureContext();
       if (!buf || !ctx || this.muted) return;
-      this.stopStoryLine();
       const src = ctx.createBufferSource();
       src.buffer = buf;
-      src.connect(ctx.destination);
+      src.connect(this.output(ctx));
       this.setDuck(true);
       src.onended = () => {
-        if (this.storySource === src) this.storySource = null;
-        this.setDuck(false);
+        if (this.storySource === src) {
+          this.storySource = null;
+          this.setDuck(false);
+        }
       };
       src.start();
       this.storySource = src;
@@ -138,6 +176,7 @@ class SoundAndHapticsManager {
   }
 
   public stopStoryLine() {
+    this.storyRequest += 1;
     if (!this.storySource) return;
     try {
       this.storySource.stop();
@@ -168,10 +207,11 @@ class SoundAndHapticsManager {
     // When the device has no voice of the right gender, move the pitch so characters still sound different
     utter.pitch = byGender.length > 0 ? profile.pitch : Math.min(2, Math.max(0.1, profile.pitch * (profile.gender === 'female' ? 1.25 : 0.8)));
     utter.volume = 1;
-    utter.onstart = () => this.setDuck(true);
-    utter.onend = () => this.setDuck(false);
-    utter.onerror = () => this.setDuck(false);
+    utter.onstart = () => { this.speaking = true; this.setDuck(true); };
+    utter.onend = () => { this.speaking = false; this.setDuck(false); };
+    utter.onerror = () => { this.speaking = false; this.setDuck(false); };
     synth.cancel();
+    this.speaking = true;
     synth.speak(utter);
   }
 
@@ -182,8 +222,9 @@ class SoundAndHapticsManager {
   }
 
   private playFile(url: string, volume: number, onMissing: () => void) {
+    const generation = this.audioGeneration;
     void this.loadBuffer(url).then((buf) => {
-      if (this.muted) return;
+      if (this.muted || generation !== this.audioGeneration) return;
       const ctx = this.ensureContext();
       if (!buf || !ctx) {
         onMissing();
@@ -194,7 +235,7 @@ class SoundAndHapticsManager {
       src.buffer = buf;
       gain.gain.value = volume;
       src.connect(gain);
-      gain.connect(ctx.destination);
+      gain.connect(this.output(ctx));
       src.start();
     });
   }
@@ -246,7 +287,7 @@ class SoundAndHapticsManager {
       src.loop = true;
       gain.gain.value = 0.6 * this.duck;
       src.connect(gain);
-      gain.connect(ctx.destination);
+      gain.connect(this.output(ctx));
       src.start();
       this.ambientSource = src;
       this.ambientGain = gain;
@@ -296,7 +337,7 @@ class SoundAndHapticsManager {
       droneGain.gain.linearRampToValueAtTime(0.035, now + 1.5);
       droneGain.gain.linearRampToValueAtTime(0.0001, now + (AMBIENT_PHRASE.length * AMBIENT_STEP_MS) / 1000);
       drone.connect(droneGain);
-      droneGain.connect(ctx.destination);
+      droneGain.connect(this.output(ctx));
       drone.start(now);
       drone.stop(now + (AMBIENT_PHRASE.length * AMBIENT_STEP_MS) / 1000 + 0.1);
     }
@@ -309,7 +350,7 @@ class SoundAndHapticsManager {
       gain.gain.setValueAtTime(0.045 * this.duck, now);
       gain.gain.exponentialRampToValueAtTime(0.001, now + 1.1);
       osc.connect(gain);
-      gain.connect(ctx.destination);
+      gain.connect(this.output(ctx));
       osc.start(now);
       osc.stop(now + 1.15);
     }
@@ -330,15 +371,18 @@ class SoundAndHapticsManager {
     return this.ctx;
   }
 
-  public triggerHaptic(intensity: 'light' | 'medium' | 'heavy' = 'light') {
-    if (typeof navigator !== 'undefined' && navigator.vibrate) {
-      const ms = intensity === 'heavy' ? 35 : intensity === 'medium' ? 18 : 8;
-      try {
-        navigator.vibrate(ms);
-      } catch {
-        // Ignore on unsupported browsers
-      }
+  /** A shared output makes the mute control silence already-playing Web Audio nodes immediately. */
+  private output(ctx: AudioContext): AudioNode {
+    if (!this.masterGain) {
+      this.masterGain = ctx.createGain();
+      this.masterGain.gain.value = this.muted ? 0 : 1;
+      this.masterGain.connect(ctx.destination);
     }
+    return this.masterGain;
+  }
+
+  public triggerHaptic(intensity: 'light' | 'medium' | 'heavy' = 'light') {
+    triggerDeviceHaptic(intensity, this.hapticsEnabled);
   }
 
   /**
@@ -361,7 +405,7 @@ class SoundAndHapticsManager {
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.11);
 
     osc.connect(gain);
-    gain.connect(ctx.destination);
+    gain.connect(this.output(ctx));
     osc.start(now);
     osc.stop(now + 0.12);
   }
@@ -391,7 +435,7 @@ class SoundAndHapticsManager {
       gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28 + idx * 0.04);
 
       osc.connect(gain);
-      gain.connect(ctx.destination);
+      gain.connect(this.output(ctx));
       osc.start(now + idx * 0.04);
       osc.stop(now + 0.3 + idx * 0.04);
     });
@@ -412,7 +456,7 @@ class SoundAndHapticsManager {
         gain.gain.exponentialRampToValueAtTime(0.001, startAt + 0.35);
 
         osc.connect(gain);
-        gain.connect(ctx.destination);
+        gain.connect(this.output(ctx));
         osc.start(startAt);
         osc.stop(startAt + 0.38);
       });
@@ -449,7 +493,7 @@ class SoundAndHapticsManager {
       gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.06 + 0.35);
 
       osc.connect(gain);
-      gain.connect(ctx.destination);
+      gain.connect(this.output(ctx));
       osc.start(now + i * 0.06);
       osc.stop(now + i * 0.06 + 0.36);
     });
@@ -471,7 +515,7 @@ class SoundAndHapticsManager {
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
 
     osc.connect(gain);
-    gain.connect(ctx.destination);
+    gain.connect(this.output(ctx));
     osc.start(now);
     osc.stop(now + 0.15);
   }
@@ -485,28 +529,14 @@ function prefersLightAudio(): boolean {
 
 export const soundFX = new SoundAndHapticsManager();
 
-export function saveGameState(state: GameState): void {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  } catch {
-    // Ignore storage quota errors
-  }
+export function saveGameState(state: GameState): boolean {
+  return persistSave(state);
 }
 
 export function loadSavedGameState(): GameState | null {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    return normalizeSave(JSON.parse(raw));
-  } catch {
-    return null;
-  }
+  return loadSave().state;
 }
 
-export function clearSavedGameState(): void {
-  try {
-    localStorage.removeItem(STORAGE_KEY);
-  } catch {
-    // Ignore
-  }
+export function clearSavedGameState(): boolean {
+  return removeSave();
 }

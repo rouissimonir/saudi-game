@@ -1,6 +1,6 @@
 import React from 'react';
 import { Coins, Gem, Gift, Hammer, Check, Zap, X, ScrollText, Clock } from 'lucide-react';
-import { ChainId, GameState, ITEM_CATALOG, Language, dayKeyFromDate } from '../game/rules';
+import { ChainId, GameState, ITEM_CATALOG, Language, dayKeyFromDate, findNearestEmptyCell } from '../game/rules';
 import { useNow } from '../utils/useNow';
 import {
   ENERGY_COIN_PACK,
@@ -22,9 +22,9 @@ export function formatCountdown(ms: number): string {
   return `${m}:${String(s).padStart(2, '0')}`;
 }
 
-export function Sheet({ title, icon, onClose, children, testId }: { title: string; icon: React.ReactNode; onClose: () => void; children: React.ReactNode; testId: string }) {
+export function Sheet({ title, icon, onClose, children, testId, closeLabel }: { title: string; icon: React.ReactNode; onClose: () => void; children: React.ReactNode; testId: string; closeLabel: string }) {
   return (
-    <div role="dialog" aria-modal="true" aria-label={title} data-testid={testId} className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/55 p-3" onClick={onClose}>
+    <div role="dialog" aria-modal="true" aria-label={title} data-testid={testId} className="safe-dialog fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/55 p-3" onClick={onClose}>
       <div className="w-full max-w-md rounded-3xl bg-[#FFFDF9] border-[3px] border-[#D97706] shadow-2xl overflow-hidden text-[#2C1E14]" onClick={(e) => e.stopPropagation()}>
         <div className="h-2 w-full sadu-trim" />
         <div className="flex items-center justify-between px-4 pt-3 pb-2">
@@ -32,7 +32,7 @@ export function Sheet({ title, icon, onClose, children, testId }: { title: strin
             {icon}
             {title}
           </h2>
-          <button type="button" onClick={onClose} aria-label="Close" className="w-9 h-9 rounded-full hud-pill flex items-center justify-center">
+          <button type="button" onClick={onClose} aria-label={closeLabel} className="w-9 h-9 rounded-full hud-pill flex items-center justify-center">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -55,9 +55,10 @@ export const EnergyModal: React.FC<{
   const dayKey = dayKeyFromDate(new Date(now));
   const next = msUntilNextEnergy(state, now);
   const coinPrice = coinEnergyPrice(state, dayKey);
+  const maxCoinPrice = ENERGY_COIN_PACK.coins + ENERGY_COIN_PACK.stepPerPurchase * ENERGY_COIN_PACK.maxPriceSteps;
   const full = state.energy >= state.maxEnergy;
   return (
-    <Sheet testId="energy-modal" title={isAr ? 'الطاقة' : 'Energy'} icon={<Zap className="w-5 h-5 fill-[#F59E0B] text-[#B45309]" />} onClose={onClose}>
+    <Sheet testId="energy-modal" title={isAr ? 'الطاقة' : 'Energy'} closeLabel={isAr ? 'إغلاق' : 'Close'} icon={<Zap className="w-5 h-5 fill-[#F59E0B] text-[#B45309]" />} onClose={onClose}>
       <div className="rounded-2xl bg-[#FEF3C7] border-2 border-[#FCD34D] p-3 flex items-center justify-between">
         <span className="text-3xl font-black tabular-nums text-[#78350F]">
           {Math.round(state.energy)}
@@ -78,7 +79,7 @@ export const EnergyModal: React.FC<{
         +{ENERGY_COIN_PACK.energy} <Zap className="w-4 h-4 fill-current" /> · {coinPrice} <Coins className="w-4 h-4" />
       </button>
       <p className="text-[11px] text-center text-[#78350F]/70">
-        {isAr ? 'سعر الريالات يرتفع مع كل شراء في نفس اليوم.' : 'The coin price rises with each purchase on the same day.'}
+        {isAr ? `يرتفع السعر حتى ${maxCoinPrice}، ثم يعود إلى ${ENERGY_COIN_PACK.coins} في اليوم التالي.` : `The coin price rises to a maximum of ${maxCoinPrice.toLocaleString('en-US')}, then resets to ${ENERGY_COIN_PACK.coins} the next day.`}
       </p>
       <button type="button" onClick={onOpenShop} className="w-full text-sm font-bold text-[#047857] underline">
         {isAr ? 'المزيد في المتجر (دلة الصباح المجانية)' : 'More in the shop (free morning dallah)'}
@@ -93,13 +94,24 @@ export const QuestsModal: React.FC<{
   onClose: () => void;
   onClaim: (questId: string) => void;
   onClaimBonus: () => void;
-}> = ({ lang, state, onClose, onClaim, onClaimBonus }) => {
+  onAcknowledge: () => void;
+}> = ({ lang, state, onClose, onClaim, onClaimBonus, onAcknowledge }) => {
   const isAr = lang === 'ar';
   const rows = questProgress(state);
   const allClaimed = rows.length > 0 && rows.every((r) => r.claimed);
   const bonusDone = state.dailyQuests?.bonusClaimed;
   return (
-    <Sheet testId="quests-modal" title={isAr ? 'مهام اليوم' : 'Daily Quests'} icon={<ScrollText className="w-5 h-5 text-[#B45309]" />} onClose={onClose}>
+    <Sheet testId="quests-modal" title={isAr ? 'مهام اليوم' : 'Daily Quests'} closeLabel={isAr ? 'إغلاق' : 'Close'} icon={<ScrollText className="w-5 h-5 text-[#B45309]" />} onClose={onClose}>
+      {state.questDelivery && <div data-testid="quest-delivery" className="rounded-2xl border-2 border-[#D97706] bg-[#FEF3C7] p-3 text-[#78350F]">
+        <p className="font-black text-sm">{isAr ? 'مكافآت مهامك السابقة' : 'Your previous quest rewards'}</p>
+        <p className="mt-1 text-xs">{isAr ? 'أضفنا المكافآت المكتسبة إلى رصيدك.' : 'We added your earned rewards to your balance.'}</p>
+        <p className="mt-2 text-xs font-bold" dir="auto">
+          {state.questDelivery.coins > 0 && <>+{state.questDelivery.coins} 🪙 </>}{state.questDelivery.gems > 0 && <>+{state.questDelivery.gems} 💎 </>}{state.questDelivery.energy > 0 && <>+{state.questDelivery.energy} ⚡ </>}{state.questDelivery.scissors > 0 && <>+{state.questDelivery.scissors} ✂️ </>}{state.questDelivery.joker > 0 && <>+{state.questDelivery.joker} 🪄 </>}{state.questDelivery.prestige > 0 && <>+{state.questDelivery.prestige} ⭐ </>}
+        </p>
+        {state.questDelivery.chests > 0 && <p className="mt-1 text-xs">{isAr ? `صندوق ملكي على اللوحة: ${state.questDelivery.chests}` : `Royal chests added to the board: ${state.questDelivery.chests}`}</p>}
+        {state.questDelivery.openedChests > 0 && <p className="mt-1 text-xs">{isAr ? 'فُتحت الصناديق التي لم تجد مساحة، وأُضيفت محتوياتها.' : 'Chests without board space were opened and their contents added.'}</p>}
+        <button type="button" onClick={onAcknowledge} className="mt-2 min-h-11 rounded-xl bg-[#92400E] px-3 py-1 text-xs font-bold text-white">{isAr ? 'حسناً' : 'Got it'}</button>
+      </div>}
       {rows.map(({ quest, progress, done, claimed }) => (
         <div key={quest.id} className="rounded-2xl border-2 border-[#E7D3AE] bg-white p-3" data-testid={`quest-${quest.id}`}>
           <div className="flex items-center justify-between gap-2">
@@ -135,7 +147,8 @@ export const QuestsModal: React.FC<{
           {bonusDone ? (isAr ? 'تم' : 'Done') : isAr ? 'افتح' : 'Open'}
         </button>
       </div>
-      <p className="text-[11px] text-center text-[#78350F]/70">{isAr ? 'مهام جديدة كل يوم.' : 'New quests every day.'}</p>
+      {allClaimed && !bonusDone && findNearestEmptyCell(state.board, 24) === null && <p className="text-xs text-[#78350F]">{isAr ? 'اللوحة ممتلئة؛ سيُفتح الصندوق فوراً وتُضاف كل محتوياته.' : 'The board is full; the chest will open immediately and all its contents will be added.'}</p>}
+      <p className="text-[11px] text-center text-[#78350F]/70">{isAr ? 'مهام جديدة كل يوم، ومكافآتك المكتسبة محفوظة.' : 'New quests every day; earned rewards are kept.'}</p>
     </Sheet>
   );
 };
@@ -155,7 +168,7 @@ export const WorkshopModal: React.FC<{
 }> = ({ lang, state, onClose, onUpgrade }) => {
   const isAr = lang === 'ar';
   return (
-    <Sheet testId="workshop-modal" title={isAr ? 'ورشة المولّدات' : 'Generator Workshop'} icon={<Hammer className="w-5 h-5 text-[#B45309]" />} onClose={onClose}>
+    <Sheet testId="workshop-modal" title={isAr ? 'ورشة المولّدات' : 'Generator Workshop'} closeLabel={isAr ? 'إغلاق' : 'Close'} icon={<Hammer className="w-5 h-5 text-[#B45309]" />} onClose={onClose}>
       <p className="text-xs text-[#78350F]/80">
         {isAr ? 'كل ترقية ترفع فرصة إنتاج عنصر من مستوى أعلى بنفس الطاقة.' : 'Each upgrade raises the chance of spawning a higher-level item for the same energy.'}
       </p>

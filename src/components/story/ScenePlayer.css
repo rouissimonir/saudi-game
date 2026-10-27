@@ -29,6 +29,10 @@
 .scene-bar { position: absolute; inset-inline: 0; height: 7vh; background: #000; z-index: 5; animation: scene-bar-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) both; }
 .scene-bar-top { top: 0; transform-origin: top; }
 .scene-bar-bottom { bottom: 0; transform-origin: bottom; }
+.scene-controls-start { top: calc(var(--game-safe-top) + 0.75rem); inset-inline-start: calc(max(var(--game-safe-left), var(--game-safe-right)) + 0.75rem); }
+.scene-controls-end { top: calc(var(--game-safe-top) + 0.75rem); inset-inline-end: calc(max(var(--game-safe-left), var(--game-safe-right)) + 0.75rem); }
+.scene-bubble { bottom: max(9vh, calc(var(--game-safe-bottom) + 0.75rem)); }
+.scene-choices-position { bottom: calc(max(9vh, var(--game-safe-bottom) + 0.75rem) + 9.5rem); }
 @keyframes scene-bar-in { from { transform: scaleY(0); } to { transform: scaleY(1); } }
 
 /* Characters stand behind the speech bubble, lower body hidden, like a stage. */

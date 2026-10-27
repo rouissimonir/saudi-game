@@ -1,5 +1,6 @@
 import { GameState } from '../game/rules';
 import { normalizeSave } from '../game/normalizeSave';
+import { gzipSync, gunzipSync } from 'fflate';
 
 /** Versioned prefix so future formats can be told apart. */
 const PREFIX = 'QM1.';
@@ -24,7 +25,8 @@ function fromBase64Url(text: string): Uint8Array<ArrayBuffer> {
 /** A copy-and-paste code holding the whole save, gzip-compressed. */
 export async function exportSaveCode(state: GameState): Promise<string> {
   const json = new TextEncoder().encode(JSON.stringify(state));
-  return PREFIX + toBase64Url(await pipe(json, new CompressionStream('gzip')));
+  const bytes = typeof CompressionStream === 'function' ? await pipe(json, new CompressionStream('gzip')) : gzipSync(json);
+  return PREFIX + toBase64Url(bytes);
 }
 
 /** Parses a transfer code; returns null for anything that is not a valid save. */
@@ -32,7 +34,8 @@ export async function importSaveCode(code: string): Promise<GameState | null> {
   const trimmed = code.trim().replace(/\s+/g, '');
   if (!trimmed.startsWith(PREFIX)) return null;
   try {
-    const bytes = await pipe(fromBase64Url(trimmed.slice(PREFIX.length)), new DecompressionStream('gzip'));
+    const compressed = fromBase64Url(trimmed.slice(PREFIX.length));
+    const bytes = typeof DecompressionStream === 'function' ? await pipe(compressed, new DecompressionStream('gzip')) : gunzipSync(compressed);
     return normalizeSave(JSON.parse(new TextDecoder().decode(bytes)));
   } catch {
     return null;

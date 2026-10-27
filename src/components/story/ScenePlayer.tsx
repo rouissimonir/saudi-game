@@ -5,6 +5,7 @@ import { advance, autoDelayMs, choose, currentBeat, ScenePlay, skip, startScene,
 import { SCENES } from '../../story/scenes';
 import { CAST_NAMES, CastId, Expression, Scene, StagePos } from '../../story/types';
 import { assetUrl } from '../../utils/assetUrl';
+import { usePageVisible } from '../../utils/usePageVisible';
 import { actorSrc } from './art';
 import './ScenePlayer.css';
 
@@ -83,6 +84,7 @@ interface ScenePlayerProps {
 export const ScenePlayer: React.FC<ScenePlayerProps> = ({ sceneId, scene: given, lang, sound, onFinish }) => {
   const scene: Scene = given ?? SCENES[sceneId];
   const isAr = lang === 'ar';
+  const pageVisible = usePageVisible();
   const reduced = useMemo(prefersReducedMotion, []);
   const [play, setPlay] = useState<ScenePlay>(() => startScene(scene));
   const [typed, setTyped] = useState(0);
@@ -109,16 +111,21 @@ export const ScenePlayer: React.FC<ScenePlayerProps> = ({ sceneId, scene: given,
   useEffect(() => {
     if (!beat) return;
     setTyped(reduced ? Number.MAX_SAFE_INTEGER : 0);
+  }, [beat?.id]);
+
+  // Stop voices while backgrounded, and replay the current line on return.
+  useEffect(() => {
+    if (!beat || !pageVisible) { sound.stopLine(); return; }
     if (beat.voice) sound.playLine(beat.voice);
     else sound.stopLine();
     for (const b of upcomingBeats(scene, play)) if (b.voice) sound.preloadLine(b.voice);
-  }, [beat?.id]);
+  }, [beat?.id, pageVisible]);
 
   useEffect(() => {
-    if (!typing) return;
+    if (!typing || !pageVisible) return;
     const t = window.setTimeout(() => setTyped((n) => n + 1), TYPE_MS);
     return () => window.clearTimeout(t);
-  }, [typed, typing]);
+  }, [typed, typing, pageVisible]);
 
   useEffect(() => () => sound.stopLine(), []);
 
@@ -151,10 +158,10 @@ export const ScenePlayer: React.FC<ScenePlayerProps> = ({ sceneId, scene: given,
 
   // Auto mode: once a line has finished typing, move on after a reading pause; choices still wait for the player.
   useEffect(() => {
-    if (!auto || historyOpen || typing || !beat || beat.choice || finale) return;
+    if (!pageVisible || !auto || historyOpen || typing || !beat || beat.choice || finale) return;
     const t = window.setTimeout(next, autoDelayMs(text.length));
     return () => window.clearTimeout(t);
-  }, [auto, historyOpen, typing, beat, finale, next, text.length]);
+  }, [auto, historyOpen, typing, beat, finale, next, text.length, pageVisible]);
 
   const toggleAuto = () => {
     setAuto((on) => {
@@ -219,7 +226,7 @@ export const ScenePlayer: React.FC<ScenePlayerProps> = ({ sceneId, scene: given,
         <div className="scene-bar scene-bar-top" />
         <div className="scene-bar scene-bar-bottom" />
 
-        <div className="absolute top-3 start-3 z-20 flex items-center gap-2">
+        <div className="scene-controls-start absolute z-20 flex items-center gap-2">
         <button
           type="button"
           data-testid="scene-history"
@@ -228,7 +235,7 @@ export const ScenePlayer: React.FC<ScenePlayerProps> = ({ sceneId, scene: given,
             e.stopPropagation();
             setHistoryOpen(true);
           }}
-          className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-black/45 border border-white/30 text-white backdrop-blur-sm"
+          className="inline-flex items-center justify-center w-11 h-11 rounded-full bg-black/45 border border-white/30 text-white backdrop-blur-sm"
         >
           <ScrollText className="w-4 h-4" />
         </button>
@@ -240,7 +247,7 @@ export const ScenePlayer: React.FC<ScenePlayerProps> = ({ sceneId, scene: given,
             e.stopPropagation();
             toggleAuto();
           }}
-          className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold backdrop-blur-sm ${
+          className={`inline-flex min-h-11 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold backdrop-blur-sm ${
             auto ? 'bg-[#D97706] border-[#FBBF24] text-white' : 'bg-black/45 border-white/30 text-white'
           }`}
         >
@@ -251,7 +258,7 @@ export const ScenePlayer: React.FC<ScenePlayerProps> = ({ sceneId, scene: given,
 
         {historyOpen && (
           <div
-            className="absolute inset-0 z-40 bg-black/70 flex items-end"
+            className="absolute inset-0 z-40 bg-black/70 flex items-end safe-dialog"
             data-testid="scene-history-panel"
             onClick={(e) => {
               e.stopPropagation();
@@ -292,7 +299,7 @@ export const ScenePlayer: React.FC<ScenePlayerProps> = ({ sceneId, scene: given,
             e.stopPropagation();
             finish(skip(scene, play));
           }}
-          className="absolute top-3 end-3 z-20 inline-flex items-center gap-1.5 rounded-full bg-black/45 border border-white/30 px-3 py-1.5 text-xs font-bold text-white backdrop-blur-sm"
+          className="scene-controls-end absolute z-20 inline-flex min-h-11 items-center gap-1.5 rounded-full bg-black/45 border border-white/30 px-3 py-1.5 text-xs font-bold text-white backdrop-blur-sm"
         >
           {isAr ? 'تخطي' : 'Skip'}
           <FastForward className="w-3.5 h-3.5 rtl:-scale-x-100" />
@@ -300,7 +307,7 @@ export const ScenePlayer: React.FC<ScenePlayerProps> = ({ sceneId, scene: given,
 
         {/* Choices */}
         {beat?.choice && !typing && (
-          <div className="absolute inset-x-4 bottom-[calc(9vh+9.5rem)] z-20 flex flex-col gap-2.5" data-testid="scene-choices">
+          <div className="scene-choices-position absolute inset-x-4 z-20 flex flex-col gap-2.5" data-testid="scene-choices">
             {beat.choice.map((o, i) => (
               <button
                 key={o.id}
@@ -331,7 +338,7 @@ export const ScenePlayer: React.FC<ScenePlayerProps> = ({ sceneId, scene: given,
 
         {/* Speech bubble */}
         {beat && (
-          <div key={beat.id} className="absolute inset-x-3 bottom-[9vh] z-10 scene-bubble" aria-live="polite">
+          <div key={beat.id} className="absolute inset-x-3 z-10 scene-bubble" aria-live="polite">
             {beat.speaker && (
               <div className="absolute -top-3.5 start-5 rounded-full px-3 py-0.5 text-xs font-extrabold text-white shadow" style={{ background: NAME_COLORS[beat.speaker] ?? '#78350F' }}>
                 {isAr ? CAST_NAMES[beat.speaker].ar : CAST_NAMES[beat.speaker].en}

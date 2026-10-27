@@ -12,11 +12,28 @@ import { AREA_COUNT_BEFORE_PRESTIGE, AREA_REWARD, areaChapterId, areaInfo, findS
 import { speakerCharacter } from '../game/voiceLines';
 import { PAINTED_STAGES, restorationStage } from '../game/majlisStages';
 import { assetUrl } from '../utils/assetUrl';
+import { TASTING_STYLES } from '../game/tasting';
+import { TastingCorner } from './TastingCorner';
+import { CustomerPortrait } from './CustomerPortrait';
+import { majlisReaction } from '../game/majlisReactions';
+import { TAIF_WELCOMES } from '../game/taifWelcome';
+import { ItemArtwork } from './ItemArtwork';
 
 interface MajlisRenovationViewProps {
   lang: Language;
   zones: RenovationZone[];
+  tastingFlags: Record<string, string>;
+  onOpenTasting: () => void;
+  taifAvailable: boolean;
+  taifWelcome: string | undefined;
+  onOpenTaif: () => void;
   stars: number;
+  showFirstRestoration: boolean;
+  restoredWing?: string;
+  onDismissRestorationReveal: () => void;
+  pourTokens: number;
+  pourUnlocked: boolean;
+  onOpenPour: () => void;
   activeRegion: MajlisRegion;
   ambiance: MajlisAmbiance;
   completedStoryIds: string[];
@@ -56,7 +73,7 @@ const EpisodeTeaser: React.FC<{ chapter: StoryChapter; isAr: boolean; locked: bo
  * Painted restoration banner (docs/ART_BATCH_4.md): shows the stage for the current progress and crossfades from the
  * previous one when a wing is restored. Only the current and previous stages are loaded.
  */
-const MajlisStageBanner: React.FC<{ areaId: string; stage: number; stages: number; isAr: boolean; hold: boolean }> = ({ areaId, stage, stages, isAr, hold }) => {
+const MajlisStageBanner: React.FC<{ areaId: string; stage: number; stages: number; isAr: boolean; hold: boolean; ambiance: MajlisAmbiance }> = ({ areaId, stage, stages, isAr, hold, ambiance }) => {
   const [shown, setShown] = React.useState({ current: stage, previous: stage });
   const [cheer, setCheer] = React.useState<number | null>(null);
   const lastStage = React.useRef(stage);
@@ -83,8 +100,16 @@ const MajlisStageBanner: React.FC<{ areaId: string; stage: number; stages: numbe
         decoding="async"
         className="absolute inset-0 w-full h-full object-cover animate-[stage-in_1.2s_ease-out_both]"
       />
+      <div data-testid="majlis-ambiance" data-ambiance={ambiance} aria-hidden="true" className={`majlis-ambiance majlis-ambiance-${ambiance} absolute inset-0 pointer-events-none`}>
+        {ambiance === 'courtyard_rain' && <div className="majlis-rain absolute inset-0" />}
+        {ambiance === 'ramadan_night' && <svg viewBox="0 0 800 450" preserveAspectRatio="none" className="absolute inset-0 w-full h-full">
+          <defs><radialGradient id="lantern-glow"><stop offset="0" stopColor="#FBBF24" stopOpacity="0.55" /><stop offset="1" stopColor="#FBBF24" stopOpacity="0" /></radialGradient></defs>
+          <circle cx="70" cy="78" r="66" fill="url(#lantern-glow)" /><circle cx="730" cy="78" r="66" fill="url(#lantern-glow)" />
+          {[70, 730].map(x => <g key={x} transform={`translate(${x} 0)`}><path d="M0 0V45" stroke="#E9C46A" strokeWidth="2" /><path d="M-8 49L0 43L8 49L6 72L0 78L-6 72Z" fill="#FBBF24" fillOpacity="0.8" stroke="#78350F" strokeWidth="2" /><path d="M0 50V72" stroke="#FFF7D6" strokeWidth="2" /></g>)}
+        </svg>}
+      </div>
       {cheer !== null && (
-        <div className="absolute inset-x-0 bottom-4 flex justify-center pointer-events-none" data-testid="stage-cheer">
+        <div className="absolute inset-x-0 bottom-4 z-10 flex justify-center pointer-events-none" data-testid="stage-cheer">
           <span className="stage-cheer rounded-full bg-[#FFFDF9]/95 border-2 border-[#F59E0B] px-4 py-1.5 text-sm font-black text-[#78350F] shadow-xl">
             ✨ {cheer >= stages
               ? isAr ? 'اكتمل الترميم!' : 'Fully restored!'
@@ -96,10 +121,51 @@ const MajlisStageBanner: React.FC<{ areaId: string; stage: number; stages: numbe
   );
 };
 
+/** Personalized accents complement the painted restoration scene without recoloring the artwork. */
+const MajlisDetails: React.FC<{ zones: RenovationZone[]; isAr: boolean; selectedId: string | null; onSelect: (id: string) => void }> = ({ zones, isAr, selectedId, onSelect }) => {
+  const selectedIndex = zones.findIndex(zone => zone.id === selectedId);
+  const reaction = selectedIndex >= 0 ? majlisReaction(zones[selectedIndex], selectedIndex) : null;
+  return (
+  <div data-testid="majlis-style-details" className="border-t border-[#D99B26]/25 bg-[#241812] px-3 py-2.5">
+    <p className="text-xs font-bold text-[#FDE68A]">{isAr ? 'تفاصيل مجلسك' : 'Details of your Majlis'}</p>
+    {zones.some(zone => zone.unlockedLevel > 0) && <p className="mt-0.5 text-[11px] text-[#D4B483]">{isAr ? 'اضغط على تفصيل مرمّم لتقرأ رأي أهل المجلس.' : 'Tap a restored detail to read a family comment.'}</p>}
+    <div className="mt-2 grid grid-cols-4 gap-1.5">
+      {zones.slice(0, 4).map((zone, index) => {
+        const style = zone.styles[zone.selectedStyle];
+        const unlocked = zone.unlockedLevel > 0;
+        const color = unlocked ? style?.swatch ?? '#8B5A2B' : '#6B5B50';
+        const label = `${isAr ? zone.nameAr : zone.nameEn}: ${unlocked && style ? (isAr ? style.nameAr : style.nameEn) : (isAr ? 'بانتظار الترميم' : 'Not restored yet')}`;
+        return <button key={zone.id} type="button" disabled={!unlocked || !style} onClick={() => onSelect(zone.id)} aria-pressed={selectedId === zone.id} data-testid={`majlis-detail-${zone.id}`} aria-label={label} title={label} className={`min-w-0 rounded-lg border bg-[#1C1410] p-1.5 text-center ${selectedId === zone.id ? 'border-[#FBBF24]' : 'border-[#D99B26]/25'}`}>
+          <svg viewBox="0 0 64 48" aria-hidden="true" className="mx-auto h-9 w-12" style={{ opacity: unlocked ? 1 : 0.45 }}>
+            {index === 0 && <><path d="M12 43V19Q32 -2 52 19V43" fill={color} stroke="#E9C46A" strokeWidth="2" /><path d="M23 43V25Q32 14 41 25V43" fill="#241812" stroke="#E9C46A" /></>}
+            {index === 1 && <><path d="M4 31H60V43H4Z" fill={color} stroke="#E9C46A" strokeWidth="2" /><rect x="8" y="20" width="21" height="12" rx="4" fill={color} stroke="#E9C46A" /><rect x="35" y="20" width="21" height="12" rx="4" fill={color} stroke="#E9C46A" /><path d="M7 37H57" stroke="#FDE68A" strokeDasharray="5 4" /></>}
+            {index === 2 && <><path d="M8 31H56V43H8Z" fill={color} stroke="#E9C46A" strokeWidth="2" /><path d="M27 28Q24 20 28 14H38Q42 20 39 28Z" fill="#E9C46A" stroke="#78350F" /><path d="M38 17Q47 12 48 8M28 19Q21 16 22 23" fill="none" stroke="#E9C46A" strokeWidth="3" /></>}
+            {index === 3 && <><path d="M20 27H44L41 43H23Z" fill={color} stroke="#E9C46A" strokeWidth="2" /><path d="M32 28V8M32 21Q20 21 20 11Q29 10 32 19M32 18Q43 18 44 8Q35 8 32 16" fill="none" stroke="#9ACB91" strokeWidth="3" /></>}
+          </svg>
+          <p className="truncate text-[10px] font-bold text-[#FDECCB]">{unlocked && style ? (isAr ? style.nameAr : style.nameEn) : (isAr ? 'بانتظار الترميم' : 'Not restored yet')}</p>
+        </button>;
+      })}
+    </div>
+    {reaction && <div data-testid="majlis-detail-reaction" role="status" className="mt-2 flex items-center gap-2 rounded-xl border border-[#D99B26]/40 bg-[#38261A] p-2 text-xs leading-relaxed text-[#FFF4DA]"><CustomerPortrait avatarKey={reaction.guest} size="sm" /><p>{isAr ? reaction.ar : reaction.en}</p></div>}
+  </div>
+  );
+};
+
 export const MajlisRenovationView: React.FC<MajlisRenovationViewProps> = ({
   lang,
   zones,
+  tastingFlags,
+  onOpenTasting,
+  taifAvailable,
+  taifWelcome,
+  onOpenTaif,
   stars,
+  showFirstRestoration,
+  restoredWing,
+  onDismissRestorationReveal,
+  pourTokens,
+  pourUnlocked,
+  onOpenPour,
   activeRegion,
   ambiance,
   areaIndex,
@@ -113,6 +179,10 @@ export const MajlisRenovationView: React.FC<MajlisRenovationViewProps> = ({
   storyOpen = false,
 }) => {
   const isAr = lang === 'ar';
+  const firstWing = showFirstRestoration ? zones.find(zone => zone.unlockedLevel === 0 && stars >= zone.starCostLevel1) : undefined;
+  const firstWingRef = React.useRef<HTMLDivElement>(null);
+  const detailsRef = React.useRef<HTMLDivElement>(null);
+  const [selectedDetail, setSelectedDetail] = React.useState<string | null>(null);
 
   // Later areas use generated wing ids, so fall back to wing order for the diorama slots.
   const archZone = zones.find((z) => z.id === 'zone_arch') ?? zones[0];
@@ -167,6 +237,8 @@ export const MajlisRenovationView: React.FC<MajlisRenovationViewProps> = ({
 
   return (
     <div className="flex flex-col gap-4">
+      {firstWing && <div data-testid="first-restoration-guide" className="rounded-2xl border-2 border-[#D99B26] bg-[#3B281A] p-3 text-sm text-[#FFF4DA]"><p className="font-bold">{isAr ? 'استخدم نجوم ضيافتك لترميم جناح، واختر طرازه قبل البدء.' : 'Use your hospitality stars to restore a wing, and choose its style before you begin.'}</p><button type="button" onClick={() => { firstWingRef.current?.scrollIntoView({ block: 'center' }); firstWingRef.current?.focus({ preventScroll: true }); }} className="mt-2 min-h-11 rounded-xl bg-[#D99B26] px-3 py-2 text-start text-xs font-black text-[#241812]">{isAr ? `شاهد «${firstWing.nameAr}» · ${firstWing.starCostLevel1} نجوم` : `See ${firstWing.nameEn} · ${firstWing.starCostLevel1} stars`}</button><p className="mt-1 text-xs text-[#EBD8BA]">{isAr ? 'يمكنك اختيار جناح آخر بدلاً منه.' : 'You can choose another wing instead.'}</p></div>}
+      {(pourTokens > 0 || pourUnlocked) && <section data-testid="majlis-pour-invitation" className="rounded-2xl border border-[#D99B26]/60 bg-[#3B281A] p-3 text-[#FFF4DA]"><p className="text-sm font-black">☕ {isAr ? 'فرصة لصب القهوة لضيوفك' : 'Pour coffee for your guests'}</p><p className="mt-1 text-xs leading-relaxed text-[#EBD8BA]">{pourTokens > 0 ? (isAr ? `تكسب فرصة مع كل ترميم. لديك ${pourTokens}؛ استخدمها الآن أو لاحقاً.` : `Each restoration earns a chance. You have ${pourTokens}; use it now or later.`) : (isAr ? 'تدرّب مجاناً، واكسب فرصة مكافأة عند ترميم جناح آخر.' : 'Practice for free, and earn another reward chance by restoring a wing.')}</p><button type="button" onClick={onOpenPour} className="mt-2 min-h-11 rounded-xl bg-[#D99B26] px-3 py-2 text-xs font-black text-[#241812]">{isAr ? 'ابدأ تحدي ربع الفنجال' : 'Start the quarter-cup challenge'}</button></section>}
       {/* Multi-Location Kingdom Map & Weather Ambiance Bar */}
       <div className="rounded-2xl border border-[#D99B26]/35 bg-[#241812] p-3 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
         {/* Restoration journey across the Kingdom: finished, current and locked areas */}
@@ -209,6 +281,7 @@ export const MajlisRenovationView: React.FC<MajlisRenovationViewProps> = ({
                 key={a.id}
                 type="button"
                 onClick={() => onChangeAmbiance(a.id)}
+                aria-pressed={active}
                 className={`px-2.5 py-1.5 rounded-xl text-xs font-semibold inline-flex items-center gap-1.5 border transition-all cursor-pointer whitespace-nowrap ${
                   active
                     ? 'bg-[#2E1E16] border-[#FBBF24] text-[#FBF7F0]'
@@ -247,7 +320,7 @@ export const MajlisRenovationView: React.FC<MajlisRenovationViewProps> = ({
 
         {/* Live SVG Isometric/Diorama Scene that visually transforms by Region, Ambiance & Upgrades */}
         {paintedStages ? (
-          <MajlisStageBanner areaId={area.id} stage={stage} stages={paintedStages} isAr={isAr} hold={storyOpen} />
+          <><MajlisStageBanner key={areaIndex} areaId={area.id} stage={stage} stages={paintedStages} isAr={isAr} hold={storyOpen} ambiance={ambiance} /><div ref={detailsRef} tabIndex={-1}><MajlisDetails key={areaIndex} zones={zones} isAr={isAr} selectedId={selectedDetail} onSelect={setSelectedDetail} /></div></>
         ) : (
         <div className={`relative w-full h-56 sm:h-64 bg-gradient-to-b ${skyGradient} flex items-center justify-center overflow-hidden`}>
           <svg viewBox="0 0 800 320" className="w-full h-full" preserveAspectRatio="xMidYMid meet">
@@ -417,6 +490,21 @@ export const MajlisRenovationView: React.FC<MajlisRenovationViewProps> = ({
         )}
       </div>
 
+      {tastingFlags?.tasting_style && (() => {
+        const style = TASTING_STYLES.find(s => s.id === tastingFlags.tasting_style);
+        if (!style) return null;
+        return <div data-testid="tasting-corner" className="w-full rounded-2xl border-2 p-3 text-start shadow-md" style={{ borderColor: style.color, background: '#302116' }}>
+          <span className="block font-black text-[#FBF7F0] mb-2">☕ {isAr ? 'ركن تذوق فيصل' : "Faisal's tasting corner"}</span>
+          <TastingCorner flags={tastingFlags} lang={lang} />
+          <button type="button" onClick={onOpenTasting} className="mt-2 min-h-11 text-xs font-bold text-[#FBBF24] underline">{isAr ? 'شاهد الذكرى وغيّر شكل الركن' : 'View the memory and change the corner'}</button>
+        </div>;
+      })()}
+
+      {taifAvailable && (() => {
+        const welcome = TAIF_WELCOMES.find(recipe => recipe.id === taifWelcome);
+        return <button type="button" onClick={onOpenTaif} data-testid="taif-welcome-card" className="w-full rounded-2xl border-2 border-[#D77D90] bg-[#382127] p-3 text-start text-[#FFF3E6] shadow-md flex items-center gap-3"><span aria-hidden="true" className="text-3xl">🌹</span><span className="min-w-0 flex-1"><span className="block font-black">{isAr ? 'ضيافة ورد الطائف' : 'A Taif rose welcome'}</span><span className="block text-xs text-[#FBD7D9]">{welcome ? (isAr ? `ذكرى محفوظة: ${welcome.nameAr}` : `A saved memory: ${welcome.nameEn}`) : (isAr ? 'نورة تنتظر ضيافتك' : 'Noura is ready to welcome guests')}</span></span>{welcome && <span aria-hidden="true" className="flex shrink-0 items-center gap-1">{welcome.items.map(id => <ItemArtwork key={id} itemId={id} size="xs" />)}</span>}</button>;
+      })()}
+
       {areaComplete && (
         <div data-testid="advance-area" className="rounded-2xl border-2 border-[#34D399] bg-gradient-to-r from-[#064E3B] to-[#065F46] p-4 flex flex-col sm:flex-row items-center gap-3 shadow-xl">
           <div className="flex-1 text-center sm:text-start">
@@ -441,6 +529,7 @@ export const MajlisRenovationView: React.FC<MajlisRenovationViewProps> = ({
       )}
 
       {/* 4 Architectural Renovation Cards */}
+      {restoredWing && zones.some(zone => zone.id === restoredWing && zone.unlockedLevel > 0) && !storyOpen && paintedStages > 0 && <div data-testid="restoration-reveal" role="status" className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] inset-x-3 z-30 mx-auto flex max-w-md items-center gap-2 rounded-2xl border-2 border-[#D99B26] bg-[#302116] p-2 text-[#FFF4DA] shadow-xl"><button type="button" onClick={() => { setSelectedDetail(restoredWing); onDismissRestorationReveal(); detailsRef.current?.scrollIntoView({ block: 'center' }); detailsRef.current?.focus({ preventScroll: true }); }} className="min-h-11 flex-1 rounded-xl bg-[#D99B26] px-3 py-2 text-start text-xs font-black text-[#241812]">{isAr ? 'شاهد لمستك في المجلس' : 'See your restored detail in the Majlis'}</button><button type="button" onClick={onDismissRestorationReveal} aria-label={isAr ? 'إغلاق' : 'Close'} className="min-h-11 min-w-11 rounded-lg bg-white/10 font-bold">✕</button></div>}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
         {zones.map((zone) => {
           const isMax = zone.unlockedLevel >= 2;
@@ -451,6 +540,9 @@ export const MajlisRenovationView: React.FC<MajlisRenovationViewProps> = ({
           return (
             <div
               key={zone.id}
+              ref={zone.id === firstWing?.id ? firstWingRef : undefined}
+              tabIndex={zone.id === firstWing?.id ? -1 : undefined}
+              data-testid={`restoration-wing-${zone.id}`}
               className="rounded-xl border border-[#D99B26]/25 bg-[#241812] p-4 flex flex-col justify-between gap-3 shadow-md"
             >
               <div>
@@ -459,10 +551,10 @@ export const MajlisRenovationView: React.FC<MajlisRenovationViewProps> = ({
                     <h3 className="text-base font-bold text-[#FBF7F0]">
                       {isAr ? zone.nameAr : zone.nameEn}
                     </h3>
-                    <p className="text-xs text-[#D4A373] mt-0.5">
-                      {isAr ? `المستوى ${zone.unlockedLevel} / 2` : `Tier ${zone.unlockedLevel} / 2`} · +
-                      {zone.coinBonusPerOrder} {isAr ? 'ريال لكل طلب' : 'SAR/Order'}
+                    <p data-testid={`wing-bonus-${zone.id}`} className="text-xs text-[#D4A373] mt-0.5">
+                      {isAr ? `المستوى ${zone.unlockedLevel} / 2 · المكافأة الحالية +${zone.unlockedLevel * zone.coinBonusPerOrder} ريال لكل طلب` : `Tier ${zone.unlockedLevel} / 2 · Current bonus +${zone.unlockedLevel * zone.coinBonusPerOrder} coins per order`}
                     </p>
+                    {!isMax && <p className="text-xs text-[#FDE68A] mt-0.5">{isAr ? `بعد الترميم: +${(zone.unlockedLevel + 1) * zone.coinBonusPerOrder} ريال لكل طلب` : `After restoring: +${(zone.unlockedLevel + 1) * zone.coinBonusPerOrder} coins per order`}</p>}
                   </div>
                   {chapter && zone.unlockedLevel > 0 && (
                     <button
@@ -490,6 +582,7 @@ export const MajlisRenovationView: React.FC<MajlisRenovationViewProps> = ({
                   <span className="text-[11px] text-[#D4A373] block mb-1.5">
                     {isAr ? 'اختر طراز التصميم الخليجي:' : 'Select Khaleeji Design Style:'}
                   </span>
+                  <p className="text-[11px] text-[#E5DEC9]/80 mb-1.5">{zone.unlockedLevel > 0 ? (isAr ? `تغيير الطراز يكلف ${styleCost} ريال.` : `Changing the style costs ${styleCost} coins.`) : (isAr ? 'اختيار الطراز قبل الترميم مجاني.' : 'Choosing a style before restoration is free.')}</p>
                   <div className="grid grid-cols-3 gap-1.5">
                     {zone.styles.map((st, sIdx) => {
                       const active = zone.selectedStyle === sIdx;
@@ -498,7 +591,10 @@ export const MajlisRenovationView: React.FC<MajlisRenovationViewProps> = ({
                           key={st.nameEn}
                           type="button"
                           onClick={() => onUpgradeZone(zone.id, sIdx)}
-                          className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-xs font-medium border transition-all cursor-pointer truncate ${
+                          aria-pressed={active}
+                          disabled={!active && zone.unlockedLevel > 0 && coins < styleCost}
+                          title={isAr ? st.nameAr : st.nameEn}
+                          className={`min-w-0 min-h-11 flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-xs font-medium border transition-all cursor-pointer disabled:opacity-40 ${
                             active
                               ? 'border-[#FBBF24] bg-[#D99B26]/20 text-[#FBF7F0]'
                               : 'border-white/10 bg-[#1C1410]/70 text-[#E5DEC9]/70 hover:text-white'
@@ -519,6 +615,7 @@ export const MajlisRenovationView: React.FC<MajlisRenovationViewProps> = ({
                       );
                     })}
                   </div>
+                  {zone.unlockedLevel > 0 && coins < styleCost && <p className="mt-1 text-[11px] text-[#FDE68A]">{isAr ? `تحتاج ${styleCost - coins} ريال إضافية لتغيير الطراز.` : `You need ${styleCost - coins} more coins to change the style.`}</p>}
                 </div>
               </div>
 

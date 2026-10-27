@@ -30,7 +30,7 @@ export const LiveEventBar: React.FC<{ lang: Language; state: GameState; onOpen: 
   const now = useNow(30_000); // the bar shows hours and minutes
   const ev = activeLiveEvent(now);
   const p = eventProgress(state, now);
-  const ready = claimableMilestones(state, now).length;
+  const ready = claimableMilestones(state, now).length + (state.festivalDelivery ? 1 : 0);
   const nextIdx = EVENT_MILESTONES.findIndex((m) => p.points < m.points);
   const prevTarget = nextIdx > 0 ? EVENT_MILESTONES[nextIdx - 1].points : 0;
   const target = nextIdx >= 0 ? EVENT_MILESTONES[nextIdx].points : EVENT_MILESTONES[EVENT_MILESTONES.length - 1].points;
@@ -68,13 +68,14 @@ export const LiveEventModal: React.FC<{
   state: GameState;
   onClose: () => void;
   onClaim: (index: number) => void;
-}> = ({ lang, state, onClose, onClaim }) => {
+  onAcknowledge: () => void;
+}> = ({ lang, state, onClose, onClaim, onAcknowledge }) => {
   const isAr = lang === 'ar';
   const now = useNow(30_000);
   const ev = activeLiveEvent(now);
   const p = eventProgress(state, now);
   return (
-    <div role="dialog" aria-modal="true" aria-label={isAr ? ev.def.nameAr : ev.def.nameEn} data-testid="event-modal" className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/55 p-3" onClick={onClose}>
+    <div role="dialog" aria-modal="true" aria-label={isAr ? ev.def.nameAr : ev.def.nameEn} data-testid="event-modal" className="safe-dialog fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/55 p-3" onClick={onClose}>
       <div className="w-full max-w-md rounded-3xl bg-[#FFFDF9] border-[3px] border-[#D97706] shadow-2xl overflow-hidden text-[#2C1E14]" onClick={(e) => e.stopPropagation()}>
         <div className={`relative bg-gradient-to-r ${ev.def.gradient} text-white px-4 pt-4 pb-3`}>
           <button type="button" onClick={onClose} aria-label={isAr ? 'إغلاق' : 'Close'} className="absolute top-3 end-3 w-9 h-9 rounded-full bg-white/20 flex items-center justify-center">
@@ -91,6 +92,12 @@ export const LiveEventModal: React.FC<{
           </p>
         </div>
         <ol className="px-4 py-3 space-y-2 max-h-[60vh] overflow-y-auto">
+          {state.festivalDelivery && <li data-testid="festival-delivery" className="rounded-2xl border-2 border-[#D97706] bg-[#FEF3C7] p-3 text-[#78350F]">
+            <p className="text-sm font-black">{isAr ? 'مكافآت مهرجانك السابق' : 'Your previous festival rewards'}</p>
+            <p className="mt-1 text-xs">{isAr ? 'أضفنا المكافآت التي كسبتها قبل انتهاء المهرجان إلى رصيدك.' : 'We added the rewards you earned before the festival ended to your balance.'}</p>
+            <div className="mt-2"><RewardChips reward={state.festivalDelivery} /></div>
+            <button type="button" onClick={onAcknowledge} className="mt-2 min-h-11 rounded-xl bg-[#92400E] px-3 py-1 text-xs font-bold text-white">{isAr ? 'حسناً' : 'Got it'}</button>
+          </li>}
           {EVENT_MILESTONES.map((m, i) => {
             const claimed = p.claimed.includes(i);
             const reached = p.points >= m.points;
@@ -122,7 +129,7 @@ export const LiveEventModal: React.FC<{
           })}
         </ol>
         <p className="px-4 pb-4 text-[11px] text-center text-[#78350F]/70">
-          {isAr ? 'مهرجان جديد كل ثلاثة أيام، والنقاط تبدأ من الصفر.' : 'A new festival every three days; points start again from zero.'}
+          {isAr ? 'مهرجان جديد كل ثلاثة أيام، والنقاط تبدأ من الصفر. مكافآتك المكتسبة محفوظة.' : 'A new festival starts every three days. Points reset, but earned rewards are kept.'}
         </p>
       </div>
     </div>

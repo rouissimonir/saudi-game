@@ -1,6 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { restorationStage } from './majlisStages';
+import { majlisReaction } from './majlisReactions';
+import { createInitialGameState, upgradeRenovationZone } from './rules';
+import { normalizeSave } from './normalizeSave';
 
 test('restoration stages: ruin until two wings are done, half restored after, fully restored only at the end', () => {
   // Diriyah: 4 wings x 2 tiers = 8 levels, 3 painted stages
@@ -19,4 +22,28 @@ test('every painted stage has its image, and every area is covered', async () =>
   for (const [id, n] of Object.entries(PAINTED_STAGES)) {
     for (let i = 1; i <= n; i++) assert.ok(existsSync(`public/assets/art/majlis/${id}_${i}.webp`), `${id}_${i}.webp`);
   }
+});
+
+test('family comments follow the restored wing and its selected style', () => {
+  const zone = createInitialGameState().renovationZones[1];
+  assert.equal(majlisReaction({ ...zone, unlockedLevel: 0 }, 1), null);
+  const first = majlisReaction({ ...zone, unlockedLevel: 1, selectedStyle: 0 }, 1)!;
+  const changed = majlisReaction({ ...zone, unlockedLevel: 1, selectedStyle: 1 }, 1)!;
+  assert.equal(first.guest, 'noura');
+  assert.ok(first.en.includes(zone.nameEn) && first.en.includes(zone.styles[0].nameEn));
+  assert.ok(changed.ar.includes(zone.styles[1].nameAr));
+  assert.notEqual(first.en, changed.en);
+  assert.equal(majlisReaction({ ...zone, unlockedLevel: 1, selectedStyle: 99 }, 1), null);
+  assert.equal(majlisReaction({ ...zone, unlockedLevel: 1 }, 4), null);
+});
+
+test('a restored wing keeps its pending reveal in the save without a second reward', () => {
+  const initial = createInitialGameState();
+  const result = upgradeRenovationZone(initial, 'zone_sadu');
+  assert.equal(result.upgraded, true);
+  const loaded = normalizeSave(JSON.parse(JSON.stringify(result.state)))!;
+  assert.equal(loaded.storyFlags.restoration_reveal_area, '0');
+  assert.equal(loaded.storyFlags.restoration_reveal_wing, 'zone_sadu');
+  assert.equal(loaded.stars, initial.stars - initial.renovationZones[1].starCostLevel1);
+  assert.equal(loaded.wingUpgrades, 1);
 });

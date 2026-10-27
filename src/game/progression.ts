@@ -10,6 +10,7 @@ import {
   INITIAL_RENOVATION_ZONES,
   ITEM_CATALOG,
   CHAIN_PROGRESSION,
+  CHEST_REWARDS,
   MajlisRegion,
   RenovationZone,
   StoryChapter,
@@ -56,6 +57,8 @@ export const ENERGY_REGEN_MS = 60_000;
 
 export function applyEnergyRegen(state: GameState, now: number): GameState {
   const last = state.lastEnergyTick || now;
+  // A device clock moving backwards must not freeze regeneration until the old time catches up.
+  if (last > now) return { ...state, lastEnergyTick: now };
   if (state.energy >= state.maxEnergy) {
     // Keep the clock roughly current while full (at most once a minute, so we do not re-save every tick).
     return now - last >= ENERGY_REGEN_MS || !state.lastEnergyTick ? { ...state, lastEnergyTick: now } : state;
@@ -69,7 +72,7 @@ export function applyEnergyRegen(state: GameState, now: number): GameState {
 export function msUntilNextEnergy(state: GameState, now: number): number | null {
   if (state.energy >= state.maxEnergy) return null;
   const last = state.lastEnergyTick || now;
-  return Math.max(0, ENERGY_REGEN_MS - ((now - last) % ENERGY_REGEN_MS));
+  return Math.max(0, ENERGY_REGEN_MS - (Math.max(0, now - last) % ENERGY_REGEN_MS));
 }
 
 export const ENERGY_GEM_PACK = { gems: 20, energy: 50 };
@@ -81,12 +84,12 @@ export function buyEnergyWithGems(state: GameState): { state: GameState; bought:
   };
 }
 
-/** A late-game coin sink: coins buy a little energy, and each purchase on the same day costs more. */
-export const ENERGY_COIN_PACK = { coins: 400, energy: 30, stepPerPurchase: 300 };
+/** A coin sink that grows during the day but stays predictable for long sessions. */
+export const ENERGY_COIN_PACK = { coins: 400, energy: 30, stepPerPurchase: 300, maxPriceSteps: 10 };
 
 export function coinEnergyPrice(state: GameState, dayKey: string): number {
   const bought = state.coinEnergyToday?.dayKey === dayKey ? state.coinEnergyToday.count : 0;
-  return ENERGY_COIN_PACK.coins + ENERGY_COIN_PACK.stepPerPurchase * bought;
+  return ENERGY_COIN_PACK.coins + ENERGY_COIN_PACK.stepPerPurchase * Math.min(bought, ENERGY_COIN_PACK.maxPriceSteps);
 }
 
 export function buyEnergyWithCoins(state: GameState, dayKey: string): { state: GameState; bought: boolean } {
@@ -507,7 +510,7 @@ const CUSTOMERS: Record<string, { nameAr: string; nameEn: string; roleAr: string
   },
   ghabga: {
     nameAr: 'لجنة مهرجان القهوة', nameEn: 'Coffee Festival Jury', roleAr: 'لجنة التحكيم', roleEn: 'Festival Jury',
-    lines: [['اللجنة تنتظر تذوق {items}.', 'The jury awaits a tasting of {items}.']],
+    lines: [['اللجنة تنتظر تجهيز {items} للمهرجان.', 'The jury would like {items} prepared for the festival.']],
   },
 };
 
@@ -650,10 +653,44 @@ export function questsForDay(dayKey: string): QuestDef[] {
   return out;
 }
 
-/** Start a new set of quests when the day changes; progress counts from the moment they start. */
+/** Settle completed rewards before starting the next day, including after an offline break. */
 export function ensureDailyQuests(state: GameState, dayKey: string): GameState {
   if (state.dailyQuests && state.dailyQuests.dayKey === dayKey) return state;
-  return { ...state, dailyQuests: { dayKey, baseline: counters(state), claimed: [], bonusClaimed: false } };
+  // A clock moving backwards must not erase a later day's progress.
+  if (state.dailyQuests && state.dailyQuests.dayKey > dayKey) return state;
+  const rows = questProgress(state);
+  let settled = state;
+  let quests = 0;
+  for (const row of rows) {
+    if (!row.done || row.claimed) continue;
+    const result = claimQuest(settled, row.quest.id);
+    if (result.claimed) { settled = result.state; quests++; }
+  }
+  let bonuses = 0, chests = 0, openedChests = 0;
+  if (rows.length > 0 && rows.every(row => row.done) && !state.dailyQuests?.bonusClaimed) {
+    const boardFull = findNearestEmptyCell(settled.board, 24) === null;
+    const result = claimQuestBonus(settled);
+    if (result.claimed) {
+      settled = result.state;
+      bonuses = 1;
+      if (boardFull) openedChests = 1;
+      else chests = 1;
+    }
+  }
+  const prior = state.questDelivery;
+  const delivery = quests || bonuses ? {
+    quests: (prior?.quests ?? 0) + quests,
+    bonuses: (prior?.bonuses ?? 0) + bonuses,
+    chests: (prior?.chests ?? 0) + chests,
+    openedChests: (prior?.openedChests ?? 0) + openedChests,
+    coins: (prior?.coins ?? 0) + settled.coins - state.coins,
+    gems: (prior?.gems ?? 0) + settled.diamonds - state.diamonds,
+    energy: (prior?.energy ?? 0) + settled.energy - state.energy,
+    scissors: (prior?.scissors ?? 0) + settled.scissorsCount - state.scissorsCount,
+    joker: (prior?.joker ?? 0) + settled.jokerCount - state.jokerCount,
+    prestige: (prior?.prestige ?? 0) + settled.prestigePoints - state.prestigePoints,
+  } : prior;
+  return { ...settled, questDelivery: delivery, dailyQuests: { dayKey, baseline: counters(settled), claimed: [], bonusClaimed: false } };
 }
 
 export function questProgress(state: GameState): { quest: QuestDef; progress: number; done: boolean; claimed: boolean }[] {
@@ -688,13 +725,18 @@ export function claimQuestBonus(state: GameState): { state: GameState; claimed: 
     return { state, claimed: false };
   }
   const emptyIdx = findNearestEmptyCell(state.board, 24);
+  const chest = emptyIdx === null ? CHEST_REWARDS.royal : null;
   const board = emptyIdx === null ? state.board : state.board.map((c, i) => (i === emptyIdx ? { ...c, itemId: 'chest_2' } : c));
   return {
     state: {
       ...state,
       board,
-      diamonds: state.diamonds + QUEST_BONUS.gems,
-      energy: state.energy + QUEST_BONUS.energy,
+      coins: state.coins + (chest?.coins ?? 0),
+      diamonds: state.diamonds + QUEST_BONUS.gems + (chest?.gems ?? 0),
+      energy: state.energy + QUEST_BONUS.energy + (chest?.energy ?? 0),
+      scissorsCount: state.scissorsCount + (chest?.scissors ?? 0),
+      jokerCount: state.jokerCount + (chest?.joker ?? 0),
+      prestigePoints: state.prestigePoints + (chest?.prestige ?? 0),
       dailyQuests: { ...state.dailyQuests, bonusClaimed: true },
     },
     claimed: true,

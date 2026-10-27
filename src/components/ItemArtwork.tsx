@@ -22,7 +22,7 @@ export function preloadItemArt(): void {
 
 interface ItemArtworkProps {
   itemId: string;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'board';
 }
 
 export const ItemArtwork: React.FC<ItemArtworkProps> = ({ itemId, size = 'md' }) => {
@@ -33,7 +33,7 @@ export const ItemArtwork: React.FC<ItemArtworkProps> = ({ itemId, size = 'md' })
   if (!def) return null;
 
   const sizeClass =
-    size === 'sm' ? 'w-7 h-7' : size === 'lg' ? 'w-14 h-14' : 'w-10 h-10 sm:w-11 sm:h-11';
+    size === 'xs' ? 'w-5 h-5' : size === 'sm' ? 'w-7 h-7' : size === 'lg' ? 'w-14 h-14' : size === 'board' ? 'w-full h-full max-w-11 max-h-11' : 'w-10 h-10 sm:w-11 sm:h-11';
 
   return (
     <div className={`relative flex items-center justify-center ${sizeClass} select-none pointer-events-none`}>

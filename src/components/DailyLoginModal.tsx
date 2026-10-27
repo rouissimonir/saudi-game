@@ -4,8 +4,9 @@ import { DAILY_LOGIN_REWARDS, DailyReward, Language } from '../game/rules';
 
 interface DailyLoginModalProps {
   lang: Language;
-  /** Streak day (1..7) that will be claimed now, or null when closed. */
+  /** Gift position (1..7) that will be claimed now, or null when closed. */
   day: number | null;
+  boardFull: boolean;
   onClaim: () => void;
 }
 
@@ -21,7 +22,7 @@ function rewardParts(reward: DailyReward, isAr: boolean): { icon: React.ReactNod
   return parts;
 }
 
-export const DailyLoginModal: React.FC<DailyLoginModalProps> = ({ lang, day, onClaim }) => {
+export const DailyLoginModal: React.FC<DailyLoginModalProps> = ({ lang, day, boardFull, onClaim }) => {
   if (day === null) return null;
   const isAr = lang === 'ar';
 
@@ -31,7 +32,7 @@ export const DailyLoginModal: React.FC<DailyLoginModalProps> = ({ lang, day, onC
       aria-modal="true"
       aria-label={isAr ? 'هدية اليوم' : 'Daily reward'}
       data-testid="daily-login-modal"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80"
+      className="safe-dialog fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80"
     >
       <div className="w-full max-w-md rounded-2xl border-2 border-[#D99B26] bg-[#241812] text-[#FBF7F0] shadow-2xl overflow-hidden">
         <div className="h-2 w-full sadu-trim" />
@@ -40,10 +41,10 @@ export const DailyLoginModal: React.FC<DailyLoginModalProps> = ({ lang, day, onC
             {isAr ? 'غبقة اليوم · مكافأة الدخول اليومي' : 'Daily Ghabga · Login Reward'}
           </span>
           <h2 className="text-xl font-bold mt-0.5">
-            {isAr ? `يا هلا! اليوم ${day} من 7` : `Welcome back! Day ${day} of 7`}
+            {isAr ? `يا هلا! الهدية ${day} من 7` : `Welcome back! Gift ${day} of 7`}
           </h2>
           <p className="text-xs text-[#D4A373] mt-1">
-            {isAr ? 'ادخل كل يوم لتكمل السلسلة وتفتح صندوق اليوم السابع.' : 'Come back every day to keep your streak and open the Day 7 chest.'}
+            {isAr ? 'لك هدية كل يوم تزورنا فيه. إذا غبت، نحتفظ بمكانك حتى تعود.' : 'Claim one gift per day you visit. Your place is saved whenever you take a break.'}
           </p>
 
           <div className="grid grid-cols-7 gap-1.5 mt-4">
@@ -82,6 +83,7 @@ export const DailyLoginModal: React.FC<DailyLoginModalProps> = ({ lang, day, onC
               </span>
             ))}
           </div>
+          {day === 7 && boardFull && <p className="mt-2 text-xs text-[#FDE68A]">{isAr ? 'اللوحة ممتلئة؛ سيُفتح الصندوق فوراً وتُضاف كل محتوياته.' : 'The board is full; the chest will open immediately and all its contents will be added.'}</p>}
 
           <button
             type="button"

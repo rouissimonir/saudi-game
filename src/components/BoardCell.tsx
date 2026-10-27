@@ -8,7 +8,8 @@ interface BoardCellProps {
   isAr: boolean;
   isSelected: boolean;
   isCelebrating: boolean;
-  isHinted: boolean;
+  isFocused: boolean;
+  isTutorialTarget: boolean;
   isMergeTarget: boolean;
   isOrderNeeded: boolean;
   isDragSource: boolean;
@@ -26,7 +27,8 @@ export const BoardCell = memo(function BoardCell({
   isAr,
   isSelected,
   isCelebrating,
-  isHinted,
+  isFocused,
+  isTutorialTarget,
   isMergeTarget,
   isOrderNeeded,
   isDragSource,
@@ -56,11 +58,11 @@ export const BoardCell = memo(function BoardCell({
   return (
     <button
       type="button"
-      aria-label={accessibleLabel}
+      aria-label={`${accessibleLabel}${isFocused ? (isAr ? '، مفيد للمهمة المختارة' : ', useful for the focused goal') : ''}${isTutorialTarget ? (isAr ? '، مقترح للدمج الأول' : ', suggested for your first merge') : ''}`}
       data-cell-index={cell.index}
       onPointerDown={(e) => onPointerDown(e, cell.index)}
       onClick={() => onSelect(cell.index)}
-      className={`relative aspect-square rounded-xl flex flex-col items-center justify-center transition-transform cursor-pointer select-none touch-none ${tileSurfaceClass} ${
+      className={`relative min-w-0 aspect-square rounded-xl flex flex-col items-center justify-center transition-transform cursor-pointer select-none touch-none ${tileSurfaceClass} ${
         isDragSource ? 'opacity-40' : ''
       } ${
         isDragOver ? 'ring-3 ring-[#FDE047] scale-[1.06] z-10' : ''
@@ -69,18 +71,20 @@ export const BoardCell = memo(function BoardCell({
           ? 'ring-3 ring-[#F59E0B] scale-[1.05] z-10'
           : ''
       } ${
-        isMergeTarget || isHinted
+        isMergeTarget || isTutorialTarget
           ? 'ring-3 ring-[#10B981]'
           : ''
       } ${
         isCelebrating
           ? 'merge-tile-celebrate ring-3 ring-[#FDE047] shadow-[0_0_18px_rgba(250,204,21,0.85)] z-20'
           : ''
+      } ${
+        isFocused && !isSelected && !isMergeTarget && !isTutorialTarget ? 'ring-2 ring-[#F59E0B]' : ''
       }`}
     >
       {itemDef && (
         <>
-          <ItemArtwork itemId={itemDef.id} size="md" />
+          <ItemArtwork itemId={itemDef.id} size="board" />
 
           {/* Clean Gossip-Harbor Style Corner Badge */}
           {itemDef.isGenerator ? (

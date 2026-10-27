@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowRightLeft, BookOpen, Castle, Coins, Gem, Gift, Grid3x3, Hammer, Languages, Menu, Pause, ScrollText, ShoppingBag, Star, Trophy, Volume2, VolumeX, X, Zap } from 'lucide-react';
+import { ArrowRightLeft, BookOpen, Castle, Coins, Gem, Gift, Grid3x3, Hammer, Languages, Menu, Pause, ScrollText, ShoppingBag, Smartphone, Star, Trophy, Volume2, VolumeX, X, Zap } from 'lucide-react';
 import { Language } from '../game/rules';
 import { formatCountdown } from './ProgressionModals';
 import { useNow } from '../utils/useNow';
@@ -24,6 +24,7 @@ export const GameHud: React.FC<{
   coins: number;
   gems: number;
   muted: boolean;
+  hapticsEnabled: boolean;
   freeSpins: number;
   onEnergy: () => void;
   onCoins: () => void;
@@ -32,6 +33,7 @@ export const GameHud: React.FC<{
   onRank: () => void;
   onToggleLanguage: () => void;
   onToggleMute: () => void;
+  onToggleHaptics: () => void;
   onPause: () => void;
   onTransfer: () => void;
   onReplayStory: () => void;
@@ -45,7 +47,7 @@ export const GameHud: React.FC<{
   const energyCountdownMs = p.energyCountdownAt(useNow());
   const ring = 2 * Math.PI * 17;
   return (
-    <header className="sticky top-0 z-40 w-full bg-gradient-to-b from-[#5C3A21] to-[#432815] border-b-[3px] border-[#C68B59] shadow-md">
+    <header className="sticky top-0 z-40 w-full pt-[env(safe-area-inset-top)] bg-gradient-to-b from-[#5C3A21] to-[#432815] border-b-[3px] border-[#C68B59] shadow-md">
       <div className="h-1 w-full sadu-trim" />
       <div className="max-w-[460px] mx-auto px-1.5 min-[360px]:px-2 py-1.5 flex items-center gap-1 min-[360px]:gap-1.5" data-testid="game-hud">
         <div className="relative w-10 h-10 min-[360px]:w-11 min-[360px]:h-11 shrink-0" aria-label={`${isAr ? 'المستوى' : 'Level'} ${p.level}`}>
@@ -96,9 +98,10 @@ export const GameHud: React.FC<{
         <div className="absolute end-2 top-full mt-1 w-56 rounded-2xl bg-[#FFFDF9] border-2 border-[#D97706] shadow-2xl p-2 grid gap-1 text-[#3E2723]" data-testid="hud-menu">
           {[
             { icon: <Gift className="w-4 h-4 text-[#D97706]" />, label: isAr ? 'عجلة فنجال الصباح' : 'Morning wheel', badge: p.freeSpins > 0, on: p.onSpin },
-            { icon: <Trophy className="w-4 h-4 text-[#D97706]" />, label: isAr ? 'ديوان الكرم' : 'Leaderboard', on: p.onRank },
+            { icon: <Trophy className="w-4 h-4 text-[#D97706]" />, label: isAr ? 'معرض المجالس' : 'Majlis showcase', on: p.onRank },
             { icon: <Languages className="w-4 h-4" />, label: isAr ? 'English' : 'العربية', on: p.onToggleLanguage },
             { icon: p.muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />, label: p.muted ? (isAr ? 'تشغيل الصوت' : 'Sound on') : isAr ? 'كتم الصوت' : 'Mute', on: p.onToggleMute },
+            { icon: <Smartphone className="w-4 h-4" />, label: p.hapticsEnabled ? (isAr ? 'إيقاف الاهتزاز' : 'Turn haptics off') : (isAr ? 'تشغيل الاهتزاز' : 'Turn haptics on'), on: p.onToggleHaptics },
             { icon: <BookOpen className="w-4 h-4" />, label: isAr ? 'حلقات القصة' : 'Story episodes', on: p.onReplayStory },
             { icon: <ArrowRightLeft className="w-4 h-4" />, label: isAr ? 'نقل التقدم لجهاز آخر' : 'Transfer progress', on: p.onTransfer },
             { icon: <Pause className="w-4 h-4" />, label: isAr ? 'إيقاف مؤقت' : 'Pause', on: p.onPause },
@@ -157,8 +160,8 @@ export const BottomNav: React.FC<{
     { id: 'shop', label: isAr ? 'المتجر' : 'Shop', icon: <ShoppingBag className="w-5 h-5" /> },
   ];
   return (
-    <nav className="fixed bottom-0 inset-x-0 z-40 bg-gradient-to-t from-[#432815] to-[#5C3A21] border-t-[3px] border-[#C68B59] pb-[env(safe-area-inset-bottom)]" data-testid="bottom-nav" aria-label={isAr ? 'التنقل' : 'Navigation'}>
-      <div className="max-w-[460px] mx-auto grid grid-cols-5">
+    <nav className="game-nav fixed bottom-0 inset-x-0 z-40 bg-gradient-to-t from-[#432815] to-[#5C3A21] border-t-[3px] border-[#C68B59] pb-[env(safe-area-inset-bottom)]" data-testid="bottom-nav" aria-label={isAr ? 'التنقل' : 'Navigation'}>
+      <div className="game-nav-items max-w-[460px] mx-auto grid grid-cols-5">
         {items.map((it) => {
           const on = it.id === active;
           return (

@@ -1,14 +1,19 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { normalizeSave } from './normalizeSave';
 import {
   createInitialGameState,
+  type GameState,
   canMergeItems,
   getNextMergedItemId,
   spawnFromGenerator,
   mergeOrMoveCells,
   fulfillCustomerOrder,
+  orderCoinReward,
+  VIP_ORDER_GEMS,
   upgradeRenovationZone,
   findBestMergePair,
+  autoMergeReservations,
   cyclePowerMultiplier,
   storeBoardItemInInventory,
   retrieveInventoryItemToBoard,
@@ -16,11 +21,13 @@ import {
   useGoldenScissors,
   useJokerUpgrade,
   openBoardChest,
+  CHEST_REWARDS,
   spinLuckyWheel,
   voteMazayenEntry,
   getDailyLoginDay,
   claimDailyLoginReward,
   getTutorialStep,
+  dailyLoginAfterTutorial,
   getActiveSeason,
   SEASONS,
   gradePour,
@@ -61,6 +68,21 @@ test('Power Boost multiplier (1x -> 2x -> 4x) spawns higher-level items directly
   const res2x = spawnFromGenerator(state, 2, 0.1);
   assert.equal(res2x.spawnedItemId, 'oud_2');
   assert.equal(res2x.state.energy, state.energy - 2);
+});
+
+test('low energy uses the highest affordable power boost without wasting energy', () => {
+  const base = createInitialGameState();
+  for (const [selected, energy, cost, item] of [
+    [4, 1, 1, 'qahwa_1'], [4, 2, 2, 'qahwa_2'], [4, 3, 2, 'qahwa_2'],
+    [4, 4, 4, 'qahwa_3'], [2, 3, 2, 'qahwa_2'], [1, 4, 1, 'qahwa_1'],
+  ] as const) {
+    const result = spawnFromGenerator({ ...base, powerMultiplier: selected, energy }, 1, 0);
+    assert.equal(result.spawnedItemId, item);
+    assert.equal(result.state.energy, energy - cost);
+  }
+  const empty = spawnFromGenerator({ ...base, powerMultiplier: 4, energy: 0 }, 1, 0);
+  assert.equal(empty.reason, 'NO_ENERGY');
+  assert.equal(empty.state.energy, 0);
 });
 
 test('Golden Scissors splits Lv.2+ item into two Lv.(N-1) items and Royal Joker upgrades Lv.1-5 item', () => {
@@ -104,6 +126,47 @@ test('Lucky Dallah Spin Wheel and Weekly Mazayen Al-Majlis voting award prizes a
   assert.equal(voteRes.state.coins, spinRes.state.coins + 25);
 });
 
+test('a full board delivers wheel prizes, opening chest prizes without losing contents', () => {
+  const base = createInitialGameState();
+  const board = base.board.map(c => ({ ...c, itemId: c.itemId ?? 'qahwa_1', sandLocked: false }));
+  const free = { ...base, board };
+  const freeResult = spinLuckyWheel(free, 5);
+  assert.equal(freeResult.spun, true);
+  assert.equal(freeResult.openedChest, true);
+  assert.deepEqual(freeResult.state.lastWheelPrize, { wedgeId: 'w_chest', openedChest: true });
+  assert.equal(freeResult.state.freeSpinsAvailable, 0);
+  assert.equal(freeResult.state.board, board);
+  assert.equal(freeResult.state.coins, free.coins + CHEST_REWARDS.wooden.coins);
+  assert.equal(freeResult.state.diamonds, free.diamonds + CHEST_REWARDS.wooden.gems);
+  assert.equal(freeResult.state.energy, free.energy + CHEST_REWARDS.wooden.energy);
+  assert.equal(freeResult.state.prestigePoints, free.prestigePoints + 15 + CHEST_REWARDS.wooden.prestige);
+  const paid = { ...free, freeSpinsAvailable: 0, diamonds: 50 };
+  const paidResult = spinLuckyWheel(paid, 5);
+  assert.equal(paidResult.spun, true);
+  assert.equal(paidResult.state.diamonds, 50 - 15 + CHEST_REWARDS.wooden.gems);
+  const energyPrize = spinLuckyWheel(free, 0);
+  assert.equal(energyPrize.state.energy, free.energy + 45);
+  assert.equal(energyPrize.openedChest, false);
+  const noGems = { ...paid, diamonds: 14 };
+  assert.equal(spinLuckyWheel(noGems, 5).state, noGems);
+  const space = spinLuckyWheel(base, 5);
+  assert.equal(space.openedChest, false);
+  assert.equal(space.state.board.filter(c => c.itemId === 'chest_1').length, 2);
+});
+
+test('the last wheel prize survives save reload without being paid again', () => {
+  const initial = createInitialGameState();
+  const spun = spinLuckyWheel(initial, 1).state;
+  const loaded = normalizeSave(JSON.parse(JSON.stringify(spun)))!;
+  assert.deepEqual(loaded.lastWheelPrize, { wedgeId: 'w_coins', openedChest: false });
+  assert.equal(loaded.coins, initial.coins + 120);
+  const old = { ...initial } as Partial<GameState>;
+  delete old.lastWheelPrize;
+  assert.equal(normalizeSave(old)?.lastWheelPrize, null);
+  assert.equal(normalizeSave({ ...initial, lastWheelPrize: { wedgeId: 'w_fake', openedChest: true } })?.lastWheelPrize, null);
+  assert.equal(normalizeSave({ ...initial, lastWheelPrize: { wedgeId: 'w_coins', openedChest: true } })?.lastWheelPrize, null);
+});
+
 test('Sadu Pantry inventory, Bonus Bubble, Customer Orders, and Renovation work end-to-end', () => {
   const state = createInitialGameState();
   const storeRes = storeBoardItemInInventory(state, 25);
@@ -129,7 +192,7 @@ test('Sadu Pantry inventory, Bonus Bubble, Customer Orders, and Renovation work 
   }
 });
 
-function emptyBoardState() {
+function emptyBoardState(): GameState {
   const state = createInitialGameState();
   return {
     ...state,
@@ -140,6 +203,62 @@ function emptyBoardState() {
 function withItems(state: ReturnType<typeof emptyBoardState>, items: Record<number, string>) {
   return { ...state, board: state.board.map((c) => (items[c.index] ? { ...c, itemId: items[c.index] } : c)) };
 }
+
+test('auto-merge preserves individual order and focused recipe quantities', () => {
+  const state = withItems(emptyBoardState(), { 0: 'qahwa_2', 2: 'qahwa_2', 4: 'sweets_1', 6: 'sweets_1' });
+  const first = { ...state.activeOrders[0], requiredItemIds: ['qahwa_2', 'qahwa_2'] };
+  const second = { ...state.activeOrders[1], requiredItemIds: ['qahwa_2'] };
+  const reservations = autoMergeReservations([first, second], ['sweets_1']);
+  assert.deepEqual(reservations, { qahwa_2: 2, sweets_1: 1 });
+  assert.equal(findBestMergePair(state.board, reservations), null);
+  assert.ok(findBestMergePair(state.board), 'manual merges remain possible');
+  state.board[8].itemId = 'sweets_1';
+  assert.deepEqual(findBestMergePair(state.board, reservations), [4, 6]);
+  const result = mergeOrMoveCells(state, 4, 6);
+  assert.equal(result.action, 'MERGED');
+  assert.equal(result.state.board.filter(c => c.itemId === 'sweets_1').length, 1);
+});
+
+test('auto-merge accounts for pantry copies without spending needed board copies', () => {
+  const state = withItems(emptyBoardState(), { 0: 'qahwa_1', 2: 'qahwa_1' });
+  const order = { ...state.activeOrders[0], requiredItemIds: ['qahwa_1', 'qahwa_1'] };
+  state.activeOrders = [order];
+  state.inventory = ['qahwa_1'];
+  let reservations = autoMergeReservations(state.activeOrders, [], state.inventory);
+  assert.equal(reservations.qahwa_1, 1);
+  assert.equal(findBestMergePair(state.board, reservations), null);
+  state.inventory.push('qahwa_1');
+  reservations = autoMergeReservations(state.activeOrders, [], state.inventory);
+  assert.equal(reservations.qahwa_1, 0);
+  assert.deepEqual(findBestMergePair(state.board, reservations), [0, 2]);
+  assert.equal(mergeOrMoveCells(state, 0, 2).action, 'MERGED');
+  assert.equal(autoMergeReservations([], ['qahwa_1', 'qahwa_1'], ['qahwa_1']).qahwa_1, 1);
+});
+
+test('a pantry copy allows a mega merge past a tier already needed by an order', () => {
+  const state = withItems(emptyBoardState(), { 0: 'qahwa_1', 1: 'qahwa_1', 8: 'qahwa_1' });
+  state.activeOrders = [{ ...state.activeOrders[0], requiredItemIds: ['qahwa_2'] }];
+  state.inventory = ['qahwa_2'];
+  const pair = findBestMergePair(state.board, autoMergeReservations(state.activeOrders, [], state.inventory));
+  assert.ok(pair);
+  const result = mergeOrMoveCells(state, ...pair);
+  assert.equal(result.megaMerge, true);
+  assert.equal(result.mergedItemId, 'qahwa_3');
+  assert.deepEqual(result.state.inventory, ['qahwa_2']);
+});
+
+test('auto-merge accounts for sand and prevents a mega merge consuming or skipping reserved items', () => {
+  const state = withItems(emptyBoardState(), { 0: 'qahwa_1', 1: 'qahwa_1', 8: 'qahwa_1' });
+  state.board[1].sandLocked = true;
+  assert.deepEqual(findBestMergePair(state.board, { qahwa_1: 1 }), [0, 1], 'the protected neighbour is left untouched');
+  const pair = findBestMergePair(state.board, { qahwa_2: 1 });
+  assert.deepEqual(pair, [0, 1], 'the regular merge does not skip the needed level');
+  assert.equal(mergeOrMoveCells(state, ...pair!).mergedItemId, 'qahwa_2');
+  state.board[8].itemId = null;
+  assert.equal(findBestMergePair(state.board, { qahwa_1: 1 }), null, 'a locked tile still consumes the unlocked item');
+  state.board[4].itemId = 'qahwa_1';
+  assert.deepEqual(findBestMergePair(state.board, { qahwa_1: 1 }), [0, 1], 'a surplus item allows the sand to be cleared');
+});
 
 test('combo chain grows inside the window, pays bonus coins from the 3rd merge, and resets when stale', () => {
   let state = withItems(emptyBoardState(), {
@@ -160,7 +279,7 @@ test('combo chain grows inside the window, pays bonus coins from the 3rd merge, 
 });
 
 test('mega merge absorbs an adjacent third matching item for a free extra level', () => {
-  const state = withItems(emptyBoardState(), { 24: 'qahwa_1', 25: 'qahwa_1', 26: 'qahwa_1' });
+  const state = { ...withItems(emptyBoardState(), { 24: 'qahwa_1', 25: 'qahwa_1', 26: 'qahwa_1' }), activeOrders: [] };
   const res = mergeOrMoveCells(state, 24, 25, 5000);
   assert.equal(res.action, 'MERGED');
   assert.equal(res.megaMerge, true);
@@ -168,6 +287,22 @@ test('mega merge absorbs an adjacent third matching item for a free extra level'
   assert.equal(res.state.board[24].itemId, null);
   assert.equal(res.state.board[26].itemId, null);
   assert.equal(res.state.board[25].itemId, 'qahwa_3');
+});
+
+test('a manual merge does not absorb a reserved third item or skip a needed result', () => {
+  const base = withItems(emptyBoardState(), { 24: 'qahwa_1', 25: 'qahwa_1', 26: 'qahwa_1' });
+  const order = { ...base.activeOrders[0], requiredItemIds: ['qahwa_1'] };
+  const reservedThird = mergeOrMoveCells({ ...base, activeOrders: [order] }, 24, 25, 5000);
+  assert.equal(reservedThird.megaMerge, false);
+  assert.equal(reservedThird.mergedItemId, 'qahwa_2');
+  assert.equal(reservedThird.state.board[26].itemId, 'qahwa_1');
+  const needsNext = mergeOrMoveCells({ ...base, activeOrders: [{ ...order, requiredItemIds: ['qahwa_2'] }] }, 24, 25, 5000);
+  assert.equal(needsNext.mergedItemId, 'qahwa_2');
+  assert.equal(needsNext.state.board[26].itemId, 'qahwa_1');
+  const focused = mergeOrMoveCells({ ...base, activeOrders: [] }, 24, 25, 5000, ['qahwa_1']);
+  assert.equal(focused.state.board[26].itemId, 'qahwa_1');
+  const alreadyReady = withItems({ ...base, activeOrders: [{ ...order, requiredItemIds: ['qahwa_2'] }] }, { 40: 'qahwa_2' });
+  assert.equal(mergeOrMoveCells(alreadyReady, 24, 25, 5000).megaMerge, true);
 });
 
 test('a non-adjacent third item does not trigger mega merge', () => {
@@ -192,7 +327,61 @@ test('crossing an XP threshold grants gems and an energy top-up exactly once', (
   assert.equal(res2.levelUp, undefined);
 });
 
-test('daily login streak: first claim, consecutive days, reset after a gap, never double-pays', () => {
+test('orders grant every crossed level reward, including VIP bonuses, only on success', () => {
+  const base = createInitialGameState();
+  const order = { ...base.activeOrders[0], requiredItemIds: ['qahwa_2'], rewardXp: 400, isVip: true };
+  const state = { ...base, xp: 95, level: 1, energy: 3, diamonds: 10, activeOrders: [order] };
+  const result = fulfillCustomerOrder(state, order.id);
+  assert.ok(result.fulfilled);
+  assert.deepEqual(result.levelUp, { fromLevel: 1, toLevel: 4, gems: 15, energy: 45 });
+  assert.equal(result.state.energy, 48);
+  assert.equal(result.state.diamonds, 35, 'level gems and the VIP bonus both apply');
+  const again = fulfillCustomerOrder(result.state, order.id);
+  assert.equal(again.fulfilled, false);
+  assert.equal(again.state.diamonds, 35);
+});
+
+test('renovations pay level rewards, but failed upgrades and style changes do not', () => {
+  const base = createInitialGameState();
+  const state = { ...base, xp: 90, level: 1, energy: 3, diamonds: 10, stars: 10, coins: 1000 };
+  const result = upgradeRenovationZone(state, 'zone_sadu');
+  assert.ok(result.upgraded);
+  assert.deepEqual(result.levelUp, { fromLevel: 1, toLevel: 2, gems: 5, energy: 15 });
+  assert.equal(result.state.energy, 18);
+  assert.equal(result.state.diamonds, 15);
+  const style = upgradeRenovationZone(result.state, 'zone_sadu', 1);
+  assert.ok(style.upgraded);
+  assert.equal(style.levelUp, undefined);
+  assert.equal(style.state.diamonds, 15);
+  assert.equal(upgradeRenovationZone({ ...state, stars: 0 }, 'zone_sadu').levelUp, undefined);
+});
+
+test('style selection never spends stars or upgrades a wing', () => {
+  const base = { ...createInitialGameState(), stars: 50, coins: 1000 };
+  const original = base.renovationZones.find(z => z.id === 'zone_sadu')!;
+  const same = upgradeRenovationZone(base, original.id, original.selectedStyle);
+  assert.equal(same.upgraded, false);
+  assert.equal(same.state, base);
+  const planned = upgradeRenovationZone(base, original.id, 1);
+  assert.equal(planned.state.stars, base.stars);
+  assert.equal(planned.state.coins, base.coins);
+  assert.equal(planned.state.renovationZones.find(z => z.id === original.id)?.unlockedLevel, 0);
+  assert.equal(planned.state.renovationZones.find(z => z.id === original.id)?.selectedStyle, 1);
+  const restored = upgradeRenovationZone(planned.state, original.id);
+  assert.equal(restored.state.renovationZones.find(z => z.id === original.id)?.selectedStyle, 1);
+  const active = upgradeRenovationZone(restored.state, original.id, 1);
+  assert.equal(active.upgraded, false);
+  assert.equal(active.state, restored.state);
+  const invalid = upgradeRenovationZone(restored.state, original.id, 999);
+  assert.equal(invalid.upgraded, false);
+  assert.equal(invalid.state, restored.state);
+  const changed = upgradeRenovationZone(restored.state, original.id, 2);
+  assert.equal(changed.state.stars, restored.state.stars);
+  assert.equal(changed.state.renovationZones.find(z => z.id === original.id)?.unlockedLevel, 1);
+  assert.ok(changed.state.coins < restored.state.coins);
+});
+
+test('daily welcome gifts preserve progress across a break and never double-pay', () => {
   const base = createInitialGameState();
   assert.equal(getDailyLoginDay(base, '2026-03-01'), 1);
 
@@ -207,13 +396,25 @@ test('daily login streak: first claim, consecutive days, reset after a gap, neve
   assert.equal(d2.state.loginStreak, 2);
 
   const afterGap = claimDailyLoginReward(d2.state, '2026-03-05');
-  assert.equal(afterGap.day, 1);
-  assert.equal(afterGap.state.loginStreak, 1);
+  assert.equal(afterGap.day, 3);
+  assert.equal(afterGap.state.loginStreak, 3);
+  assert.equal(afterGap.state.diamonds, d2.state.diamonds + 10);
+  assert.equal(claimDailyLoginReward(afterGap.state, '2026-03-05').claimed, false);
 
   assert.equal(getDailyLoginDay(d2.state, '2026-03-01'), null);
 });
 
-test('daily login day 7 drops a Gilded chest and the cycle wraps back to day 1', () => {
+test('an existing six-day save still earns the seventh gift after time away', () => {
+  const oldSave = { ...createInitialGameState(), loginStreak: 6, lastLoginDay: '2026-01-10' };
+  const reward = claimDailyLoginReward(oldSave, '2026-02-15');
+  assert.equal(reward.day, 7);
+  assert.equal(reward.state.loginStreak, 7);
+  assert.ok(reward.state.board.some(cell => cell.itemId === 'chest_2'));
+  assert.equal(getDailyLoginDay(reward.state, '2026-02-16'), 1);
+  assert.equal(claimDailyLoginReward(reward.state, '2026-02-14').claimed, false);
+});
+
+test('seventh welcome gift drops a Gilded chest and the cycle wraps back to gift 1', () => {
   let state = createInitialGameState();
   for (let i = 1; i <= 7; i++) {
     state = claimDailyLoginReward(state, `2026-03-0${i}`).state;
@@ -226,12 +427,17 @@ test('daily login day 7 drops a Gilded chest and the cycle wraps back to day 1',
   assert.equal(wrapped.state.loginStreak, 8);
 });
 
-test('day 7 chest converts to coins when the board is full', () => {
+test('day 7 chest opens for its complete contents when the board is full', () => {
   let state = createInitialGameState();
   state = { ...state, board: state.board.map((c) => (c.itemId ? c : { ...c, itemId: 'qahwa_1' })), loginStreak: 6, lastLoginDay: '2026-03-06' };
   const res = claimDailyLoginReward(state, '2026-03-07');
   assert.equal(res.day, 7);
   assert.equal(res.state.coins, state.coins + 180);
+  assert.equal(res.state.diamonds, state.diamonds + 30 + 35);
+  assert.equal(res.state.energy, state.energy + 65);
+  assert.equal(res.state.scissorsCount, state.scissorsCount + 1);
+  assert.equal(res.state.jokerCount, state.jokerCount + 1);
+  assert.equal(res.state.prestigePoints, state.prestigePoints + 45);
   assert.ok(!res.state.board.some((c) => c.itemId === 'chest_2'));
 });
 
@@ -241,6 +447,18 @@ test('tutorial coaches merge first, then serving an order, then stops', () => {
   assert.equal(getTutorialStep({ ...s, totalMerges: 1 }), 'serve');
   assert.equal(getTutorialStep({ ...s, totalMerges: 1, ordersCompleted: 1 }), null);
   assert.equal(getTutorialStep({ ...s, tutorialDismissed: true }), null);
+});
+
+test('first-session coaching defers the daily reward without consuming it', () => {
+  const initial = createInitialGameState();
+  const today = '2026-03-01';
+  assert.equal(dailyLoginAfterTutorial(initial, today), null);
+  assert.equal(dailyLoginAfterTutorial({ ...initial, totalMerges: 1 }, today), null);
+  const completed = { ...initial, totalMerges: 1, ordersCompleted: 1 };
+  assert.equal(dailyLoginAfterTutorial(completed, today), 1);
+  assert.equal(dailyLoginAfterTutorial({ ...initial, tutorialDismissed: true }, today), 1);
+  const claimed = claimDailyLoginReward(completed, today);
+  assert.equal(dailyLoginAfterTutorial(claimed.state, today), null);
 });
 
 test('Saudi seasons: Founding Day and National Day windows boost order rewards; ordinary days do not', () => {
@@ -268,6 +486,32 @@ test('Saudi seasons: Founding Day and National Day windows boost order rewards; 
     festive.state.prestigePoints - state.prestigePoints,
     2 * (plain.state.prestigePoints - state.prestigePoints)
   );
+});
+
+test('displayed order coins match the awarded base, restoration, area and seasonal bonus', () => {
+  const base = createInitialGameState();
+  const order = { ...base.activeOrders[0], requiredItemIds: ['qahwa_1'], rewardCoins: 101 };
+  const state = { ...base, areaIndex: 2, activeOrders: [order] };
+  const payout = orderCoinReward(state, order, SEASONS.national_day);
+  assert.equal(payout.base, 101);
+  assert.equal(payout.area, 16);
+  assert.equal(payout.total, Math.round((payout.base + payout.restoration + payout.area) * 1.5));
+  assert.equal(payout.base + payout.restoration + payout.area + payout.seasonal, payout.total);
+  const result = fulfillCustomerOrder(state, order.id, SEASONS.national_day);
+  assert.ok(result.fulfilled);
+  assert.equal(result.state.coins - state.coins, payout.total);
+});
+
+test('VIP service grants the advertised gems and a chest on a consumed tile', () => {
+  const base = createInitialGameState();
+  const order = { ...base.activeOrders[0], isVip: true, requiredItemIds: ['qahwa_1'], rewardXp: 0 };
+  const state = { ...base, activeOrders: [order] };
+  const used = state.board.find(cell => cell.itemId === 'qahwa_1' && !cell.sandLocked)!;
+  const result = fulfillCustomerOrder(state, order.id);
+  assert.ok(result.fulfilled && result.spawnedChest);
+  assert.equal(result.state.diamonds - state.diamonds, VIP_ORDER_GEMS);
+  assert.equal(result.state.board[used.index].itemId, 'chest_1');
+  assert.equal(fulfillCustomerOrder(result.state, order.id).fulfilled, false);
 });
 
 test('Ramadan is detected through the Hijri calendar when the runtime supports it', () => {
