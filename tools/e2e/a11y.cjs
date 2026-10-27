@@ -22,6 +22,8 @@ const langs = (process.argv[2] || 'en,ar').split(',');
     await ctx.addInitScript((l) => { try { localStorage.setItem('qahwa_lang', l); } catch {} }, lang);
     const pg = await ctx.newPage();
     const run = async (name) => {
+      // Sample finished colours, not the middle of a fade (a tab that was just tapped is still transitioning)
+      await pg.addStyleTag({ content: '*,*::before,*::after{transition:none!important;animation-duration:0s!important}' }).catch(() => {});
       await pg.addScriptTag({ path: AXE });
       all[`${lang}:${name}`] = await pg.evaluate(() => axe.run(document, { runOnly: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa', 'best-practice'], resultTypes: ['violations'] }).then(r => r.violations.map(v => ({ id: v.id, impact: v.impact, n: v.nodes.length, help: v.help, sample: v.nodes.slice(0, 4).map(n => n.target.join(' ').slice(0, 90) + ' :: ' + (n.html || '').slice(0, 90)) }))));
     };

@@ -163,7 +163,7 @@ const MajlisDetails: React.FC<{ zones: RenovationZone[]; isAr: boolean; selected
             {index === 2 && <><path d="M8 31H56V43H8Z" fill={color} stroke="#E9C46A" strokeWidth="2" /><path d="M27 28Q24 20 28 14H38Q42 20 39 28Z" fill="#E9C46A" stroke="#78350F" /><path d="M38 17Q47 12 48 8M28 19Q21 16 22 23" fill="none" stroke="#E9C46A" strokeWidth="3" /></>}
             {index === 3 && <><path d="M20 27H44L41 43H23Z" fill={color} stroke="#E9C46A" strokeWidth="2" /><path d="M32 28V8M32 21Q20 21 20 11Q29 10 32 19M32 18Q43 18 44 8Q35 8 32 16" fill="none" stroke="#9ACB91" strokeWidth="3" /></>}
           </svg>
-          <p className="truncate text-[10px] font-bold text-[#FDECCB]">{unlocked && style ? (isAr ? style.nameAr : style.nameEn) : (isAr ? 'بانتظار الترميم' : 'Not restored yet')}</p>
+          <p className="line-clamp-2 leading-tight text-[10px] font-bold text-[#FDECCB]">{unlocked && style ? (isAr ? style.nameAr : style.nameEn) : (isAr ? 'بانتظار الترميم' : 'Not restored yet')}</p>
         </button>;
       })}
     </div>
@@ -298,8 +298,8 @@ export const MajlisRenovationView: React.FC<MajlisRenovationViewProps> = ({
         </div>
 
         {/* Dynamic Weather & Ambiance Toggle */}
-        <div className="flex items-center gap-1.5 self-end lg:self-auto">
-          <span className="text-[11px] text-[#D4A373] me-1">
+        <div className="flex flex-wrap items-center gap-1.5 self-stretch lg:self-auto">
+          <span className="text-[11px] text-[#D4A373] me-1 basis-full lg:basis-auto">
             {isAr ? 'أجواء الحوش:' : 'Ambiance:'}
           </span>
           {ambiances.map((a) => {
@@ -641,7 +641,7 @@ export const MajlisRenovationView: React.FC<MajlisRenovationViewProps> = ({
                           aria-pressed={active}
                           disabled={!active && zone.unlockedLevel > 0 && coins < styleCost}
                           title={isAr ? st.nameAr : st.nameEn}
-                          className={`min-w-0 min-h-11 flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-xs font-medium border transition-all cursor-pointer disabled:opacity-40 ${
+                          className={`min-w-0 min-h-11 flex flex-wrap items-center content-center gap-x-1.5 gap-y-0.5 px-2 py-1.5 rounded-lg text-xs font-medium leading-tight border transition-all cursor-pointer disabled:opacity-40 ${
                             active
                               ? 'border-[#FBBF24] bg-[#D99B26]/20 text-[#FBF7F0]'
                               : 'border-white/10 bg-[#1C1410]/70 text-[#E5DEC9]/70 hover:text-white'
@@ -651,7 +651,7 @@ export const MajlisRenovationView: React.FC<MajlisRenovationViewProps> = ({
                             className="w-3 h-3 rounded-full shrink-0 border border-black/40"
                             style={{ backgroundColor: st.swatch }}
                           />
-                          <span className="truncate">{isAr ? st.nameAr : st.nameEn}</span>
+                          <span className="min-w-0 flex-1 basis-[3.5rem] break-words">{isAr ? st.nameAr : st.nameEn}</span>
                           {!active && zone.unlockedLevel > 0 && (
                             <span className={`ms-auto shrink-0 inline-flex items-center gap-0.5 text-[10px] ${coins >= styleCost ? 'text-[#FBBF24]' : 'text-white/35'}`}>
                               {styleCost}
