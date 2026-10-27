@@ -35,6 +35,7 @@ export const FinjanPourModal: React.FC<FinjanPourModalProps> = ({ lang, isOpen, 
   const [practice, setPractice] = useState(tokens <= 0);
   const fillRef = useRef(0);
   const pouringRef = useRef(false);
+  const pourGeneration = useRef(0);
   const activePointer = useRef<number | null>(null);
   const keyboardPour = useRef(false);
   const tapPour = useRef(false);
@@ -56,6 +57,7 @@ export const FinjanPourModal: React.FC<FinjanPourModalProps> = ({ lang, isOpen, 
   const finishPour = () => {
     if (!pouringRef.current) return;
     pouringRef.current = false;
+    pourGeneration.current += 1;
     activePointer.current = null;
     keyboardPour.current = false;
     tapPour.current = false;
@@ -68,6 +70,7 @@ export const FinjanPourModal: React.FC<FinjanPourModalProps> = ({ lang, isOpen, 
   const cancelPour = () => {
     if (!pouringRef.current) return;
     pouringRef.current = false;
+    pourGeneration.current += 1;
     activePointer.current = null;
     keyboardPour.current = false;
     tapPour.current = false;
@@ -91,7 +94,9 @@ export const FinjanPourModal: React.FC<FinjanPourModalProps> = ({ lang, isOpen, 
     if (!pouring) return;
     let raf = 0;
     let last = performance.now();
+    const generation = pourGeneration.current;
     const tick = (now: number) => {
+      if (!pouringRef.current || generation !== pourGeneration.current) return;
       const dt = (now - last) / 1000;
       last = now;
       fillRef.current = Math.min(100, fillRef.current + FILL_PER_SECOND * dt);
@@ -114,6 +119,7 @@ export const FinjanPourModal: React.FC<FinjanPourModalProps> = ({ lang, isOpen, 
     fillRef.current = 0;
     setFill(0);
     pouringRef.current = true;
+    pourGeneration.current += 1;
     setPouring(true);
     return true;
   };

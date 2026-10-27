@@ -15,7 +15,8 @@
     "voice:generate": "python3 tools/voice/generate_elevenlabs.py generate",
     "voice:test": "python3 tools/voice/test_generate.py",
     "test:phone:transfer": "node tools/e2e/transfer-race.cjs",
-    "test:phone:smoke": "node tools/e2e/smoke.cjs"
+    "test:phone:smoke": "node tools/e2e/smoke.cjs",
+    "test:phone:pour": "node tools/e2e/pour-interruption.cjs"
   },
   "dependencies": {
     "@capacitor/core": "^8.5.2",
