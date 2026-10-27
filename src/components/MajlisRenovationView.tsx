@@ -459,7 +459,7 @@ export const MajlisRenovationView: React.FC<MajlisRenovationViewProps> = ({
 
       {/* 4 Architectural Renovation Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-        {zones.map((zone) => {
+        {zones.map((zone, wingIndex) => {
           const isMax = zone.unlockedLevel >= 2;
           const nextCost = zone.unlockedLevel === 0 ? zone.starCostLevel1 : zone.starCostLevel2;
           const canAfford = stars >= nextCost && !isMax;
@@ -471,6 +471,18 @@ export const MajlisRenovationView: React.FC<MajlisRenovationViewProps> = ({
               className="rounded-xl border border-[#D99B26]/25 bg-[#241812] p-4 flex flex-col justify-between gap-3 shadow-md"
             >
               <div>
+                {paintedStages > 0 && (
+                  <img
+                    src={assetUrl(`assets/art/majlis/wings/${area.id}_${wingIndex}_${zone.unlockedLevel > 0 ? 'done' : 'ruin'}.webp`)}
+                    alt=""
+                    width={480}
+                    height={210}
+                    loading="lazy"
+                    decoding="async"
+                    data-testid={`wing-pic-${wingIndex}`}
+                    className="w-full aspect-[16/7] object-cover rounded-lg border border-[#D99B26]/20 mb-3"
+                  />
+                )}
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <h3 className="text-base font-bold text-[#FBF7F0]">
