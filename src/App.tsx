@@ -240,7 +240,7 @@ export default function App() {
   const [workspace, setWorkspace] = useState<ActiveWorkspace>('merge');
   const [tastingOpen, setTastingOpen] = useState(false);
   const [taifWelcomeOpen, setTaifWelcomeOpen] = useState(false);
-  const [rememberedGuest, setRememberedGuest] = useState<TastingGuest | null>(null);
+  const [rememberedGuest, setRememberedGuest] = useState<{ guest: TastingGuest; coins: number; stars: number; gems: number; chest: boolean } | null>(null);
   const [saleReceipt, setSaleReceipt] = useState<SaleReceipt | null>(null);
   const [guideOrderId, setGuideOrderId] = useState<string | null>(null);
   const focusedOrderId = focusedGuestOrder(gameState)?.id ?? null;
@@ -915,11 +915,11 @@ export default function App() {
         soundFX.playVoice(servedOrder.customerId, servedOrder.isVip ? 'vip' : 'served');
       }
       setGameState(addEventPoints(res.state, Date.now(), EVENT_ORDER_POINTS));
-      if (res.rememberedGuest) setRememberedGuest(res.rememberedGuest);
       showLevelUp(res.levelUp);
       const guest = servedOrder ? (isAr ? servedOrder.customerNameAr : servedOrder.customerNameEn) : (isAr ? 'الضيف' : 'your guest');
       const coins = res.state.coins - gameState.coins;
       const stars = res.state.stars - gameState.stars;
+      if (res.rememberedGuest) setRememberedGuest({ guest: res.rememberedGuest, coins, stars, gems: servedOrder?.isVip ? VIP_ORDER_GEMS : 0, chest: Boolean(res.spawnedChest) });
       const vipReward = servedOrder?.isVip ? ` · +${VIP_ORDER_GEMS} 💎` : '';
       showFeedback(isAr
         ? `تم استقبال ${guest} · +${coins} 🪙 · +${stars} ⭐${vipReward}${res.spawnedChest ? ' · صندوق ضيافة' : ''}`
@@ -1422,7 +1422,7 @@ export default function App() {
       <main className="game-main flex-1 max-w-4xl w-full mx-auto px-2 sm:px-5 pt-1.5 pb-[calc(6rem+env(safe-area-inset-bottom))] flex flex-col gap-1.5">
         {tastingOpen && <CoffeeTasting onRetrieve={handleRetrieveFromPantry} lang={lang} state={gameState} onChange={setGameState} onClose={() => setTastingOpen(false)} onMajlis={() => { setTastingOpen(false); setWorkspace('majlis'); }} onFocusRecipe={(items, nameAr, nameEn) => { setTastingFocus({ kind: 'tasting', items, nameAr, nameEn }); setFocusedOrderId(null); setTastingOpen(false); }} />}
         {taifWelcomeOpen && <TaifWelcome onRetrieve={handleRetrieveFromPantry} lang={lang} state={gameState} onChange={setGameState} onClose={() => setTaifWelcomeOpen(false)} onFocus={(items, nameAr, nameEn) => { setTastingFocus({ kind: 'taif', items, nameAr, nameEn }); setFocusedOrderId(null); setTaifWelcomeOpen(false); setWorkspace('merge'); }} />}
-        {rememberedGuest && tastingGuestMemory(gameState.storyFlags, rememberedGuest) && <GuestMemoryModal lang={lang} memory={tastingGuestMemory(gameState.storyFlags, rememberedGuest)!} onClose={() => setRememberedGuest(null)} />}
+        {rememberedGuest && tastingGuestMemory(gameState.storyFlags, rememberedGuest.guest) && <GuestMemoryModal lang={lang} memory={tastingGuestMemory(gameState.storyFlags, rememberedGuest.guest)!} reward={rememberedGuest} onClose={() => setRememberedGuest(null)} />}
         {guideOrder && <OrderGuide order={guideOrder} state={gameState} season={activeSeason} lang={lang} focused={focusedOrderId === guideOrder.id} onClose={() => setGuideOrderId(null)} onRetrieve={handleRetrieveFromPantry} onServe={() => { handleFulfillOrder(guideOrder.id); setGuideOrderId(null); }} onFocus={() => { setFocusedOrderId(current => current === guideOrder.id ? null : guideOrder.id); setTastingFocus(null); setGuideOrderId(null); }} />}
 
         {/* Persistent prompts sit just above the bottom navigation */}
