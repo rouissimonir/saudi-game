@@ -1,3 +1,4 @@
+import { hospitalityFocus, setHospitalityFocus, type HospitalityFocus } from './game/hospitalityFocus';
 import React, { Suspense, lazy, useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { usePageVisible } from './utils/usePageVisible';
 import {
@@ -244,7 +245,8 @@ export default function App() {
   const [showBoostHelp, setShowBoostHelp] = useState(false);
   const [hideFirstRestorationPrompt, setHideFirstRestorationPrompt] = useState(false);
   const boardGridRef = useRef<HTMLDivElement>(null);
-  const [tastingFocus, setTastingFocus] = useState<{ kind: 'tasting' | 'taif'; items: readonly string[]; nameAr: string; nameEn: string } | null>(null);
+  const tastingFocus = hospitalityFocus(gameState);
+  const setTastingFocus = (focus: HospitalityFocus | null) => setGameState(previous => setHospitalityFocus(previous, focus));
   const [muted, setMuted] = useState<boolean>(() => {
     const saved = loadMuted();
     soundFX.muted = saved;
