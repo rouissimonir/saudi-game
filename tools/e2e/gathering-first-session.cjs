@@ -14,7 +14,13 @@ const { chromium } = require('playwright');
     await cell(17).click();
     await cell(18).click();
     await page.getByRole('button', { name: 'تقديم!', exact: true }).first().click();
+    await page.getByTestId('daily-login-claim').waitFor();
+    await page.waitForTimeout(3000); // The welcome must not expire behind the daily gift.
     await page.getByTestId('daily-login-claim').click();
+    const welcome = page.getByTestId('guest-welcome-feedback');
+    await welcome.waitFor();
+    if (!(await welcome.innerText()).includes('تم استقبال')) throw new Error('Guest welcome is missing after the gift');
+    if (!(await welcome.locator('img, svg').count())) throw new Error('Guest portrait missing');
 
     // Make sweets for the specialty-coffee tray. A lucky generator drop may already be level 2.
     for (let attempt = 0; attempt < 8; attempt++) {

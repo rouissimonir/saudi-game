@@ -262,6 +262,7 @@ export default function App() {
   const activeDragCleanupRef = useRef<(() => void) | null>(null);
   useEffect(() => () => activeDragCleanupRef.current?.(), []);
   const [feedbackBanner, setFeedbackBanner] = useState<string | null>(null);
+  const [welcomeReceipt, setWelcomeReceipt] = useState<{ guestId: string; message: string } | null>(null);
 
   const [shopModalOpen, setShopModalOpen] = useState<boolean>(false);
 
@@ -378,6 +379,13 @@ export default function App() {
     const timer = window.setTimeout(() => setSaleReceipt(null), 8000);
     return () => window.clearTimeout(timer);
   }, [saleReceipt]);
+
+  // Keep the welcome visible after first-run gifts and stories, rather than timing out behind them.
+  useEffect(() => {
+    if (!welcomeReceipt || shellState !== 'playing' || activeScene || gameState.activeStoryId || rememberedGuest || dailyLoginDay !== null || guideOrderId) return;
+    const timer = window.setTimeout(() => setWelcomeReceipt(null), 4200);
+    return () => window.clearTimeout(timer);
+  }, [welcomeReceipt, shellState, activeScene, gameState.activeStoryId, rememberedGuest, dailyLoginDay, guideOrderId]);
 
   // Keep level rewards visible until a story, guest memory or daily gift is dismissed.
   useEffect(() => {
@@ -921,9 +929,10 @@ export default function App() {
       const stars = res.state.stars - gameState.stars;
       if (res.rememberedGuest) setRememberedGuest({ guest: res.rememberedGuest, coins, stars, gems: servedOrder?.isVip ? VIP_ORDER_GEMS : 0, chest: Boolean(res.spawnedChest) });
       const vipReward = servedOrder?.isVip ? ` · +${VIP_ORDER_GEMS} 💎` : '';
-      showFeedback(isAr
+      const welcomeMessage = isAr
         ? `تم استقبال ${guest} · +${coins} 🪙 · +${stars} ⭐${vipReward}${res.spawnedChest ? ' · صندوق ضيافة' : ''}`
-        : `Welcomed ${guest} · +${coins} 🪙 · +${stars} ⭐${vipReward}${res.spawnedChest ? ' · hospitality chest' : ''}`);
+        : `Welcomed ${guest} · +${coins} 🪙 · +${stars} ⭐${vipReward}${res.spawnedChest ? ' · hospitality chest' : ''}`;
+      setWelcomeReceipt(!res.rememberedGuest && servedOrder ? { guestId: servedOrder.customerId, message: welcomeMessage } : null);
     } else {
       soundFX.playError();
       showFeedback(
@@ -1406,6 +1415,11 @@ export default function App() {
               <div data-testid="combo-meter" className="combo-meter px-4 py-1 rounded-full bg-gradient-to-r from-[#B45309] to-[#F59E0B] text-[#1C1410] text-xs font-extrabold shadow">
                 {isAr ? `كومبو ×${gameState.comboCount}` : `Combo ×${gameState.comboCount}`}
                 <span className="combo-bar" style={{ animationDuration: `${COMBO_WINDOW_MS}ms` }} key={gameState.lastMergeAt} />
+              </div>
+            )}
+            {welcomeReceipt && !activeScene && !gameState.activeStoryId && !rememberedGuest && dailyLoginDay === null && !guideOrderId && (
+              <div role="status" data-testid="guest-welcome-feedback" className="max-w-[440px] flex items-center gap-2 rounded-2xl bg-[#3E2723]/95 border border-[#FBBF24] px-3 py-2 text-xs leading-snug font-bold text-[#FEF3C7] shadow">
+                <CustomerPortrait avatarKey={welcomeReceipt.guestId} size="sm" /><span>{welcomeReceipt.message}</span>
               </div>
             )}
             {feedbackBanner && (
