@@ -1649,6 +1649,8 @@ export default function App() {
                       <button
                         type="button"
                         onClick={() => isReady ? handleFulfillOrder(order.id) : setGuideOrderId(order.id)}
+                        data-testid={`order-action-${order.id}`}
+                        aria-label={isAr ? `${isReady ? 'تقديم طلب' : 'فتح دليل طلب'} ${order.customerNameAr}` : `${isReady ? 'Serve order for' : 'Open order guide for'} ${order.customerNameEn}`}
                         className={`min-h-11 min-w-11 px-1.5 py-1 rounded-lg text-[10px] font-black transition-all cursor-pointer whitespace-nowrap text-center shrink-0 ${
                           isReady
                             ? 'btn-3d-green text-white'

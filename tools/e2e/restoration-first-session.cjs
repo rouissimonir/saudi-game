@@ -13,7 +13,7 @@ const { chromium } = require('playwright');
     await page.getByTestId('scene-skip').click();
     await cell(17).click();
     await cell(18).click();
-    await page.getByRole('button', { name: 'تقديم!', exact: true }).first().click();
+    await page.getByRole('button', { name: /^تقديم طلب / }).first().click();
     await page.getByTestId('daily-login-claim').click();
     await page.getByTestId('first-restoration-prompt').click();
     await page.getByTestId('first-restoration-guide').getByRole('button').click();
