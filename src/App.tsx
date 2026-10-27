@@ -1,3 +1,4 @@
+import { focusedGuestOrder, setFocusedGuestOrder } from './game/orderGuide';
 import { hospitalityFocus, setHospitalityFocus, type HospitalityFocus } from './game/hospitalityFocus';
 import React, { Suspense, lazy, useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { usePageVisible } from './utils/usePageVisible';
@@ -241,7 +242,8 @@ export default function App() {
   const [rememberedGuest, setRememberedGuest] = useState<TastingGuest | null>(null);
   const [saleReceipt, setSaleReceipt] = useState<SaleReceipt | null>(null);
   const [guideOrderId, setGuideOrderId] = useState<string | null>(null);
-  const [focusedOrderId, setFocusedOrderId] = useState<string | null>(null);
+  const focusedOrderId = focusedGuestOrder(gameState)?.id ?? null;
+  const setFocusedOrderId = (value: string | null | ((current: string | null) => string | null)) => setGameState(previous => setFocusedGuestOrder(previous, typeof value === 'function' ? value(focusedGuestOrder(previous)?.id ?? null) : value));
   const [showBoostHelp, setShowBoostHelp] = useState(false);
   const [hideFirstRestorationPrompt, setHideFirstRestorationPrompt] = useState(false);
   const boardGridRef = useRef<HTMLDivElement>(null);

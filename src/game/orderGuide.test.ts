@@ -96,3 +96,16 @@ test('ingredient guidance identifies the preceding merge and the boost needed fo
   assert.match(ingredientInstruction({ ...missing, location: 'board' }, 'ar', 1), /جاهز/);
   assert.match(ingredientInstruction({ ...missing, itemId: 'unknown' }, 'en', 1), /chain guide/);
 });
+
+test('focused guest order survives save and becomes inactive after the order is replaced', async () => {
+  const { focusedGuestOrder, setFocusedGuestOrder } = await import('./orderGuide');
+  const { normalizeSave } = await import('./normalizeSave');
+  const state = createInitialGameState();
+  const order = state.activeOrders[0];
+  const selected = setFocusedGuestOrder(state, order.id);
+  const restored = normalizeSave(JSON.parse(JSON.stringify(selected)))!;
+  assert.equal(focusedGuestOrder(restored)?.id, order.id);
+  assert.equal(focusedGuestOrder({ ...restored, activeOrders: restored.activeOrders.filter(o => o.id !== order.id) }), null);
+  assert.equal(focusedGuestOrder(setFocusedGuestOrder(restored, null)), null);
+  assert.equal(setFocusedGuestOrder(state, 'missing-order'), state);
+});

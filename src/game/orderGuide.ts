@@ -93,3 +93,17 @@ export function focusCells(needs: OrderNeed[], board: BoardCell[]): Set<number> 
     return Boolean(def && missing.some(target => def.isGenerator ? def.spawnsChain === target.chain : def.chain === target.chain && def.level < target.level));
   }).map(cell => cell.index));
 }
+
+/** Restore only an order that is still present; old or completed IDs never become active. */
+export function focusedGuestOrder(state: GameState): CustomerOrder | null {
+  const id = state.storyFlags?.focused_guest_order;
+  return state.activeOrders.find(order => order.id === id) ?? null;
+}
+
+export function setFocusedGuestOrder(state: GameState, id: string | null): GameState {
+  if (id && !state.activeOrders.some(order => order.id === id)) return state;
+  const flags = { ...state.storyFlags };
+  if (id) flags.focused_guest_order = id;
+  else delete flags.focused_guest_order;
+  return { ...state, storyFlags: flags };
+}
