@@ -116,6 +116,26 @@ test('areas are endless: completing every wing moves to the next area with new, 
   assert.match(P.areaInfo(9).nameEn, /✦2/);
 });
 
+test('travelling preserves the completed area’s actual style choices without changing its rewards', async () => {
+  const { normalizeSave } = await import('./normalizeSave');
+  const initial = fresh();
+  const complete = { ...initial, renovationZones: initial.renovationZones.map((z, i) => ({ ...z, unlockedLevel: 2, selectedStyle: i % z.styles.length })) };
+  const travel = P.advanceArea(complete);
+  assert.equal(travel.advanced, true);
+  const loaded = normalizeSave(JSON.parse(JSON.stringify(travel.state)))!;
+  const details = P.restoredPlaceDetails(loaded.storyFlags, 0)!;
+  assert.deepEqual(details.map(d => d.styleEn), complete.renovationZones.map(z => z.styles[z.selectedStyle].nameEn));
+  assert.equal(loaded.diamonds, complete.diamonds + P.AREA_REWARD.gems);
+  assert.equal(loaded.energy, complete.energy + P.AREA_REWARD.energy);
+  assert.deepEqual(loaded.board, complete.board);
+  const next = P.advanceArea({ ...loaded, renovationZones: loaded.renovationZones.map(z => ({ ...z, unlockedLevel: 2 })) });
+  assert.deepEqual(P.restoredPlaceDetails(next.state.storyFlags, 0), details);
+  assert.ok(P.restoredPlaceDetails(next.state.storyFlags, 1));
+  assert.equal(P.restoredPlaceDetails({}, 0), null);
+  assert.equal(P.restoredPlaceDetails({ restored_place_0: 'not json' }, 0), null);
+  assert.equal(P.restoredPlaceDetails({ restored_place_0: '[{"swatch":"invalid"}]' }, 0), null);
+});
+
 test('coin sinks: generator upgrades raise spawn luck, sand tiles can be bought, both cost coins', () => {
   let s = { ...fresh(), coins: 1000 };
   const before = P.generatorLuckyChance(s, 'qahwa');

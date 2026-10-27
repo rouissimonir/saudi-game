@@ -458,13 +458,32 @@ export function isAreaComplete(state: GameState): boolean {
 /** Move to the next area once every wing is fully restored. Stars carry over. */
 export const AREA_REWARD = { gems: 25, energy: 40 };
 
+export type RestoredPlaceDetail = { nameAr: string; nameEn: string; styleAr: string; styleEn: string; swatch: string };
+
+/** Read only recorded choices; older saves cannot reconstruct previously visited styles. */
+export function restoredPlaceDetails(flags: Record<string, string>, areaIndex: number): RestoredPlaceDetail[] | null {
+  try {
+    const details: unknown = JSON.parse(flags[`restored_place_${areaIndex}`] ?? 'null');
+    if (!Array.isArray(details) || details.length === 0 || details.length > 20) return null;
+    if (!details.every(item => item && typeof item === 'object' && ['nameAr', 'nameEn', 'styleAr', 'styleEn', 'swatch'].every(key => typeof item[key] === 'string') && /^#[0-9a-f]{6}$/i.test(item.swatch))) return null;
+    return details as RestoredPlaceDetail[];
+  } catch { return null; }
+}
+
 export function advanceArea(state: GameState): { state: GameState; advanced: boolean } {
   if (!isAreaComplete(state)) return { state, advanced: false };
   const next = (state.areaIndex ?? 0) + 1;
   const info = areaInfo(next);
+  const details = state.renovationZones.map(zone => {
+    const style = zone.styles[zone.selectedStyle];
+    return style && { nameAr: zone.nameAr, nameEn: zone.nameEn, styleAr: style.nameAr, styleEn: style.nameEn, swatch: style.swatch };
+  });
+  const flags = { ...state.storyFlags };
+  if (details.every(Boolean)) flags[`restored_place_${state.areaIndex ?? 0}`] = JSON.stringify(details);
   return {
     state: {
       ...state,
+      storyFlags: flags,
       areaIndex: next,
       renovationZones: buildAreaZones(next),
       activeRegion: info.region,

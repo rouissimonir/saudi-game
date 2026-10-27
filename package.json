@@ -19,7 +19,8 @@
     "test:phone:pour": "node tools/e2e/pour-interruption.cjs",
     "test:phone:gathering": "node tools/e2e/gathering-first-session.cjs",
     "test:phone:restoration": "node tools/e2e/restoration-first-session.cjs",
-    "test:phone:guest-majlis": "node tools/e2e/guest-majlis-reaction.cjs"
+    "test:phone:guest-majlis": "node tools/e2e/guest-majlis-reaction.cjs",
+    "test:phone:restored-places": "node tools/e2e/restored-places.cjs"
   },
   "dependencies": {
     "@capacitor/core": "^8.5.2",

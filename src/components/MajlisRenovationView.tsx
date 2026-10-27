@@ -8,7 +8,7 @@ import {
   STORY_CHAPTERS,
   StoryChapter,
 } from '../game/rules';
-import { AREA_COUNT_BEFORE_PRESTIGE, AREA_REWARD, areaChapterId, areaInfo, findStoryChapter } from '../game/progression';
+import { AREA_COUNT_BEFORE_PRESTIGE, AREA_REWARD, areaChapterId, areaInfo, findStoryChapter, restoredPlaceDetails } from '../game/progression';
 import { speakerCharacter } from '../game/voiceLines';
 import { MOOD_SUFFIXES, PAINTED_STAGES, moodSuffix, restorationStage } from '../game/majlisStages';
 import { assetUrl } from '../utils/assetUrl';
@@ -204,6 +204,7 @@ export const MajlisRenovationView: React.FC<MajlisRenovationViewProps> = ({
   const firstWingRef = React.useRef<HTMLDivElement>(null);
   const detailsRef = React.useRef<HTMLDivElement>(null);
   const [selectedDetail, setSelectedDetail] = React.useState<string | null>(null);
+  const [savedPlace, setSavedPlace] = React.useState<number | null>(null);
 
   // Later areas use generated wing ids, so fall back to wing order for the diorama slots.
   const archZone = zones.find((z) => z.id === 'zone_arch') ?? zones[0];
@@ -223,6 +224,12 @@ export const MajlisRenovationView: React.FC<MajlisRenovationViewProps> = ({
   );
   const lapStart = area.lap * AREA_COUNT_BEFORE_PRESTIGE;
   const journey = Array.from({ length: AREA_COUNT_BEFORE_PRESTIGE }, (_, i) => ({ index: lapStart + i, ...areaInfo(lapStart + i) }));
+  const savedPlaces = Object.keys(tastingFlags).flatMap(key => {
+    const match = /^restored_place_(0|[1-9]\d*)$/.exec(key);
+    const index = match ? Number(match[1]) : -1;
+    return Number.isSafeInteger(index) && index >= 0 && index < areaIndex && restoredPlaceDetails(tastingFlags, index) ? [index] : [];
+  }).sort((a, b) => b - a);
+  const savedDetails = savedPlace === null ? null : restoredPlaceDetails(tastingFlags, savedPlace);
 
   const totalLevels = zones.reduce((acc, z) => acc + z.unlockedLevel, 0);
   const maxLevels = zones.length * 2;
@@ -316,6 +323,13 @@ export const MajlisRenovationView: React.FC<MajlisRenovationViewProps> = ({
           })}
         </div>
       </div>
+
+      {savedPlaces.length > 0 && <section data-testid="restored-places" className="rounded-2xl border border-[#D99B26]/50 bg-[#302116] p-3 text-[#FFF4DA]">
+        <h3 className="font-black text-[#FBBF24]">{isAr ? 'أماكن رمّمتها' : 'Places you restored'}</h3>
+        <p className="mt-1 text-xs text-[#EBD8BA]">{isAr ? 'استعد اختياراتك من رحلتك. تظهر الأماكن التي أتممتها بعد هذا التحديث.' : 'Revisit your choices. Places completed after this update appear here.'}</p>
+        <div className="mt-2 flex gap-2 overflow-x-auto pb-1">{savedPlaces.map(index => <button key={index} type="button" onClick={() => setSavedPlace(current => current === index ? null : index)} aria-expanded={savedPlace === index} className="min-h-11 shrink-0 rounded-xl border border-[#D99B26]/60 bg-[#4A3020] px-3 text-xs font-bold">{isAr ? areaInfo(index).nameAr : areaInfo(index).nameEn} · {index + 1}</button>)}</div>
+        {savedDetails && savedPlace !== null && <div data-testid="restored-place-details" className="mt-2 rounded-xl bg-[#241812] p-3">{PAINTED_STAGES[areaInfo(savedPlace).id] && <img alt="" loading="lazy" className="mb-2 h-28 w-full rounded-lg object-cover" src={assetUrl(`assets/art/majlis/${areaInfo(savedPlace).id}_${PAINTED_STAGES[areaInfo(savedPlace).id]}.webp`)} />}<p className="font-bold">{isAr ? areaInfo(savedPlace).nameAr : areaInfo(savedPlace).nameEn}</p><ul className="mt-2 space-y-2">{savedDetails.map((detail, i) => <li key={i} className="flex items-center gap-2 text-xs"><span aria-hidden="true" className="h-5 w-5 shrink-0 rounded-full border border-white/40" style={{ backgroundColor: detail.swatch }} /><span>{isAr ? detail.nameAr : detail.nameEn} · {isAr ? detail.styleAr : detail.styleEn}</span></li>)}</ul></div>}
+      </section>}
 
       {/* Interactive Architectural Diorama of the Selected Saudi Region & Ambiance */}
       <div className="relative rounded-2xl border border-[#D99B26]/35 bg-[#19110D] overflow-hidden shadow-xl">
