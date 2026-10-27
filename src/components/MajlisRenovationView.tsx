@@ -10,7 +10,7 @@ import {
 } from '../game/rules';
 import { AREA_COUNT_BEFORE_PRESTIGE, AREA_REWARD, areaChapterId, areaInfo, findStoryChapter } from '../game/progression';
 import { speakerCharacter } from '../game/voiceLines';
-import { PAINTED_STAGES, restorationStage } from '../game/majlisStages';
+import { MOOD_SUFFIXES, PAINTED_STAGES, moodSuffix, restorationStage } from '../game/majlisStages';
 import { assetUrl } from '../utils/assetUrl';
 import { TASTING_STYLES } from '../game/tasting';
 import { TastingCorner } from './TastingCorner';
@@ -70,18 +70,21 @@ const EpisodeTeaser: React.FC<{ chapter: StoryChapter; isAr: boolean; locked: bo
 };
 
 /**
- * Painted restoration banner (docs/ART_BATCH_4.md): shows the stage for the current progress and crossfades from the
- * previous one when a wing is restored. Only the current and previous stages are loaded.
+ * Painted restoration banner (docs/ART_BATCH_4.md, ART_BATCH_6.md): shows the stage for the current progress in the
+ * chosen mood (golden afternoon, night or rain), and crossfades from the previous picture when either changes.
+ * Only the current and previous pictures are on screen; the other moods of this stage are fetched quietly so a tap on a
+ * chip does not wait for the network.
  */
 const MajlisStageBanner: React.FC<{ areaId: string; stage: number; stages: number; isAr: boolean; hold: boolean; ambiance: MajlisAmbiance }> = ({ areaId, stage, stages, isAr, hold, ambiance }) => {
-  const [shown, setShown] = React.useState({ current: stage, previous: stage });
+  const mood = moodSuffix(ambiance);
+  const [shownStage, setShownStage] = React.useState(stage);
   const [cheer, setCheer] = React.useState<number | null>(null);
   const lastStage = React.useRef(stage);
   React.useEffect(() => {
     const from = lastStage.current;
     if (from === stage || hold) return;
     lastStage.current = stage;
-    setShown({ current: stage, previous: from });
+    setShownStage(stage);
     if (stage > from) setCheer(stage); // a newly reached stage, not a revisit
   }, [stage, hold]);
   React.useEffect(() => {
@@ -89,14 +92,32 @@ const MajlisStageBanner: React.FC<{ areaId: string; stage: number; stages: numbe
     const t = window.setTimeout(() => setCheer(null), 2600);
     return () => window.clearTimeout(t);
   }, [cheer]);
-  const src = (n: number) => assetUrl(`assets/art/majlis/${areaId}_${n}.webp`);
+  const src = (key: string) => assetUrl(`assets/art/majlis/${areaId}_${key}.webp`);
+  const key = `${shownStage}${mood}`;
+  const [shown, setShown] = React.useState({ current: key, previous: key });
+  // A mood picture that cannot load (offline and never viewed) falls back to the stage's golden-afternoon picture.
+  const [failed, setFailed] = React.useState<string | null>(null);
+  React.useEffect(() => {
+    setShown((s) => (s.current === key ? s : { current: key, previous: s.current }));
+    // Once the fade (1.2 s) is over, drop the old picture instead of keeping it decoded underneath.
+    const t = window.setTimeout(() => setShown((s) => (s.previous === s.current ? s : { current: s.current, previous: s.current })), 1400);
+    return () => window.clearTimeout(t);
+  }, [key]);
+  React.useEffect(() => {
+    const t = window.setTimeout(() => {
+      for (const m of MOOD_SUFFIXES) if (m !== mood) new Image().src = src(`${shownStage}${m}`);
+    }, 900);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [areaId, shownStage, mood]);
   return (
     <div className="relative w-full aspect-video bg-[#2A1B12] overflow-hidden" data-testid="majlis-stage" data-stage={stage}>
       {shown.previous !== shown.current && <img src={src(shown.previous)} alt="" className="absolute inset-0 w-full h-full object-cover" />}
       <img
         key={shown.current}
-        src={src(shown.current)}
-        alt={isAr ? `مرحلة الترميم ${stage} من ${stages}` : `Restoration stage ${stage} of ${stages}`}
+        src={src(failed === shown.current ? String(shownStage) : shown.current)}
+        onError={() => setFailed(shown.current)}
+        alt={isAr ? `مرحلة الترميم ${shownStage} من ${stages}` : `Restoration stage ${shownStage} of ${stages}`}
         decoding="async"
         className="absolute inset-0 w-full h-full object-cover animate-[stage-in_1.2s_ease-out_both]"
       />
@@ -531,7 +552,7 @@ export const MajlisRenovationView: React.FC<MajlisRenovationViewProps> = ({
       {/* 4 Architectural Renovation Cards */}
       {restoredWing && zones.some(zone => zone.id === restoredWing && zone.unlockedLevel > 0) && !storyOpen && paintedStages > 0 && <div data-testid="restoration-reveal" role="status" className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] inset-x-3 z-30 mx-auto flex max-w-md items-center gap-2 rounded-2xl border-2 border-[#D99B26] bg-[#302116] p-2 text-[#FFF4DA] shadow-xl"><button type="button" onClick={() => { setSelectedDetail(restoredWing); onDismissRestorationReveal(); detailsRef.current?.scrollIntoView({ block: 'center' }); detailsRef.current?.focus({ preventScroll: true }); }} className="min-h-11 flex-1 rounded-xl bg-[#D99B26] px-3 py-2 text-start text-xs font-black text-[#241812]">{isAr ? 'شاهد لمستك في المجلس' : 'See your restored detail in the Majlis'}</button><button type="button" onClick={onDismissRestorationReveal} aria-label={isAr ? 'إغلاق' : 'Close'} className="min-h-11 min-w-11 rounded-lg bg-white/10 font-bold">✕</button></div>}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-        {zones.map((zone) => {
+        {zones.map((zone, wingIndex) => {
           const isMax = zone.unlockedLevel >= 2;
           const nextCost = zone.unlockedLevel === 0 ? zone.starCostLevel1 : zone.starCostLevel2;
           const canAfford = stars >= nextCost && !isMax;
@@ -546,6 +567,18 @@ export const MajlisRenovationView: React.FC<MajlisRenovationViewProps> = ({
               className="rounded-xl border border-[#D99B26]/25 bg-[#241812] p-4 flex flex-col justify-between gap-3 shadow-md"
             >
               <div>
+                {paintedStages > 0 && (
+                  <img
+                    src={assetUrl(`assets/art/majlis/wings/${area.id}_${wingIndex}_${zone.unlockedLevel > 0 ? 'done' : 'ruin'}.webp`)}
+                    alt=""
+                    width={480}
+                    height={210}
+                    loading="lazy"
+                    decoding="async"
+                    data-testid={`wing-pic-${wingIndex}`}
+                    className="w-full aspect-[16/7] object-cover rounded-lg border border-[#D99B26]/20 mb-3"
+                  />
+                )}
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <h3 className="text-base font-bold text-[#FBF7F0]">

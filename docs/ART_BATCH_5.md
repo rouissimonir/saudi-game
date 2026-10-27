@@ -188,6 +188,8 @@ Three painted restoration stages per area, 21 images, like Diriyah's in batch 4.
 
 ## Al-Ahsa Oasis (`ahsa`)
 
+_Correction: in the game Al-Ahsa has four wings, with the **Qaisariya Souq** between the spring and the press. The painting as delivered shows three; the souq is shown by the market-like space between them, which is acceptable. Its own wing picture came in batch 7._
+
 **The 3 wings to show, left to right:** (1) the **Oasis Spring**: a majlis beside a palm-ringed spring; (2) the **Date Syrup House**: a press for Khalas date syrup; (3) the **Al-Qarah Caves**: cool coffee inside the Al-Qarah caves.
 
 ### `ahsa_1.png`: stage 1, run down
@@ -267,6 +269,8 @@ Three painted restoration stages per area, 21 images, like Diriyah's in batch 4.
 ---
 
 ## Al-Khobar Corniche (`khobar`)
+
+_Correction: in the game Al-Khobar has four wings, with the **Pearl Divers' Majlis** between the kiosk and the dhow. The painting as delivered shows three; the quay by the water stands in for it. Its own wing picture came in batch 7._
 
 **The 3 wings to show, left to right:** (1) the **Corniche Kiosk**: a coffee kiosk on the Gulf shore; (2) the **Dhow Deck**: a majlis aboard a traditional dhow; (3) the **Lighthouse Café**: sunset coffee by the lighthouse.
 

@@ -71,6 +71,7 @@ import {
 } from './utils/soundAndHaptics';
 import { CustomerPortrait } from './components/CustomerPortrait';
 import { assetUrl } from './utils/assetUrl';
+import { TITLE_PLACEHOLDER } from './utils/titlePlaceholder';
 import { BoardCell } from './components/BoardCell';
 import { applySceneResult, ScenePlay } from './story/engine';
 import { withStoryFlags } from './story/flags';
@@ -78,6 +79,7 @@ import type { Scene } from './story/types';
 import type { StoryLogEntry } from './components/story/StoryLog';
 import { MergeParticleOverlay } from './components/MergeParticleOverlay';
 import { EnergyModal, QuestsModal, WorkshopModal } from './components/ProgressionModals';
+import { bannerKey } from './game/majlisStages';
 import { BottomNav, GameHud, NavTab } from './components/GameChrome';
 import { DailyLoginModal } from './components/DailyLoginModal';
 import { ItemArtwork, preloadItemArt } from './components/ItemArtwork';
@@ -407,6 +409,18 @@ export default function App() {
     preloadItemArt();
     prefetchScreens();
   }, []);
+
+  // Fetch the Majlis banner for the current area, progress and mood while the board is idle, so opening that tab is instant.
+  const majlisBanner = bannerKey(areaInfo(gameState.areaIndex).id, gameState.renovationZones, gameState.ambiance);
+  useEffect(() => {
+    if (shellState !== 'playing' || !majlisBanner) return;
+    const t = window.setTimeout(() => {
+      const img = new Image();
+      (img as HTMLImageElement & { fetchPriority?: string }).fetchPriority = 'low';
+      img.src = assetUrl(`assets/art/majlis/${majlisBanner}.webp`);
+    }, 2500);
+    return () => window.clearTimeout(t);
+  }, [shellState, majlisBanner]);
 
   // Let new players learn the board and serve a guest before introducing the daily reward.
   // The reward remains available and is shown once the tutorial is completed or skipped.
@@ -1203,6 +1217,12 @@ export default function App() {
   if (shellState === 'title') {
     return (
       <main className="relative min-h-screen w-full bg-gradient-to-b from-[#2A1B12] via-[#3A2417] to-[#1E130D] text-[#FBF7F0] flex flex-col justify-between overflow-hidden select-none">
+        {/* Tiny blurred copy of the key art (same one the splash in index.html shows), so loading looks painted, not flat */}
+        <div
+          aria-hidden="true"
+          className={`absolute inset-0 lg:hidden transition-opacity duration-[1400ms] ${keyArtReady ? 'opacity-0' : 'opacity-100'}`}
+          style={{ background: `url(${TITLE_PLACEHOLDER}) 50% 35%/cover`, filter: 'blur(14px) saturate(1.15)', transform: 'scale(1.12)' }}
+        />
         {/* Painted key art on phones (docs/ART_BATCH_3.md): fades in once loaded, so it never holds up first paint */}
         <img
           src={assetUrl('assets/art/story/bg_title.webp')}

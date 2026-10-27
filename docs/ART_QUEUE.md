@@ -6,9 +6,7 @@ and moves the batch to "Done" below.
 
 ## Waiting for Codex
 
-| Batch | Prompts | Files | Lands in | Then (Claude) |
-|---|---|---|---|---|
-| Batch 6 | `docs/ART_BATCH_6.md` | 48: `<area>_<1-3>_night` and `<area>_<1-3>_rain` for diriyah, jeddah, alula, taif, abha, ahsa, riyadh, khobar | `tools/art/background_inbox/majlis/` | Overlay each against its golden-hour source to check alignment, convert to `public/assets/art/majlis/<area>_<n>_night.webp` and `_rain.webp` (1280x720, quality 72), and make `MajlisStageBanner` pick the file for the ambiance chip (`afternoon` = plain, `ramadan_night` = `_night`, `courtyard_rain` = `_rain`), falling back to the plain image when a mood is missing. Night lands first, areas can land one at a time |
+Nothing queued. Next ideas: a painted loading screen, App Store screenshots, new story characters.
 
 When a new batch is added:
 - **Portraits:** cut out with `tools/art/cutout_portrait.py`, convert, and add the character to `EXPRESSIONS` in `src/components/story/art.ts`.
@@ -16,6 +14,8 @@ When a new batch is added:
 
 ## Done
 
+- Batch 7: wing pictures for Al-Ahsa's Qaisariya Souq and Al-Khobar's Pearl Divers' Majlis (run-down and restored), used by `make_wing_thumbs.py` instead of the crop.
+- Batch 6: night and rain versions of every Majlis restoration stage, 48 images (`public/assets/art/majlis/<area>_<n>_night.webp`, `_rain.webp`), wired to the ambiance chips.
 - Batch 5: Majlis restoration stages 1–3 for Jeddah, AlUla, Taif, Abha, Al-Ahsa, Riyadh and Khobar (`public/assets/art/majlis/`).
 - Prologue cast: Layla (5 expressions), Noura (4), Rashid (3).
 - Prologue backgrounds: street, courtyard, dallah.

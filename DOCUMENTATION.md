@@ -165,7 +165,8 @@ The engine lives in `src/game/progression.ts` (pure, seeded RNG in `state.rngSee
     - **Story episodes:** the HUD menu opens an episode list (`src/components/story/StoryLog.tsx`).
       - It shows the prologue and all 11 chapters.
       - Finished ones can be rewatched, with no second reward. Upcoming ones show locked, with a blurred speaker.
-    - **Painted restoration stages:** in every area (Diriyah, Jeddah, AlUla, Taif, Abha, Al-Ahsa, Riyadh, Khobar), the Majlis view shows a painted banner in place of the vector diorama: ruin, half restored, then fully restored. It crossfades to the next stage as wings are restored (`src/game/majlisStages.ts`). Reaching a new stage shows a short caption ("The Majlis is coming back to life!" or "Fully restored!"). If a story episode opens on the same restore, the banner waits until it closes, so the moment isn't hidden. An area without painted stages falls back to the diorama.
+    - **Painted restoration stages:** in every area (Diriyah, Jeddah, AlUla, Taif, Abha, Al-Ahsa, Riyadh, Khobar), the Majlis view shows a painted banner in place of the vector diorama: ruin, half restored, then fully restored. It crossfades to the next stage as wings are restored (`src/game/majlisStages.ts`). Reaching a new stage shows a short caption ("The Majlis is coming back to life!" or "Fully restored!"). If a story episode opens on the same restore, the banner waits until it closes, so the moment isn't hidden. The Golden Afternoon, Lantern Night and Courtyard Rain chips each pick their own painted mood (`<area>_<stage>.webp`, `_night`, `_rain`) and crossfade between them; the other moods of the current stage are fetched quietly so a tap never waits. An area without painted stages falls back to the diorama. While the board is idle the app quietly fetches the banner for the current area, progress and mood (`bannerKey`), so opening the Majlis tab paints in about 0.4 s on fast 3G instead of 1.1 s; a mood picture that cannot load falls back to that stage's golden-afternoon picture.
+    - **Wing pictures:** each wing card on the Majlis screen shows a painted thumbnail of that wing, the run-down version until it is renovated and the restored one afterwards (`public/assets/art/majlis/wings/`). They are cut from the stage pictures by `tools/art/make_wing_thumbs.py`, which holds where each wing sits in its area's painting; re-run it after repainting a stage.
     - **Episode teasers:** on the Majlis screen, each locked wing shows the episode it unlocks ("Restore to unlock Episode N", with the speaker's painted face). The travel card names the next area's episode.
     - **Title key art:** on phones, painted Layla with the dallah fills the title screen (`bg_title.webp`, 89 KB). It fades in after first paint, and the emblem holds its place until then, so nothing shifts.
     - **Loading:** chapter and epilogue scripts live in the lazily loaded scene chunk (App builds scenes through `useLazyScene`), so they add nothing to the first download.
@@ -225,6 +226,14 @@ The engine lives in `src/game/progression.ts` (pure, seeded RNG in `state.rngSee
         ├── MajlisRenovationView.tsx          # Interactive architectural SVG diorama, Kingdom Map (Diriyah/Jeddah/AlUla) & Weather Ambiance
         └── ShopAndMadaModal.tsx              # Diriyah Souq: daily gift, existing pass status, Majlis-point milestones
 ```
+
+### Painted loading
+
+On phones the splash shown in `index.html` while the game code loads, and the title screen while its full-size key art loads, sit on a tiny blurred copy of the title painting (about 0.5 KB as a data URI, `src/utils/titlePlaceholder.ts`). Loading therefore looks like the title that follows, and the full art sharpens in over it. `python3 tools/art/make_title_placeholder.py` regenerates both copies after the key art changes. Measured on a fast-3G, 4x slower CPU profile it moves first paint by about +50 ms (1.34 to 1.39 s) with the title ready at the same time. Desktop is unchanged.
+
+### App Store screenshots
+
+`store/screenshots/<en|ar>/` holds the five 1290x2796 store screenshots per language, captured from the real game and framed with captions by `tools/store/capture.cjs` and `tools/store/compose.cjs`. See `store/README.md` for the list, how to regenerate them, and the note that the Arabic captions need native review.
 
 ### Running Tests & Building for iOS / Android
 The repository includes the Capacitor iOS project and matching runtime, CLI and platform packages. The native project uses Swift Package Manager and has been synced on Windows, but has not been built in Xcode. Building and testing locally for iOS requires macOS and Xcode; see the [official setup requirements](https://capacitorjs.com/docs/getting-started/environment-setup).

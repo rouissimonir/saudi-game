@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { restorationStage } from './majlisStages';
+import { MOOD_SUFFIXES, bannerKey, moodSuffix, restorationStage } from './majlisStages';
 import { majlisReaction } from './majlisReactions';
 import { createInitialGameState, upgradeRenovationZone } from './rules';
 import { normalizeSave } from './normalizeSave';
@@ -20,7 +20,9 @@ test('every painted stage has its image, and every area is covered', async () =>
   const { areaInfo, AREA_COUNT_BEFORE_PRESTIGE } = await import('./progression');
   for (let i = 0; i < AREA_COUNT_BEFORE_PRESTIGE; i++) assert.ok(PAINTED_STAGES[areaInfo(i).id], `${areaInfo(i).id} has painted stages`);
   for (const [id, n] of Object.entries(PAINTED_STAGES)) {
-    for (let i = 1; i <= n; i++) assert.ok(existsSync(`public/assets/art/majlis/${id}_${i}.webp`), `${id}_${i}.webp`);
+    for (let i = 1; i <= n; i++) {
+      for (const m of MOOD_SUFFIXES) assert.ok(existsSync(`public/assets/art/majlis/${id}_${i}${m}.webp`), `${id}_${i}${m}.webp`);
+    }
   }
 });
 
@@ -46,4 +48,31 @@ test('a restored wing keeps its pending reveal in the save without a second rewa
   assert.equal(loaded.storyFlags.restoration_reveal_wing, 'zone_sadu');
   assert.equal(loaded.stars, initial.stars - initial.renovationZones[1].starCostLevel1);
   assert.equal(loaded.wingUpgrades, 1);
+});
+
+test('each Majlis ambiance chip maps to its painted mood', () => {
+  assert.equal(moodSuffix('afternoon'), '');
+  assert.equal(moodSuffix('ramadan_night'), '_night');
+  assert.equal(moodSuffix('courtyard_rain'), '_rain');
+});
+
+test('every wing of every area has a run-down and a restored picture', async () => {
+  const { existsSync } = await import('node:fs');
+  const { areaInfo, buildAreaZones, AREA_COUNT_BEFORE_PRESTIGE } = await import('./progression');
+  for (let a = 0; a < AREA_COUNT_BEFORE_PRESTIGE; a++) {
+    const id = areaInfo(a).id;
+    const wings = buildAreaZones(a).length;
+    assert.ok(wings >= 3, `${id} has wings`);
+    for (let i = 0; i < wings; i++) {
+      for (const state of ['ruin', 'done']) assert.ok(existsSync(`public/assets/art/majlis/wings/${id}_${i}_${state}.webp`), `${id}_${i}_${state}.webp`);
+    }
+  }
+});
+
+test('the banner picture to prefetch follows the area, the wings restored and the mood', () => {
+  const wings = (levels: number[]) => levels.map((unlockedLevel) => ({ unlockedLevel }));
+  assert.equal(bannerKey('diriyah', wings([0, 0, 0, 0]), 'afternoon'), 'diriyah_1');
+  assert.equal(bannerKey('diriyah', wings([2, 2, 0, 0]), 'ramadan_night'), 'diriyah_2_night');
+  assert.equal(bannerKey('khobar', wings([2, 2, 2, 2]), 'courtyard_rain'), 'khobar_3_rain');
+  assert.equal(bannerKey('nowhere', wings([2]), 'afternoon'), null);
 });
