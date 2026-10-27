@@ -45,3 +45,24 @@ test('guests respond to the chosen trays only after the gathering', () => {
   assert.match(gatheringReaction({ ...flags, tasting_tray_1: 'sweet' }, 'noura')!.en, /Fresh dates/);
   assert.equal(gatheringReaction({ ...flags, tasting_tray_0: 'invalid' }, 'faisal'), null);
 });
+
+// A selected recipe remains the player's active goal across saves and disappears once prepared.
+test('hospitality focus survives saves and ignores completed or invalid recipes', async () => {
+  const { hospitalityFocus, setHospitalityFocus } = await import('./hospitalityFocus');
+  const state = createInitialGameState();
+  const goal = { kind: 'tasting' as const, items: ['qahwa_2', 'sweets_2'], nameAr: 'ignored', nameEn: 'ignored' };
+  const focused = setHospitalityFocus(state, goal);
+  const loaded = normalizeSave(JSON.parse(JSON.stringify(focused)))!;
+  assert.equal(hospitalityFocus(loaded)?.nameEn, 'Coffee and dates');
+  assert.deepEqual(hospitalityFocus(loaded)?.items, goal.items);
+  assert.equal(hospitalityFocus({ ...loaded, storyFlags: { ...loaded.storyFlags, tasting_tray_0: 'traditional' } }), null);
+  assert.equal(hospitalityFocus({ ...loaded, storyFlags: { ...loaded.storyFlags, hospitality_focus: 'tasting:unknown' } }), null);
+  assert.equal(hospitalityFocus(setHospitalityFocus(loaded, null)), null);
+  const invalid = setHospitalityFocus(state, { ...goal, items: ['unknown'] });
+  assert.equal(invalid, state);
+  const taif = { kind: 'taif' as const, items: ['oud_3', 'sweets_2'], nameAr: '', nameEn: '' };
+  assert.equal(setHospitalityFocus(state, taif), state, 'Taif focus is unavailable before its story');
+  const later = setHospitalityFocus({ ...state, areaIndex: 4 }, taif);
+  assert.equal(hospitalityFocus(normalizeSave(JSON.parse(JSON.stringify(later)))!)?.nameEn, 'Rose scent and dates');
+  assert.equal(hospitalityFocus({ ...later, storyFlags: { ...later.storyFlags, taif_welcome: 'dates' } }), null);
+});
