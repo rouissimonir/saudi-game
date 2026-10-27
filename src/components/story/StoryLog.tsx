@@ -79,7 +79,7 @@ export const StoryLog: React.FC<StoryLogProps> = ({ lang, prologueSeen, entries,
                       {r.unlocked ? shortTitle(isAr ? r.titleAr : r.titleEn) : isAr ? 'تُفتح مع ترميم المجلس' : 'Unlocks as you restore the Majlis'}
                     </span>
                   </span>
-                  <span className={`w-9 h-9 shrink-0 rounded-full flex items-center justify-center ${r.unlocked ? 'bg-[#D97706] text-white' : 'bg-[#E7DCCB] text-[#8B7355]'}`}>
+                  <span className={`w-9 h-9 shrink-0 rounded-full flex items-center justify-center ${r.unlocked ? 'bg-[#B45309] text-white' : 'bg-[#E7DCCB] text-[#8B7355]'}`}>
                     {r.unlocked ? <Play className="w-4 h-4" fill="currentColor" /> : <Lock className="w-4 h-4" />}
                   </span>
                 </button>

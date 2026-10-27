@@ -263,7 +263,7 @@ export const MajlisRenovationView: React.FC<MajlisRenovationViewProps> = ({
       {/* Multi-Location Kingdom Map & Weather Ambiance Bar */}
       <div className="rounded-2xl border border-[#D99B26]/35 bg-[#241812] p-3 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
         {/* Restoration journey across the Kingdom: finished, current and locked areas */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5" data-testid="area-journey">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5" data-testid="area-journey" tabIndex={0} role="group" aria-label={isAr ? 'رحلة المملكة' : 'Kingdom trail'}>
           <span className="text-xs font-bold text-[#E9C46A] inline-flex items-center gap-1 shrink-0 px-1">
             <MapPin className="w-3.5 h-3.5 text-[#FBBF24]" />
             {isAr ? 'رحلة المملكة:' : 'Kingdom trail:'}
@@ -277,10 +277,10 @@ export const MajlisRenovationView: React.FC<MajlisRenovationViewProps> = ({
                 aria-current={current ? 'step' : undefined}
                 className={`px-2.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap border inline-flex items-center gap-1 ${
                   current
-                    ? 'bg-[#D97724] text-white border-[#FBBF24] shadow'
+                    ? 'bg-[#B45309] text-white border-[#FBBF24] shadow'
                     : done
                     ? 'bg-[#14532D]/60 text-[#BBF7D0] border-[#34D399]/40'
-                    : 'bg-[#1C1410] text-[#D4A373]/60 border-white/10'
+                    : 'bg-[#1C1410] text-[#D4A373]/80 border-white/10'
                 }`}
               >
                 {done ? <Check className="w-3 h-3" /> : !current && <Lock className="w-3 h-3" />}
@@ -665,7 +665,7 @@ export const MajlisRenovationView: React.FC<MajlisRenovationViewProps> = ({
                     onClick={() => onUpgradeZone(zone.id)}
                     className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
                       canAfford
-                        ? 'bg-[#D97724] hover:bg-[#E08738] text-white shadow-lg'
+                        ? 'bg-[#B45309] hover:bg-[#A94E08] text-white shadow-lg'
                         : 'bg-white/10 text-white/40 cursor-not-allowed'
                     }`}
                   >

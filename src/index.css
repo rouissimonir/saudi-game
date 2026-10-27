@@ -11,6 +11,11 @@
     --game-safe-left: env(safe-area-inset-left, 0px);
   }
 
+  /* Pinch-zoom stays available (WCAG 1.4.4); this only stops the browser zooming on a double tap while merging. */
+  html {
+    touch-action: manipulation;
+  }
+
   body {
     font-family: var(--font-sans);
     background-color: #F4EFE6;

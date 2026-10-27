@@ -123,7 +123,7 @@ export const ChainTreeModal: React.FC<{
               onClick={() => setSelectedChain(c.id)}
               className={`px-3 py-2 rounded-t-xl text-xs font-bold transition-colors cursor-pointer whitespace-nowrap ${
                 selectedChain === c.id
-                  ? 'bg-[#D97724] text-white'
+                  ? 'bg-[#B45309] text-white'
                   : 'bg-[#2B1D14] text-[#D4A373] hover:text-white'
               }`}
             >
@@ -136,7 +136,7 @@ export const ChainTreeModal: React.FC<{
         </div>
 
         {/* Body */}
-        <div className="p-4 sm:p-5 overflow-y-auto space-y-4 flex-1">
+        <div className="p-4 sm:p-5 overflow-y-auto space-y-4 flex-1" tabIndex={0}>
           {generatorDef && (
             <div className="rounded-xl bg-[#2E1F16] border border-[#FBBF24]/40 p-3 flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
@@ -369,7 +369,7 @@ export const LeaderboardModal: React.FC<{
             onClick={() => setSection('leaderboard')}
             className={`px-3.5 py-2 rounded-t-xl text-xs font-bold cursor-pointer whitespace-nowrap ${
               section === 'leaderboard'
-                ? 'bg-[#D97724] text-white'
+                ? 'bg-[#B45309] text-white'
                 : 'bg-[#2B1D14] text-[#D4A373] hover:text-white'
             }`}
           >
@@ -380,7 +380,7 @@ export const LeaderboardModal: React.FC<{
             onClick={() => setSection('mazayen')}
             className={`px-3.5 py-2 rounded-t-xl text-xs font-bold cursor-pointer whitespace-nowrap inline-flex items-center gap-1.5 ${
               section === 'mazayen'
-                ? 'bg-[#D97724] text-white'
+                ? 'bg-[#B45309] text-white'
                 : 'bg-[#2B1D14] text-[#D4A373] hover:text-white'
             }`}
           >
@@ -392,7 +392,7 @@ export const LeaderboardModal: React.FC<{
             onClick={() => setSection('wheel')}
             className={`px-3.5 py-2 rounded-t-xl text-xs font-bold cursor-pointer whitespace-nowrap inline-flex items-center gap-1.5 ${
               section === 'wheel'
-                ? 'bg-[#D97724] text-white'
+                ? 'bg-[#B45309] text-white'
                 : 'bg-[#2B1D14] text-[#D4A373] hover:text-white'
             }`}
           >
@@ -406,7 +406,7 @@ export const LeaderboardModal: React.FC<{
         </div>
 
         {/* Section Content */}
-        <div className="p-4 sm:p-5 overflow-y-auto space-y-3 flex-1">
+        <div className="p-4 sm:p-5 overflow-y-auto space-y-3 flex-1" tabIndex={0}>
           {section === 'leaderboard' && (
             <>
               <p className="text-xs text-[#E5DEC9]" data-testid="local-showcase-note">{isAr ? 'هذه مجالس خيالية داخل اللعبة، وليست ترتيباً للاعبين عبر الإنترنت.' : 'These are fictional in-game Majlis examples, not an online player ranking.'}</p>
@@ -451,7 +451,7 @@ export const LeaderboardModal: React.FC<{
                               : rank === 2
                               ? 'bg-[#E2E8F0] text-[#1C1410]'
                               : rank === 3
-                              ? 'bg-[#D97724] text-white'
+                              ? 'bg-[#B45309] text-white'
                               : 'bg-white/10 text-[#D4A373]'
                           }`}
                         >
@@ -531,7 +531,7 @@ export const LeaderboardModal: React.FC<{
                             hasVoted
                               ? 'bg-[#10B981]/20 text-[#34D399]'
                               : mazayenVotesRemaining > 0
-                              ? 'bg-[#D97724] hover:bg-[#E08738] text-white shadow'
+                              ? 'bg-[#B45309] hover:bg-[#A94E08] text-white shadow'
                               : 'bg-white/10 text-white/40 cursor-not-allowed'
                           }`}
                         >
