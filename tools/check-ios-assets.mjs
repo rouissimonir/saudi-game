@@ -23,6 +23,11 @@ export async function verifyIOSBundle(root) {
   try { files = await filesUnder(dist); }
   catch { return { filesChecked: 0, issues: ['Build directory is missing. Run npm run build first.'] }; }
   if (!files.includes('index.html')) issues.push('Build is missing index.html.');
+  try {
+    const bundledFiles = await filesUnder(bundled);
+    const expected = new Set([...files, 'cordova.js', 'cordova_plugins.js']);
+    for (const file of bundledFiles) if (!expected.has(file)) issues.push(`Unexpected iOS asset: ${file}`);
+  } catch { issues.push('iOS public assets directory is missing or unreadable.'); }
   for (const file of files) {
     try {
       const [source, copy] = await Promise.all([readFile(path.join(dist, file)), readFile(path.join(bundled, file))]);

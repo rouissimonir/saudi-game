@@ -25,6 +25,13 @@ test('iOS bundle audit detects missing, stale and remote-hosted builds', async t
   assert.match(result.issues.join(), /Stale iOS asset/);
   await writeFile(path.join(app, 'public', 'assets', 'game.js'), 'current');
   assert.deepEqual(await verifyIOSBundle(root), { filesChecked: 2, issues: [] });
+  await writeFile(path.join(app, 'public', 'cordova.js'), 'generated');
+  await writeFile(path.join(app, 'public', 'cordova_plugins.js'), 'generated');
+  assert.deepEqual(await verifyIOSBundle(root), { filesChecked: 2, issues: [] });
+  await writeFile(path.join(app, 'public', 'assets', 'old.js'), 'leftover');
+  result = await verifyIOSBundle(root);
+  assert.match(result.issues.join(), /Unexpected iOS asset:.*old\.js/);
+  await rm(path.join(app, 'public', 'assets', 'old.js'));
   await writeFile(path.join(app, 'capacitor.config.json'), JSON.stringify({ appId: 'test.app', server: { iosScheme: 'capacitor', url: 'https://example.com' } }));
   result = await verifyIOSBundle(root);
   assert.match(result.issues.join(), /remote server URL/);
