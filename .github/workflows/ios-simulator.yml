@@ -45,4 +45,19 @@ jobs:
       - name: Compile for iOS simulator
         run: |
           xcodebuild -version
-          xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build
+          xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath "$RUNNER_TEMP/qahwa-derived" CODE_SIGNING_ALLOWED=NO build
+      - name: Install and launch on an iPhone simulator
+        run: |
+          SIMULATOR_ID=$(xcrun simctl list devices available -j | node -e 'let s=""; process.stdin.on("data", c => s += c); process.stdin.on("end", () => { const d = JSON.parse(s).devices; const phone = Object.entries(d).filter(([runtime]) => runtime.includes("SimRuntime.iOS")).flatMap(([, devices]) => devices).find(device => device.isAvailable && device.name.startsWith("iPhone")); if (!phone) { console.error("No available iPhone simulator"); process.exit(1); } console.log(phone.udid); });')
+          xcrun simctl boot "$SIMULATOR_ID"
+          xcrun simctl bootstatus "$SIMULATOR_ID" -b
+          xcrun simctl install "$SIMULATOR_ID" "$RUNNER_TEMP/qahwa-derived/Build/Products/Debug-iphonesimulator/App.app"
+          xcrun simctl launch "$SIMULATOR_ID" sa.qahwamajlis.merge
+          sleep 10
+          xcrun simctl io "$SIMULATOR_ID" screenshot "$RUNNER_TEMP/qahwa-simulator.png"
+      - name: Save simulator screenshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-simulator-launch
+          path: ${{ runner.temp }}/qahwa-simulator.png
+          if-no-files-found: error
