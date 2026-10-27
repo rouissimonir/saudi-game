@@ -25,6 +25,7 @@ const { chromium } = require('playwright');
     // Focus the specialty-coffee tray and identify the already available ingredient.
     await page.getByTestId('open-tasting').click();
     await page.getByTestId('tasting-choice-modern').locator('..').getByRole('button', { name: 'أرني على اللوحة' }).click();
+    if (!(await page.getByTestId('recipe-marker-legend').innerText()).includes('للوصفة')) throw new Error('Recipe marker legend missing');
     const readyCoffee = cell(24);
     if (await readyCoffee.getAttribute('data-recipe-needed') !== 'true') throw new Error('Ready recipe ingredient not marked');
     if (!(await readyCoffee.getAttribute('aria-label')).includes('جاهز للوصفة المختارة')) throw new Error('Ready recipe ingredient not described');
