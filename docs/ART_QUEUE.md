@@ -6,9 +6,7 @@ and moves the batch to "Done" below.
 
 ## Waiting for Codex
 
-| Batch | Prompts | Files | Lands in | Then (Claude) |
-|---|---|---|---|---|
-| Batch 7 | `docs/ART_BATCH_7.md` | 4: `ahsa_1_ruin`, `ahsa_1_done`, `khobar_1_ruin`, `khobar_1_done` (the Qaisariya Souq and the Pearl Divers' Majlis wing pictures) | `tools/art/background_inbox/majlis/wings/` | Check ruin and restored line up and read well at thumbnail size, copy them there as `ahsa_1_ruin.png` etc. (the folder name `wings/` and the file names already match), run `python3 tools/art/make_wing_thumbs.py` (it prefers a painted picture over the crop), and check the two cards in the browser |
+Nothing queued. Next ideas: a painted loading screen, App Store screenshots, new story characters.
 
 When a new batch is added:
 - **Portraits:** cut out with `tools/art/cutout_portrait.py`, convert, and add the character to `EXPRESSIONS` in `src/components/story/art.ts`.
@@ -16,6 +14,7 @@ When a new batch is added:
 
 ## Done
 
+- Batch 7: wing pictures for Al-Ahsa's Qaisariya Souq and Al-Khobar's Pearl Divers' Majlis (run-down and restored), used by `make_wing_thumbs.py` instead of the crop.
 - Batch 6: night and rain versions of every Majlis restoration stage, 48 images (`public/assets/art/majlis/<area>_<n>_night.webp`, `_rain.webp`), wired to the ambiance chips.
 - Batch 5: Majlis restoration stages 1–3 for Jeddah, AlUla, Taif, Abha, Al-Ahsa, Riyadh and Khobar (`public/assets/art/majlis/`).
 - Prologue cast: Layla (5 expressions), Noura (4), Rashid (3).
