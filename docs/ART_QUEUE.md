@@ -8,7 +8,6 @@ and moves the batch to "Done" below.
 
 | Batch | Prompts | Files | Lands in | Then (Claude) |
 |---|---|---|---|---|
-| Painted board icons (Codex's own trial, see `codex-plan.md`) | none written here | the other chains: `barista_1..6`, `sweets_1..6`, `oud_1..6`, `chest_1..2`, `gen_*` | `tools/art/item_inbox/<chain>/<itemId>.png` (1254x1254 transparent PNG) | `python3 tools/art/install_item_icons.py tools/art/item_inbox/<chain>` (trims, adds an even margin, writes the 256 px WebP), then check the board, the Chains guide and the order strip in the browser |
 | Batch 8 | `docs/ART_BATCH_8.md` | 28 portraits: seven new local hosts (`hani`, `reem`, `hessa`, `aisha`, `khalid`, `dana`, `nasser`) x neutral, happy, surprised, worried | `tools/art/portrait_inbox/` | Cut out and install each (`cutout_portrait.py`, `to_webp.py`), add the ids to `CastId`, `EXPRESSIONS` and the name colours, rewrite each area chapter so its local host opens it, check bubble layout, check both languages. Needs Saudi cultural review before release. The scripts are already drafted (`src/story/hostDrafts.ts`); the wiring task is `docs/CODEX_TASK_HOSTS.md` |
 
 When a new batch is added:
@@ -17,6 +16,7 @@ When a new batch is added:
 
 ## Done
 
+- All 30 painted board icons from Codex (qahwa, barista, sweets, oud chains, 2 chests, 4 generators), installed with `tools/art/install_item_icons.py`. No Blender renders remain in `public/assets/art/items/`.
 - Painted qahwa chain icons (`qahwa_1`..`qahwa_6`), Codex's icon trial, replacing the Blender renders.
 - Batch 7: wing pictures for Al-Ahsa's Qaisariya Souq and Al-Khobar's Pearl Divers' Majlis (run-down and restored), used by `make_wing_thumbs.py` instead of the crop.
 - Batch 6: night and rain versions of every Majlis restoration stage, 48 images (`public/assets/art/majlis/<area>_<n>_night.webp`, `_rain.webp`), wired to the ambiance chips.

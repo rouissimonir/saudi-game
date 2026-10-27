@@ -6,7 +6,7 @@
 | --- | --- | --- |
 | Hero 3D renders (dallah, finjan, V60, mabkhara, dates, chest, beans) | Generated with Blender, 512x512 transparent PNG | `public/assets/art/*.png` |
 | Title-screen emblem | Uses `dallah.png` | `src/App.tsx` |
-| The 30 merge-board item icons | The qahwa chain (`qahwa_1`..`qahwa_6`) is now painted art from Codex; the rest are still Blender renders, being replaced chain by chain. Install painted icons with `python3 tools/art/install_item_icons.py tools/art/item_inbox/<chain>`. Generated with Blender, 256x256 transparent WebP (converted from the PNG renders by `tools/art/to_webp.py`), shown by `ItemArtwork` (old SVG kept as fallback) | `public/assets/art/items/<itemId>.webp` |
+| The 30 merge-board item icons | All 30 are now painted art from Codex (the earlier Blender renders were replaced). Install painted icons with `python3 tools/art/install_item_icons.py tools/art/item_inbox/<chain>`. Generated with Blender, 256x256 transparent WebP (converted from the PNG renders by `tools/art/to_webp.py`), shown by `ItemArtwork` (old SVG kept as fallback) | `public/assets/art/items/<itemId>.webp` |
 | Character portraits (Noura, Faisal, Tariq, Lama, Sultan, Jury) | Stylized 3D busts rendered with Blender, 256px transparent WebP; shown in the order strip and story dialogue (SVG kept as fallback) | `public/assets/art/characters/<name>.webp` |
 | Sound effects | Merge, spawn and error sounds still synthesized in code; order-complete and level-up use generated stingers (synth fallback) | `src/utils/soundAndHaptics.ts`, `public/assets/audio/` |
 | Background music | Generated 60 s seamless Hijaz oud loop (`ambient.mp3`); replace with your own file any time | `public/assets/audio/ambient.mp3` |
