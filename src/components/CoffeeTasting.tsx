@@ -9,9 +9,9 @@ import { TastingCorner } from './TastingCorner';
 import { ingredientInstruction, ingredientNeeds } from '../game/orderGuide';
 import { tastingGuestMemory, type TastingGuest } from '../game/guestMemories';
 
-type Props = { lang: Language; state: GameState; onChange: React.Dispatch<React.SetStateAction<GameState>>; onClose: () => void; onMajlis: () => void; onFocusRecipe: (items: readonly string[], nameAr: string, nameEn: string) => void; onRetrieve: (index: number) => void };
+type Props = { lang: Language; state: GameState; onChange: React.Dispatch<React.SetStateAction<GameState>>; onClose: () => void; onMajlis: () => void; onWelcome: () => void; onFocusRecipe: (items: readonly string[], nameAr: string, nameEn: string) => void; onRetrieve: (index: number) => void };
 
-export function CoffeeTasting({ lang, state, onChange, onClose, onMajlis, onFocusRecipe, onRetrieve }: Props) {
+export function CoffeeTasting({ lang, state, onChange, onClose, onMajlis, onWelcome, onFocusRecipe, onRetrieve }: Props) {
   const ar = lang === 'ar';
   const flags = state.storyFlags ?? {};
   const ready = Boolean(flags.tasting_tray_0 && flags.tasting_tray_1);
@@ -22,9 +22,10 @@ export function CoffeeTasting({ lang, state, onChange, onClose, onMajlis, onFocu
   useEffect(() => {
     if (!complete || !welcomePending.current) return;
     welcomePending.current = false;
+    onWelcome();
     gatheringRef.current?.scrollIntoView({ block: 'start' });
     gatheringRef.current?.focus({ preventScroll: true });
-  }, [complete]);
+  }, [complete, onWelcome]);
   return (
     <div role="dialog" aria-modal="true" aria-label={ar ? 'جلسة تذوق فيصل' : "Faisal's coffee tasting"} className="safe-dialog fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-3" dir={ar ? 'rtl' : 'ltr'}>
       <div className="w-full max-w-md max-h-[90dvh] overflow-y-auto rounded-2xl border-2 border-[#D99B26] bg-[#241812] text-[#FBF7F0] shadow-2xl">
