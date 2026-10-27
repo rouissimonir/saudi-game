@@ -13,7 +13,9 @@
     "test": "tsx --test src/game/rules.test.ts src/game/progression.test.ts src/fasih/engine.test.ts src/utils/saveMigration.test.ts src/utils/saveStorage.test.ts src/game/events.test.ts src/utils/saveTransfer.test.ts src/story/engine.test.ts src/story/chapterScene.test.ts src/game/majlisStages.test.ts src/game/tasting.test.ts src/game/saleUndo.test.ts src/game/orderGuide.test.ts src/game/guestMemories.test.ts src/game/taifWelcome.test.ts src/game/wheelRotation.test.ts src/utils/haptics.test.ts src/utils/storyAudio.test.ts tools/check-ios-assets.test.mjs",
     "voice:export": "tsx tools/voice/export_lines.ts",
     "voice:generate": "python3 tools/voice/generate_elevenlabs.py generate",
-    "voice:test": "python3 tools/voice/test_generate.py"
+    "voice:test": "python3 tools/voice/test_generate.py",
+    "test:phone:transfer": "node tools/e2e/transfer-race.cjs",
+    "test:phone:smoke": "node tools/e2e/smoke.cjs"
   },
   "dependencies": {
     "@capacitor/core": "^8.5.2",
@@ -40,6 +42,7 @@
     "@types/react-dom": "^19.3.0",
     "autoprefixer": "^10.4.21",
     "esbuild": "^0.28.0",
+    "playwright": "1.62.1",
     "tailwindcss": "^4.3.3",
     "tsx": "^4.21.0",
     "typescript": "^7.0.2"
