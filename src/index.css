@@ -369,7 +369,9 @@
   to { transform: scaleX(0); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .level-up-toast, .combo-meter, .combo-bar, .merge-sunburst-rays, .merge-tile-celebrate { animation: none; }
+  .level-up-toast, .combo-meter, .merge-tile-celebrate, .merge-callout-badge { animation: none; }
+  .merge-core-glow, .merge-sunburst-rays, .combo-bar { display: none; }
+  .merge-callout-badge { transform: translate(-50%, -22px); }
 }
 
 /* Majlis restoration banner: the newly reached stage fades in over the previous one */
