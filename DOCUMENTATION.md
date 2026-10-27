@@ -217,6 +217,10 @@ The engine lives in `src/game/progression.ts` (pure, seeded RNG in `state.rngSee
         └── ShopAndMadaModal.tsx              # Diriyah Souq: daily gift, energy crate, VIP pass, Majlis-point milestones
 ```
 
+### Painted loading
+
+On phones the splash shown in `index.html` while the game code loads, and the title screen while its full-size key art loads, sit on a tiny blurred copy of the title painting (about 0.5 KB as a data URI, `src/utils/titlePlaceholder.ts`). Loading therefore looks like the title that follows, and the full art sharpens in over it. `python3 tools/art/make_title_placeholder.py` regenerates both copies after the key art changes. Measured on a fast-3G, 4x slower CPU profile it moves first paint by about +50 ms (1.34 to 1.39 s) with the title ready at the same time. Desktop is unchanged.
+
 ### App Store screenshots
 
 `store/screenshots/<en|ar>/` holds the five 1290x2796 store screenshots per language, captured from the real game and framed with captions by `tools/store/capture.cjs` and `tools/store/compose.cjs`. See `store/README.md` for the list, how to regenerate them, and the note that the Arabic captions need native review.
