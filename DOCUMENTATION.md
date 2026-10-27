@@ -217,6 +217,10 @@ The engine lives in `src/game/progression.ts` (pure, seeded RNG in `state.rngSee
         └── ShopAndMadaModal.tsx              # Diriyah Souq: daily gift, energy crate, VIP pass, Majlis-point milestones
 ```
 
+### App Store screenshots
+
+`store/screenshots/<en|ar>/` holds the five 1290x2796 store screenshots per language, captured from the real game and framed with captions by `tools/store/capture.cjs` and `tools/store/compose.cjs`. See `store/README.md` for the list, how to regenerate them, and the note that the Arabic captions need native review.
+
 ### Running Tests & Building for iOS / Android
 ```bash
 # 1. Run pure game logic unit tests
