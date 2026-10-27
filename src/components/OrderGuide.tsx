@@ -6,6 +6,7 @@ import { CustomerPortrait } from './CustomerPortrait';
 import { ReturnPantryItem } from './ReturnPantryItem';
 import { PantryMergeHelper } from './PantryMergeHelper';
 import { tastingGuestMemory } from '../game/guestMemories';
+import { guestMajlisReaction } from '../game/majlisReactions';
 
 export function OrderGuide({ order, state, season, lang, focused, onFocus, onClose, onRetrieve, onServe }: { order: CustomerOrder; state: GameState; season: Season | null; lang: Language; focused: boolean; onFocus: () => void; onClose: () => void; onRetrieve: (index: number) => void; onServe: () => void }) {
   const ar = lang === 'ar';
@@ -13,11 +14,13 @@ export function OrderGuide({ order, state, season, lang, focused, onFocus, onClo
   const reward = orderCoinReward(state, order, season);
   const ready = needs.every(need => need.location === 'board');
   const memory = order.customerId === 'faisal' || order.customerId === 'noura' ? tastingGuestMemory(state.storyFlags, order.customerId) : null;
+  const majlisComment = guestMajlisReaction(state, order.customerId);
   return <div role="dialog" aria-modal="true" aria-label={ar ? 'دليل الطلب' : 'Order guide'} dir={ar ? 'rtl' : 'ltr'} className="safe-dialog fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-3">
     <div className="w-full max-w-md max-h-[90dvh] overflow-y-auto rounded-2xl border-2 border-[#D99B26] bg-[#241812] p-4 text-[#FBF7F0] shadow-2xl">
       <div className="flex items-center gap-3"><CustomerPortrait avatarKey={order.customerId} size="md" /><div className="flex-1"><p className="text-xs font-bold text-[#FBBF24]">{ar ? 'دليل الضيافة' : 'Hospitality guide'}</p><h2 className="font-black">{ar ? order.customerNameAr : order.customerNameEn}</h2></div><button type="button" onClick={onClose} aria-label={ar ? 'إغلاق' : 'Close'} className="rounded-lg bg-white/10 px-3 py-2">✕</button></div>
       <p className="my-3 text-sm text-[#EBD8BA]">{ar ? order.quoteAr : order.quoteEn}</p>
       {memory && <p data-testid="order-guest-memory" className="mb-3 rounded-xl border border-[#8B5E3C] bg-[#302116] p-2 text-xs leading-relaxed text-[#FDECCB]"><span className="block font-bold text-[#FBBF24]">{ar ? 'ذكرى من اللمّة' : 'A memory from your gathering'}</span>{ar ? memory.textAr : memory.textEn}</p>}
+      {majlisComment && <p data-testid="order-majlis-reaction" className="mb-3 rounded-xl border border-[#8B5E3C] bg-[#302116] p-2 text-xs leading-relaxed text-[#FDECCB]"><span className="block font-bold text-[#FBBF24]">{ar ? 'من مجلسك' : 'From your Majlis'}</span>{ar ? majlisComment.ar : majlisComment.en}</p>}
       <div data-testid="order-reward-breakdown" className="mb-3 rounded-xl border border-[#D99B26]/40 bg-[#39271B] p-2 text-xs text-[#FDECCB]">
         <p className="font-black">{ar ? 'مكافأة الضيافة' : 'Hospitality reward'}: +{reward.total} 🪙 · +{order.rewardStars} ⭐</p>
         {order.isVip && <p data-testid="vip-reward-details" className="mt-1 font-bold text-[#FDE68A]">{ar ? `ضيف مميز: +${VIP_ORDER_GEMS} جوهرة` : `VIP guest: +${VIP_ORDER_GEMS} gems`}{order.requiredItemIds.length > 0 && (ar ? ' وصندوق ضيافة على اللوحة' : ' and a hospitality chest on the board')}</p>}

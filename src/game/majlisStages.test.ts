@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { MOOD_SUFFIXES, bannerKey, moodSuffix, restorationStage } from './majlisStages';
-import { majlisReaction } from './majlisReactions';
+import { guestMajlisReaction, majlisReaction } from './majlisReactions';
 import { createInitialGameState, upgradeRenovationZone } from './rules';
 import { normalizeSave } from './normalizeSave';
 
@@ -37,6 +37,22 @@ test('family comments follow the restored wing and its selected style', () => {
   assert.notEqual(first.en, changed.en);
   assert.equal(majlisReaction({ ...zone, unlockedLevel: 1, selectedStyle: 99 }, 1), null);
   assert.equal(majlisReaction({ ...zone, unlockedLevel: 1 }, 4), null);
+});
+
+test('guest order comments reflect saved restoration choices only for the matching family member', () => {
+  const initial = createInitialGameState();
+  initial.renovationZones = initial.renovationZones.map(zone => ({ ...zone, unlockedLevel: 0 }));
+  assert.equal(guestMajlisReaction(initial, 'noura'), null);
+  const result = upgradeRenovationZone(initial, 'zone_sadu');
+  assert.equal(result.upgraded, true);
+  const loaded = normalizeSave(JSON.parse(JSON.stringify(result.state)))!;
+  const reaction = guestMajlisReaction(loaded, 'noura');
+  assert.ok(reaction?.en.includes(loaded.renovationZones[1].styles[0].nameEn));
+  assert.equal(guestMajlisReaction(loaded, 'faisal'), null);
+  assert.equal(guestMajlisReaction(loaded, 'other'), null);
+  loaded.renovationZones[1].selectedStyle = 1;
+  assert.ok(guestMajlisReaction(loaded, 'noura')?.ar.includes(loaded.renovationZones[1].styles[1].nameAr));
+  assert.equal(loaded.coins, result.state.coins);
 });
 
 test('a restored wing keeps its pending reveal in the save without a second reward', () => {

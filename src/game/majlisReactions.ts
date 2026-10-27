@@ -1,4 +1,4 @@
-import type { RenovationZone } from './rules';
+import type { GameState, RenovationZone } from './rules';
 
 /** A small replayable family comment on a restored wing and the player's current style. */
 export function majlisReaction(zone: RenovationZone, position: number): { guest: 'noura' | 'faisal'; ar: string; en: string } | null {
@@ -24,5 +24,15 @@ export function majlisReaction(zone: RenovationZone, position: number): { guest:
     ar: `نورة: أحب لمسة «${style.nameAr}» في «${zone.nameAr}». المكان أحلى مع اللمّة.`,
     en: `Noura: I like the ${style.nameEn} detail in ${zone.nameEn}. It's even lovelier shared together.`,
   };
+  return null;
+}
+
+/** Find a comment by this guest about a wing the player has actually restored. */
+export function guestMajlisReaction(state: Pick<GameState, 'renovationZones'>, guest: string) {
+  for (let position = state.renovationZones.length - 1; position >= 0; position--) {
+    const zone = state.renovationZones[position];
+    const reaction = majlisReaction(zone, position);
+    if (reaction?.guest === guest) return reaction;
+  }
   return null;
 }
