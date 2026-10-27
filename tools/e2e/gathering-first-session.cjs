@@ -12,6 +12,8 @@ const { chromium } = require('playwright');
     const cell = index => page.locator(`[data-cell-index="${index}"]`);
     await page.goto(url.href);
     await page.getByTestId('scene-skip').click();
+    const clipped = await page.locator('[data-testid^=order-recipe-]').evaluateAll(rows => rows.some(row => row.scrollWidth > row.clientWidth));
+    if (clipped) throw new Error('Guest ingredients are clipped on the phone viewport');
     await cell(17).click();
     await cell(18).click();
     const serve = page.getByRole('button', { name: /^تقديم طلب / }).first();

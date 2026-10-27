@@ -1613,8 +1613,8 @@ export default function App() {
                     </div>
 
                     {/* Speech-Bubble Recipe Tray + Serve CTA */}
-                    <div className="mt-1 pt-1 border-t border-[#D4B483]/50 flex flex-row items-center justify-between gap-1">
-                      <div className="flex flex-1 items-center justify-start gap-0.5 min-w-0 overflow-x-auto">
+                    <div className="mt-1 pt-1 border-t border-[#D4B483]/50 flex flex-col items-stretch gap-1">
+                      <div data-testid={`order-recipe-${order.id}`} className="flex w-full items-center justify-center gap-0.5 min-w-0 overflow-x-auto">
                         {order.requiredItemIds.map((reqId, idx) => {
                           const reqDef = ITEM_CATALOG[reqId];
                           const hasItem = needs[idx]?.location === 'board';
