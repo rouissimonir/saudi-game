@@ -31,6 +31,7 @@ export const FinjanPourModal: React.FC<FinjanPourModalProps> = ({ lang, isOpen, 
   const isAr = lang === 'ar';
   const [fill, setFill] = useState(0);
   const [pouring, setPouring] = useState(false);
+  const [pourRun, setPourRun] = useState(0);
   const [result, setResult] = useState<PourGrade | null>(null);
   const [practice, setPractice] = useState(tokens <= 0);
   const fillRef = useRef(0);
@@ -110,7 +111,7 @@ export const FinjanPourModal: React.FC<FinjanPourModalProps> = ({ lang, isOpen, 
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pouring]);
+  }, [pouring, pourRun]);
 
   if (!isOpen) return null;
 
@@ -120,6 +121,7 @@ export const FinjanPourModal: React.FC<FinjanPourModalProps> = ({ lang, isOpen, 
     setFill(0);
     pouringRef.current = true;
     pourGeneration.current += 1;
+    setPourRun(pourGeneration.current);
     setPouring(true);
     return true;
   };

@@ -30,6 +30,10 @@ const { chromium } = require('playwright');
     const rewardFields = ['pourTokens', 'coins', 'diamonds', 'jokerCount', 'prestigePoints'];
     if (rewardFields.some(field => cancelled[field] !== before[field])) throw new Error('Interrupted pour changed rewards or chances');
     await page.getByTestId('finjan-tap').click();
+    await page.waitForTimeout(100);
+    // A cancellation and restart in the same turn must still create a new animation loop.
+    await page.evaluate(() => { window.dispatchEvent(new Event('blur')); document.querySelector('[data-testid=finjan-tap]').click(); });
+    await page.waitForFunction(() => Number(document.querySelector('[data-testid=finjan-glass]').getAttribute('aria-valuenow')) > 2, null, { timeout: 3000 });
     await page.waitForTimeout(550);
     await page.getByTestId('finjan-tap').click();
     await page.getByTestId('finjan-result').waitFor();
