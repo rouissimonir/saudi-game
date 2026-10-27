@@ -4,7 +4,7 @@ const fs = require('node:fs/promises');
 const path = require('node:path');
 const sharp = require(process.argv[3] || 'sharp');
 const sourceDir = process.argv[2];
-const out = path.resolve('public/assets/art/characters/illustrated');
+const out = path.resolve('tools/art/archive/illustrated_portraits');
 const sources = {
   noura: 'exec-4592fbc0-e294-4d1d-b3b5-27d5ca53964a.png',
   faisal: 'exec-cfa5963f-a8c9-4e0f-8dc2-692828125707.png',
