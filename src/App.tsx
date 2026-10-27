@@ -1863,7 +1863,7 @@ export default function App() {
                           <button
                             type="button"
                             onClick={handleStoreInPantry}
-                            className="px-2.5 py-1.5 rounded-xl bg-[#E0F2FE] hover:bg-[#BAE6FD] border border-[#0284C7] text-[#0369A1] text-xs font-extrabold cursor-pointer whitespace-nowrap"
+                            className="scroll-mb-28 min-h-11 px-2.5 py-1.5 rounded-xl bg-[#E0F2FE] hover:bg-[#BAE6FD] border border-[#0284C7] text-[#0369A1] text-xs font-extrabold cursor-pointer whitespace-nowrap"
                           >
                             {isAr ? 'تخزين' : 'Store'}
                           </button>
@@ -1876,7 +1876,7 @@ export default function App() {
                               setGameState(result.state);
                               setSaleReceipt(result.receipt);
                             }}
-                            className="px-2.5 py-1.5 rounded-xl bg-[#FEF3C7] hover:bg-[#FDE68A] border border-[#D97706] text-[#92400E] text-xs font-extrabold cursor-pointer whitespace-nowrap"
+                            className="scroll-mb-28 min-h-11 px-2.5 py-1.5 rounded-xl bg-[#FEF3C7] hover:bg-[#FDE68A] border border-[#D97706] text-[#92400E] text-xs font-extrabold cursor-pointer whitespace-nowrap"
                           >
                             {isAr ? 'بيع' : 'Sell'} · +{selectedItemDef.sellValue}
                           </button>

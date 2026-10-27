@@ -32,7 +32,7 @@ const { chromium } = require('playwright');
 
     // Focus the specialty-coffee tray and identify the already available ingredient.
     await page.getByTestId('open-tasting').click();
-    await page.getByTestId('tasting-choice-modern').locator('..').getByRole('button', { name: 'أرني على اللوحة' }).click();
+    await page.getByTestId('tasting-choice-modern').locator('..').getByRole('button', { name: 'أرني على اللوحة: قهوة مختصة وتمر' }).click();
     if (!(await page.getByTestId('recipe-marker-legend').innerText()).includes('للوصفة')) throw new Error('Recipe marker legend missing');
     const readyCoffee = cell(24);
     if (await readyCoffee.getAttribute('data-recipe-needed') !== 'true') throw new Error('Ready recipe ingredient not marked');
@@ -64,7 +64,10 @@ const { chromium } = require('playwright');
     if (!(await save()).board.some(c => c.itemId === 'sweets_2' && !c.sandLocked)) throw new Error('Could not prepare sweets from the starting board');
     await page.getByTestId('open-tasting').click();
     const first = page.getByTestId('tasting-tray-0');
-    await first.getByRole('button', { name: 'جهّز', exact: true }).nth(1).click();
+    const prepare = first.getByRole('button', { name: 'جهّز: قهوة مختصة وتمر', exact: true });
+    const prepareSize = await prepare.boundingBox();
+    if (!prepareSize || prepareSize.width < 44 || prepareSize.height < 44) throw new Error('Prepare touch target is smaller than 44 × 44');
+    await prepare.click();
     await page.getByRole('dialog').getByRole('button', { name: 'إغلاق' }).click();
     if (await page.locator('[data-recipe-needed=true]').count()) throw new Error('Completed recipe still marked on board');
 
@@ -76,7 +79,7 @@ const { chromium } = require('playwright');
     await cell(coffee[0].index).click();
     await cell(coffee[1].index).click();
     await page.getByTestId('open-tasting').click();
-    await page.getByTestId('tasting-tray-1').getByRole('button', { name: 'جهّز', exact: true }).nth(1).click();
+    await page.getByTestId('tasting-tray-1').getByRole('button', { name: /^جهّز:/ }).nth(1).click();
     await page.getByRole('button', { name: 'نحاس دافئ' }).click();
     state = await save();
     const vibrationCount = await page.evaluate(() => (window.testVibrations || []).length);
