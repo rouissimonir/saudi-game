@@ -28,3 +28,16 @@ test('each Majlis ambiance chip maps to its painted mood', () => {
   assert.equal(moodSuffix('ramadan_night'), '_night');
   assert.equal(moodSuffix('courtyard_rain'), '_rain');
 });
+
+test('every wing of every area has a run-down and a restored picture', async () => {
+  const { existsSync } = await import('node:fs');
+  const { areaInfo, buildAreaZones, AREA_COUNT_BEFORE_PRESTIGE } = await import('./progression');
+  for (let a = 0; a < AREA_COUNT_BEFORE_PRESTIGE; a++) {
+    const id = areaInfo(a).id;
+    const wings = buildAreaZones(a).length;
+    assert.ok(wings >= 3, `${id} has wings`);
+    for (let i = 0; i < wings; i++) {
+      for (const state of ['ruin', 'done']) assert.ok(existsSync(`public/assets/art/majlis/wings/${id}_${i}_${state}.webp`), `${id}_${i}_${state}.webp`);
+    }
+  }
+});
