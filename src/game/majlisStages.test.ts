@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { MOOD_SUFFIXES, moodSuffix, restorationStage } from './majlisStages';
+import { MOOD_SUFFIXES, bannerKey, moodSuffix, restorationStage } from './majlisStages';
 
 test('restoration stages: ruin until two wings are done, half restored after, fully restored only at the end', () => {
   // Diriyah: 4 wings x 2 tiers = 8 levels, 3 painted stages
@@ -40,4 +40,12 @@ test('every wing of every area has a run-down and a restored picture', async () 
       for (const state of ['ruin', 'done']) assert.ok(existsSync(`public/assets/art/majlis/wings/${id}_${i}_${state}.webp`), `${id}_${i}_${state}.webp`);
     }
   }
+});
+
+test('the banner picture to prefetch follows the area, the wings restored and the mood', () => {
+  const wings = (levels: number[]) => levels.map((unlockedLevel) => ({ unlockedLevel }));
+  assert.equal(bannerKey('diriyah', wings([0, 0, 0, 0]), 'afternoon'), 'diriyah_1');
+  assert.equal(bannerKey('diriyah', wings([2, 2, 0, 0]), 'ramadan_night'), 'diriyah_2_night');
+  assert.equal(bannerKey('khobar', wings([2, 2, 2, 2]), 'courtyard_rain'), 'khobar_3_rain');
+  assert.equal(bannerKey('nowhere', wings([2]), 'afternoon'), null);
 });
