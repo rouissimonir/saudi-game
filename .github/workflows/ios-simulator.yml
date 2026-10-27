@@ -7,7 +7,14 @@ name: iOS simulator build
     paths:
       - '.github/workflows/ios-simulator.yml'
       - 'ios/**'
+      - 'src/**'
+      - 'public/**'
+      - 'tools/check-ios-assets*'
       - 'capacitor.config.json'
+      - 'index.html'
+      - 'fasih.html'
+      - 'vite.config.ts'
+      - 'tsconfig.json'
       - 'package.json'
       - 'package-lock.json'
 
