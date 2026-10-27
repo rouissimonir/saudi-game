@@ -14,7 +14,10 @@ const { chromium } = require('playwright');
     await page.getByTestId('scene-skip').click();
     await cell(17).click();
     await cell(18).click();
-    await page.getByRole('button', { name: 'تقديم!', exact: true }).first().click();
+    const serve = page.getByRole('button', { name: 'تقديم!', exact: true }).first();
+    const target = await serve.boundingBox();
+    if (!target || target.width < 44 || target.height < 44) throw new Error('Serve touch target is smaller than 44 × 44');
+    await serve.click();
     await page.getByTestId('daily-login-claim').waitFor();
     await page.waitForTimeout(3000); // The welcome must not expire behind the daily gift.
     await page.getByTestId('daily-login-claim').click();

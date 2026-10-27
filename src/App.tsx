@@ -1649,7 +1649,7 @@ export default function App() {
                       <button
                         type="button"
                         onClick={() => isReady ? handleFulfillOrder(order.id) : setGuideOrderId(order.id)}
-                        className={`px-1.5 py-1 rounded-lg text-[10px] font-black transition-all cursor-pointer whitespace-nowrap text-center shrink-0 ${
+                        className={`min-h-11 min-w-11 px-1.5 py-1 rounded-lg text-[10px] font-black transition-all cursor-pointer whitespace-nowrap text-center shrink-0 ${
                           isReady
                             ? 'btn-3d-green text-white'
                             : 'bg-[#E6D5B8] text-[#785A3C] hover:bg-[#DBC6A4]'
