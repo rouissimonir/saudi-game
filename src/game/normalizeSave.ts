@@ -23,7 +23,7 @@ export function normalizeSave(raw: unknown): GameState | null {
   if (!parsed || !Array.isArray(parsed.board) || parsed.board.length !== 49 || !Number.isFinite(parsed.coins)) return null;
   // Do not accept a syntactically valid but unusable board as a recoverable save.
   if (!parsed.board.every((cell, index) => cell && cell.index === index && cell.row === Math.floor(index / 7) && cell.col === index % 7 && (cell.itemId === null || knownItem(cell.itemId)) && typeof cell.sandLocked === 'boolean')) return null;
-  if (parsed.activeOrders !== undefined && (!Array.isArray(parsed.activeOrders) || !parsed.activeOrders.every(order => order && typeof order.id === 'string' && Array.isArray(order.requiredItemIds) && order.requiredItemIds.every(knownItem)))) return null;
+  if (parsed.activeOrders !== undefined && (!Array.isArray(parsed.activeOrders) || !parsed.activeOrders.every(order => record(order) && stringFields(order, ['id', 'customerId', 'customerNameAr', 'customerNameEn', 'customerRoleAr', 'customerRoleEn', 'quoteAr', 'quoteEn']) && numericFields(order, ['rewardCoins', 'rewardStars', 'rewardXp']) && (order.isVip === undefined || typeof order.isVip === 'boolean') && Array.isArray(order.requiredItemIds) && order.requiredItemIds.every(knownItem)))) return null;
   if (parsed.discoveredItemIds !== undefined && (!Array.isArray(parsed.discoveredItemIds) || !parsed.discoveredItemIds.every(id => typeof id === 'string'))) return null;
   for (const list of [parsed.inventory, parsed.claimedDiscoveryIds, parsed.seenScenes, parsed.completedStoryIds]) {
     if (list !== undefined && (!Array.isArray(list) || !list.every(id => typeof id === 'string'))) return null;
