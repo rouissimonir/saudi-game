@@ -831,7 +831,7 @@ export const ORDER_TEMPLATES: Omit<CustomerOrder, 'id'>[] = [
   {
     customerId: 'noura',
     customerNameAr: 'الجدة نورة',
-    customerNameEn: 'Grandmother Noura',
+    customerNameEn: 'Grandma Noura',
     customerRoleAr: 'تجهيز قهوة العصر',
     customerRoleEn: 'Afternoon Majlis Hostess',
     quoteAr: 'نحتاج بن محمص بالهيل وتمر محشي بالطحينة لضيوف العصر يا بنيتي.',

@@ -182,9 +182,9 @@ export const WorkshopModal: React.FC<{
               <ItemArtwork itemId={id} size="md" />
             </div>
             <div className="flex-1 min-w-0">
-              <div className="font-extrabold text-sm truncate">{isAr ? def.nameAr : def.nameEn}</div>
+              <div className="font-extrabold text-sm leading-tight break-words">{isAr ? def.nameAr : def.nameEn}</div>
               <div className="text-xs text-[#92400E] font-bold">
-                {isAr ? 'المستوى' : 'Level'} {level}/{GENERATOR_MAX_LEVEL} · {isAr ? 'فرصة الحظ' : 'Lucky'} {Math.round(generatorLuckyChance(state, chain) * 100)}%
+                {isAr ? 'المستوى' : 'Level'} <bdi>{level}/{GENERATOR_MAX_LEVEL}</bdi> · {isAr ? 'فرصة الحظ' : 'Lucky'} <bdi>{Math.round(generatorLuckyChance(state, chain) * 100)}%</bdi>
               </div>
               <div className="flex gap-1 mt-1">
                 {Array.from({ length: GENERATOR_MAX_LEVEL }).map((_, i) => (

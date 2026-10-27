@@ -177,7 +177,7 @@ export const ChainTreeModal: React.FC<{
                 >
                   <div className="w-full flex items-center justify-between text-[10px] font-bold text-[#D4A373] mb-1">
                     <span className="px-1.5 py-0.5 rounded bg-black/50 text-[#FBBF24] tabular-nums">
-                      Lv.{item.level}
+                      {isAr ? 'مستوى ' : 'Lv.'}{item.level}
                     </span>
                     {unlocked ? (
                       <span className="text-[#34D399] inline-flex items-center gap-0.5">
@@ -193,7 +193,7 @@ export const ChainTreeModal: React.FC<{
                     <ItemArtwork itemId={item.id} size="md" />
                   </div>
 
-                  <div className="text-xs font-bold text-[#FBF7F0] mt-1 line-clamp-1">
+                  <div className="text-xs font-bold text-[#FBF7F0] mt-1 leading-tight line-clamp-2">
                     {isAr ? item.nameAr : item.nameEn}
                   </div>
                   <div className="text-[11px] text-[#D4A373] tabular-nums mt-0.5">
