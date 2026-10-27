@@ -17,7 +17,8 @@
     "test:phone:transfer": "node tools/e2e/transfer-race.cjs",
     "test:phone:smoke": "node tools/e2e/smoke.cjs",
     "test:phone:pour": "node tools/e2e/pour-interruption.cjs",
-    "test:phone:gathering": "node tools/e2e/gathering-first-session.cjs"
+    "test:phone:gathering": "node tools/e2e/gathering-first-session.cjs",
+    "test:phone:restoration": "node tools/e2e/restoration-first-session.cjs"
   },
   "dependencies": {
     "@capacitor/core": "^8.5.2",
