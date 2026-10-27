@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ArrowRightLeft, Check, Copy, Share2, Upload, X } from 'lucide-react';
 import { GameState, Language } from '../game/rules';
 import { exportSaveCode, importSaveCode } from '../utils/saveTransfer';
@@ -18,6 +18,9 @@ export const SaveTransferModal: React.FC<{
   const [input, setInput] = useState('');
   const [pending, setPending] = useState<GameState | null>(null);
   const [error, setError] = useState(false);
+  const [checking, setChecking] = useState(false);
+  const checkVersion = useRef(0);
+  useEffect(() => () => { checkVersion.current += 1; }, []);
 
   useEffect(() => {
     if (!allowExport) return;
@@ -41,7 +44,11 @@ export const SaveTransferModal: React.FC<{
   const share = () => navigator.share?.({ title: isAr ? 'تقدمي في قهوة ومجلس' : 'My Qahwa & Majlis save', text: code }).catch(() => {});
 
   const check = async () => {
+    const version = ++checkVersion.current;
+    setChecking(true);
     const parsed = await importSaveCode(input);
+    if (version !== checkVersion.current) return;
+    setChecking(false);
     setError(!parsed);
     setPending(parsed);
   };
@@ -84,6 +91,8 @@ export const SaveTransferModal: React.FC<{
             <textarea
               value={input}
               onChange={(e) => {
+                checkVersion.current += 1;
+                setChecking(false);
                 setInput(e.target.value);
                 setPending(null);
                 setError(false);
@@ -106,9 +115,9 @@ export const SaveTransferModal: React.FC<{
                 </button>
               </div>
             ) : (
-              <button type="button" data-testid="transfer-check" onClick={check} disabled={!input.trim()} className="w-full rounded-xl btn-3d-green text-white text-sm font-extrabold py-2 inline-flex items-center justify-center gap-1.5 disabled:opacity-40">
+              <button type="button" data-testid="transfer-check" onClick={check} disabled={!input.trim() || checking} className="w-full rounded-xl btn-3d-green text-white text-sm font-extrabold py-2 inline-flex items-center justify-center gap-1.5 disabled:opacity-40">
                 <Upload className="w-4 h-4" />
-                {isAr ? 'تحميل التقدم' : 'Load progress'}
+                {checking ? (isAr ? 'جارٍ التحقق…' : 'Checking…') : (isAr ? 'تحميل التقدم' : 'Load progress')}
               </button>
             )}
           </section>
