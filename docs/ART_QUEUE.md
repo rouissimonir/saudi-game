@@ -6,7 +6,9 @@ and moves the batch to "Done" below.
 
 ## Waiting for Codex
 
-Nothing queued. Next ideas: painted wing interiors, new story characters, a painted loading screen, store screenshots.
+| Batch | Prompts | Files | Lands in | Then (Claude) |
+|---|---|---|---|---|
+| Batch 7 | `docs/ART_BATCH_7.md` | 4: `ahsa_1_ruin`, `ahsa_1_done`, `khobar_1_ruin`, `khobar_1_done` (the Qaisariya Souq and the Pearl Divers' Majlis wing pictures) | `tools/art/background_inbox/majlis/wings/` | Check ruin and restored line up and read well at thumbnail size, copy them there as `ahsa_1_ruin.png` etc. (the folder name `wings/` and the file names already match), run `python3 tools/art/make_wing_thumbs.py` (it prefers a painted picture over the crop), and check the two cards in the browser |
 
 When a new batch is added:
 - **Portraits:** cut out with `tools/art/cutout_portrait.py`, convert, and add the character to `EXPRESSIONS` in `src/components/story/art.ts`.
