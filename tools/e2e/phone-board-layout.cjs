@@ -23,8 +23,19 @@ const { chromium } = require('playwright');
           throw new Error(`${height}px ${phase}: guests and board are not visible together: ${JSON.stringify(bounds)}`);
         }
       }
+      await page.locator('[data-cell-index="17"]').tap();
+      await page.locator('[data-cell-index="18"]').tap();
+      await page.getByRole('button', { name: /^تقديم طلب / }).first().tap();
+      await page.evaluate(() => window.scrollTo(0, 0));
+      const afterOrder = await page.evaluate(() => {
+        const rect = selector => document.querySelector(selector).getBoundingClientRect().toJSON();
+        return { dock: rect('[data-testid=guest-order-dock]'), board: rect('[data-testid=merge-board-grid]'), header: rect('header'), nav: rect('[data-testid=bottom-nav]') };
+      });
+      if (afterOrder.dock.top < afterOrder.header.bottom - 1 || afterOrder.board.bottom > afterOrder.nav.top + 1) {
+        throw new Error(`${height}px after serving: guests or board are obscured: ${JSON.stringify(afterOrder)}`);
+      }
       await page.close();
     }
-    console.log('Guest cards and full board fit together at 390 × 844 and 390 × 740.');
+    console.log('Guest cards and full board fit at 390 × 844 and 390 × 740, including after a merge and guest order.');
   } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });
