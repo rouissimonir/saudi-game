@@ -235,6 +235,10 @@ On phones the splash shown in `index.html` while the game code loads, and the ti
 
 Each area chapter (5 to 11) is opened by a local host with four painted expressions: Abu Hani (Jeddah), Reem (AlUla), Hessa (Taif), Aisha (Abha), Abu Khalid (Al-Ahsa), Dana (Riyadh) and Captain Nasser (Al-Khobar). Their lines live in `src/story/hostDrafts.ts` and `withHost` (`src/story/scenes/withHost.ts`) adds them to the chapters without changing any choice, flag or reward. Each leaves Layla a keepsake that the epilogue lists for the hosts the player met. Dialect wording and cultural details need native review before launch.
 
+### Arabic and cultural review
+
+`npm run review:export` writes `docs/arabic-review/arabic_review.csv`: every Arabic string in the game (story, voice, data tables, screens, store captions) with its English meaning, where it lives and columns for a native reviewer. `docs/ARABIC_REVIEW.md` explains how to review and lists the dialect and cultural questions only a Saudi reviewer can answer. Nothing in the game is reviewed until that sheet comes back.
+
 ### What ships in the app
 
 Everything under `public/` is copied into the web build and into the iOS app, so it counts toward the download. The built game is about 21 MB. Art that is kept for reference but not loaded by the game lives in `tools/art/archive/` (see its README), not in `public/`. Before adding a large file under `public/`, check that something loads it; `npm run check:ios-assets` (after `npx cap copy ios`) confirms the iOS copy matches the web build.
