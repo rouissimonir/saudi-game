@@ -23,6 +23,8 @@ Set `VITE_REVENUECAT_TEST_KEY` in the shell to the project's **public Test Store
 
 For a native test, use a disposable checkout on a Mac: temporarily set Capacitor's `webDir` to `build/revenuecat-test`, run `npx cap sync ios`, and build a debug simulator or signed development app in Xcode. Confirm the development-only panel appears in the shop. Exercise load, cancellation, successful monthly and decor test purchases, errors and user-initiated restore; compare active entitlements with the RevenueCat Test Store customer record. The panel grants no in-game benefits and does not purchase the consumable. Record the results and device/build. Restore the source config afterward; before any release, rebuild with `npm run build`, sync from `dist`, audit the bundle, and verify that no Test Store key or panel is present. A signed build requires the owner's Apple team and registered identifier. RevenueCat Test Store does not prove Apple Sandbox or real App Store behavior.
 
+The `RevenueCat Test Store simulator` GitHub Actions workflow also builds this synthetic test bundle in an ephemeral macOS checkout and attempts simulator installation and launch. It uses the project's public Test Store key, never exports a signed app, and uploads only a launch screenshot. Its result does not verify SDK initialization, offering retrieval or purchase interactions. Check its run and inspect the screenshot before describing any result; use the signed-device procedure above to exercise transactions.
+
 ## Required before enabling a real offer
 
 1. Define the product, ownership duration, price source and benefits; review Arabic and English copy and confirm the core loop remains enjoyable without purchase. Use store-provided localized prices rather than hardcoded amounts.

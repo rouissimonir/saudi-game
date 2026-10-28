@@ -1,0 +1,56 @@
+name: RevenueCat Test Store simulator
+
+'on':
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/revenuecat-test-simulator.yml'
+      - 'tools/build-revenuecat-test.mjs'
+      - 'src/utils/revenueCatTestStore.ts'
+      - 'src/components/RevenueCatTestPanel.tsx'
+      - 'src/components/ShopAndMadaModal.tsx'
+      - 'package.json'
+      - 'package-lock.json'
+
+permissions:
+  contents: read
+
+jobs:
+  test-store-build:
+    runs-on: macos-26
+    timeout-minutes: 30
+    env:
+      # This is the public key of this project's synthetic Test Store, not a secret or an App Store key.
+      VITE_REVENUECAT_TEST_KEY: test_WIosChYdpimDTrZuRpZpzZldcpx
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - name: Build isolated Test Store assets
+        run: npm run build:revenuecat-test
+      - name: Sync test bundle in the ephemeral CI checkout
+        run: |
+          node -e 'const fs=require("fs"); const file="capacitor.config.json"; const config=JSON.parse(fs.readFileSync(file,"utf8")); config.webDir="build/revenuecat-test"; fs.writeFileSync(file,JSON.stringify(config,null,2));'
+          npx cap sync ios
+      - name: Compile Test Store simulator app
+        run: |
+          xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath "$RUNNER_TEMP/qahwa-test-store" CODE_SIGNING_ALLOWED=NO build
+      - name: Install and launch Test Store simulator app
+        run: |
+          SIMULATOR_ID=$(xcrun simctl list devices available -j | node -e 'let s=""; process.stdin.on("data", c => s += c); process.stdin.on("end", () => { const d=JSON.parse(s).devices; const phone=Object.entries(d).filter(([runtime]) => runtime.includes("SimRuntime.iOS")).flatMap(([, devices]) => devices).find(device => device.isAvailable && device.name.startsWith("iPhone")); if (!phone) process.exit(1); console.log(phone.udid); });')
+          xcrun simctl boot "$SIMULATOR_ID"
+          xcrun simctl bootstatus "$SIMULATOR_ID" -b
+          xcrun simctl install "$SIMULATOR_ID" "$RUNNER_TEMP/qahwa-test-store/Build/Products/Debug-iphonesimulator/App.app"
+          xcrun simctl launch "$SIMULATOR_ID" sa.qahwamajlis.merge
+          sleep 10
+          xcrun simctl io "$SIMULATOR_ID" screenshot "$RUNNER_TEMP/qahwa-test-store.png"
+      - name: Save launch screenshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: revenuecat-test-store-launch
+          path: ${{ runner.temp }}/qahwa-test-store.png
+          if-no-files-found: error
