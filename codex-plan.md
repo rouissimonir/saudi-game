@@ -73,6 +73,8 @@ The source of truth for the design direction and pacing investigation is [docs/P
 - The local iOS project was rebuilt and synced from the source at `012a806`; its audit found 325 matching web build files and no remote server URL. The later web description update is not in that local bundle. Generated bundle files are local and ignored by Git, so rebuild and sync after later source changes. The cloud simulator workflow passed for commit `b6daa99`; real-device lifecycle tests, cultural review, human playtests, release metrics, and ranking evidence remain outstanding. No top-10 position is claimed.
 - Check Git status for the current local and remote branch state. Continue recording meaningful work and validation here; keep planned, implemented, and verified work distinct.
 
+- RevenueCat Test Store simulator run [40684502023](https://github.com/rouissimonir/saudi-game/actions/runs/40684502023) compiled the app but failed in its combined install/launch/probe step; the public job result does not identify the cause. The workflow now separates simulator selection, boot, installation and offering verification, with distinct probe failure labels and bounded boot/install steps. This improves diagnostics; it does not establish successful product loading or a purchase.
+
 ## Useful commands
 
 ```sh
