@@ -9,3 +9,9 @@ This is a browser preview for checking touch, layout and the first-session exper
 5. Use [the playtest protocol](PLAYTEST_IPHONE.md) for observations. Record the build commit and that this was Safari, not the native app. Avoid entering private information in a test save.
 
 A plain HTTP LAN preview is not a secure context; clipboard, service-worker/offline support and other browser APIs may be unavailable. A later native build still requires access to a macOS/Xcode build and Apple's signing/distribution setup, followed by testing on the actual iPhone.
+
+## Preparing for a signed iPhone build
+
+- The current project bundle identifier is `sa.qahwamajlis.merge` in both `capacitor.config.json` and the Xcode target. The project uses automatic signing but does not specify a development team. This does not establish that the identifier is available or registered to the owner's Apple team.
+- Before the first upload, confirm the identifier belongs to the correct team and matches the App Store Connect record. Apple says the [app record must exist before uploading](https://developer.apple.com/help/app-store-connect/create-an-app-record/add-a-new-app/) and the [bundle identifier cannot be changed after the first upload](https://developer.apple.com/documentation/xcode/preparing-your-app-for-distribution). Do not create or rename the record based on an assumption about account ownership.
+- On a Mac or an appropriately configured macOS build service, rebuild the web app, sync Capacitor, select the correct Apple team and sign the iOS app. A simulator build without signing cannot be installed on a physical iPhone. Use a signed test build to perform the native checks in the playtest protocol; do not reuse or expose private signing credentials in the repository.
