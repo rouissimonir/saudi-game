@@ -45,23 +45,27 @@ jobs:
       - name: Install and launch Test Store simulator app
         run: |
           SIMULATOR_ID=$(xcrun simctl list devices available -j | node -e 'let s=""; process.stdin.on("data", c => s += c); process.stdin.on("end", () => { const d=JSON.parse(s).devices; const phone=Object.entries(d).filter(([runtime]) => runtime.includes("SimRuntime.iOS")).flatMap(([, devices]) => devices).find(device => device.isAvailable && device.name.startsWith("iPhone")); if (!phone) process.exit(1); console.log(phone.udid); });')
+          echo 'Simulator selected.' | tee -a "$GITHUB_STEP_SUMMARY"
           xcrun simctl boot "$SIMULATOR_ID"
           xcrun simctl bootstatus "$SIMULATOR_ID" -b
+          echo 'Simulator booted.' | tee -a "$GITHUB_STEP_SUMMARY"
           xcrun simctl install "$SIMULATOR_ID" "$RUNNER_TEMP/qahwa-test-store/Build/Products/Debug-iphonesimulator/App.app"
+          echo 'Test app installed; requesting launch and monitoring its console.' | tee -a "$GITHUB_STEP_SUMMARY"
           xcrun simctl launch --console "$SIMULATOR_ID" sa.qahwamajlis.merge > "$RUNNER_TEMP/qahwa-test-console.log" 2>&1 &
           LAUNCH_PID=$!
           trap 'xcrun simctl terminate "$SIMULATOR_ID" sa.qahwamajlis.merge >/dev/null 2>&1 || true; kill "$LAUNCH_PID" >/dev/null 2>&1 || true' EXIT
-          FOUND=0
+          RESULT=timeout
           for attempt in $(seq 1 60); do
-            if grep -q 'QAHWA_TEST_STORE_OFFERINGS_OK' "$RUNNER_TEMP/qahwa-test-console.log"; then FOUND=1; break; fi
-            if grep -q 'QAHWA_TEST_STORE_OFFERINGS_FAILED' "$RUNNER_TEMP/qahwa-test-console.log"; then break; fi
+            if grep -q 'QAHWA_TEST_STORE_OFFERINGS_OK' "$RUNNER_TEMP/qahwa-test-console.log"; then RESULT=success; break; fi
+            if grep -q 'QAHWA_TEST_STORE_OFFERINGS_FAILED' "$RUNNER_TEMP/qahwa-test-console.log"; then RESULT=probe_failed; break; fi
+            if ! kill -0 "$LAUNCH_PID" 2>/dev/null; then RESULT=launch_ended; break; fi
             sleep 2
           done
-          if [ "$FOUND" != 1 ]; then
-            echo 'Test Store offering probe failed or its console marker was not observed.'
+          if [ "$RESULT" != success ]; then
+            echo "Test Store probe result: $RESULT. No transaction was attempted." | tee -a "$GITHUB_STEP_SUMMARY"
             exit 1
           fi
-          echo 'Test Store returned all three expected packages.'
+          echo 'Test Store returned all three expected packages.' | tee -a "$GITHUB_STEP_SUMMARY"
           xcrun simctl io "$SIMULATOR_ID" screenshot "$RUNNER_TEMP/qahwa-test-store.png"
       - name: Save launch screenshot
         uses: actions/upload-artifact@v4
