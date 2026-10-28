@@ -15,7 +15,7 @@ import { assetUrl } from '../utils/assetUrl';
 import { TASTING_STYLES } from '../game/tasting';
 import { TastingCorner } from './TastingCorner';
 import { CustomerPortrait } from './CustomerPortrait';
-import { majlisReaction } from '../game/majlisReactions';
+import { majlisReaction, restoredDetailReaction } from '../game/majlisReactions';
 import { TAIF_WELCOMES } from '../game/taifWelcome';
 import { ItemArtwork } from './ItemArtwork';
 
@@ -205,6 +205,7 @@ export const MajlisRenovationView: React.FC<MajlisRenovationViewProps> = ({
   const detailsRef = React.useRef<HTMLDivElement>(null);
   const [selectedDetail, setSelectedDetail] = React.useState<string | null>(null);
   const [savedPlace, setSavedPlace] = React.useState<number | null>(null);
+  const [savedWing, setSavedWing] = React.useState<number | null>(null);
 
   // Later areas use generated wing ids, so fall back to wing order for the diorama slots.
   const archZone = zones.find((z) => z.id === 'zone_arch') ?? zones[0];
@@ -327,8 +328,8 @@ export const MajlisRenovationView: React.FC<MajlisRenovationViewProps> = ({
       {savedPlaces.length > 0 && <section data-testid="restored-places" className="rounded-2xl border border-[#D99B26]/50 bg-[#302116] p-3 text-[#FFF4DA]">
         <h3 className="font-black text-[#FBBF24]">{isAr ? 'أماكن رمّمتها' : 'Places you restored'}</h3>
         <p className="mt-1 text-xs text-[#EBD8BA]">{isAr ? 'استعد اختياراتك من رحلتك. تظهر الأماكن التي أتممتها بعد هذا التحديث.' : 'Revisit your choices. Places completed after this update appear here.'}</p>
-        <div className="mt-2 flex gap-2 overflow-x-auto pb-1">{savedPlaces.map(index => <button key={index} type="button" onClick={() => setSavedPlace(current => current === index ? null : index)} aria-expanded={savedPlace === index} className="min-h-11 shrink-0 rounded-xl border border-[#D99B26]/60 bg-[#4A3020] px-3 text-xs font-bold">{isAr ? areaInfo(index).nameAr : areaInfo(index).nameEn} · {index + 1}</button>)}</div>
-        {savedDetails && savedPlace !== null && <div data-testid="restored-place-details" className="mt-2 rounded-xl bg-[#241812] p-3">{PAINTED_STAGES[areaInfo(savedPlace).id] && <img alt="" loading="lazy" className="mb-2 h-28 w-full rounded-lg object-cover" src={assetUrl(`assets/art/majlis/${areaInfo(savedPlace).id}_${PAINTED_STAGES[areaInfo(savedPlace).id]}.webp`)} />}<p className="font-bold">{isAr ? areaInfo(savedPlace).nameAr : areaInfo(savedPlace).nameEn}</p><ul className="mt-2 space-y-2">{savedDetails.map((detail, i) => <li key={i} className="flex items-center gap-2 text-xs"><span aria-hidden="true" className="h-5 w-5 shrink-0 rounded-full border border-white/40" style={{ backgroundColor: detail.swatch }} /><span>{isAr ? detail.nameAr : detail.nameEn} · {isAr ? detail.styleAr : detail.styleEn}</span></li>)}</ul></div>}
+        <div className="mt-2 flex gap-2 overflow-x-auto pb-1">{savedPlaces.map(index => <button key={index} type="button" onClick={() => { setSavedPlace(current => current === index ? null : index); setSavedWing(null); }} aria-expanded={savedPlace === index} className="min-h-11 shrink-0 rounded-xl border border-[#D99B26]/60 bg-[#4A3020] px-3 text-xs font-bold">{isAr ? areaInfo(index).nameAr : areaInfo(index).nameEn} · {index + 1}</button>)}</div>
+        {savedDetails && savedPlace !== null && <div data-testid="restored-place-details" className="mt-2 rounded-xl bg-[#241812] p-3">{PAINTED_STAGES[areaInfo(savedPlace).id] && <img alt="" loading="lazy" className="mb-2 h-28 w-full rounded-lg object-cover" src={assetUrl(`assets/art/majlis/${areaInfo(savedPlace).id}_${PAINTED_STAGES[areaInfo(savedPlace).id]}.webp`)} />}<p className="font-bold">{isAr ? areaInfo(savedPlace).nameAr : areaInfo(savedPlace).nameEn}</p><p className="mt-1 text-xs text-[#EBD8BA]">{isAr ? 'اضغط على جناح لقراءة رأي العائلة.' : 'Tap a wing to read what the family thinks.'}</p><ul className="mt-2 space-y-2">{savedDetails.map((detail, i) => <li key={i}><button type="button" disabled={!restoredDetailReaction(detail, i)} onClick={() => setSavedWing(current => current === i ? null : i)} aria-expanded={savedWing === i} className="min-h-11 w-full flex items-center gap-2 rounded-lg border border-[#8B5E3C] px-2 text-start text-xs"><span aria-hidden="true" className="h-5 w-5 shrink-0 rounded-full border border-white/40" style={{ backgroundColor: detail.swatch }} /><span>{isAr ? detail.nameAr : detail.nameEn} · {isAr ? detail.styleAr : detail.styleEn}</span></button>{savedWing === i && restoredDetailReaction(detail, i) && <p data-testid="restored-place-reaction" className="mt-1 rounded-lg bg-[#39271B] p-2 text-xs leading-relaxed text-[#FDECCB]">{isAr ? restoredDetailReaction(detail, i)!.ar : restoredDetailReaction(detail, i)!.en}</p>}</li>)}</ul></div>}
       </section>}
 
       {/* Interactive Architectural Diorama of the Selected Saudi Region & Ambiance */}

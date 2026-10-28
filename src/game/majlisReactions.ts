@@ -1,9 +1,17 @@
 import type { GameState, RenovationZone } from './rules';
+import type { RestoredPlaceDetail } from './progression';
 
 /** A small replayable family comment on a restored wing and the player's current style. */
 export function majlisReaction(zone: RenovationZone, position: number): { guest: 'noura' | 'faisal'; ar: string; en: string } | null {
   const style = zone.styles[zone.selectedStyle];
   if (zone.unlockedLevel <= 0 || !style) return null;
+  return restoredDetailReaction({ nameAr: zone.nameAr, nameEn: zone.nameEn, styleAr: style.nameAr, styleEn: style.nameEn, swatch: style.swatch }, position);
+}
+
+/** Reuse the same family words for a saved design, without granting rewards or changing it. */
+export function restoredDetailReaction(detail: RestoredPlaceDetail, position: number): { guest: 'noura' | 'faisal'; ar: string; en: string } | null {
+  const zone = { nameAr: detail.nameAr, nameEn: detail.nameEn };
+  const style = { nameAr: detail.styleAr, nameEn: detail.styleEn };
   if (position === 0) return {
     guest: 'noura',
     ar: `نورة: اختيار «${style.nameAr}» لـ«${zone.nameAr}» يشرح الخاطر. الله يحيي ضيوفنا!`,

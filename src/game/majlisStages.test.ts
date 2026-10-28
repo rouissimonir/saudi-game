@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { MOOD_SUFFIXES, bannerKey, moodSuffix, restorationStage } from './majlisStages';
-import { guestMajlisReaction, majlisReaction } from './majlisReactions';
+import { guestMajlisReaction, majlisReaction, restoredDetailReaction } from './majlisReactions';
 import { createInitialGameState, upgradeRenovationZone } from './rules';
 import { normalizeSave } from './normalizeSave';
 
@@ -37,6 +37,8 @@ test('family comments follow the restored wing and its selected style', () => {
   assert.notEqual(first.en, changed.en);
   assert.equal(majlisReaction({ ...zone, unlockedLevel: 1, selectedStyle: 99 }, 1), null);
   assert.equal(majlisReaction({ ...zone, unlockedLevel: 1 }, 4), null);
+  const style = zone.styles[1];
+  assert.deepEqual(restoredDetailReaction({ nameAr: zone.nameAr, nameEn: zone.nameEn, styleAr: style.nameAr, styleEn: style.nameEn, swatch: style.swatch }, 1), changed);
 });
 
 test('guest order comments reflect saved restoration choices only for the matching family member', () => {
