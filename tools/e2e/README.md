@@ -46,3 +46,10 @@ The board-layout check verifies that the guest dock, full board and initial coac
 To run that check with Playwright WebKit, install it with `npx playwright install webkit` and set `PHONE_TEST_BROWSER=webkit` before running `npm run test:phone:board-layout`. In PowerShell, use `$env:PHONE_TEST_BROWSER = 'webkit'`. Playwright WebKit on Windows is not iOS Safari.
 
 For the optional accessibility audit, install `axe-core` without saving it to the project (`npm install --no-save axe-core`), then run `node tools/e2e/a11y.cjs en,ar http://127.0.0.1:4173/`. The audit reports the screens reached and exits nonzero for reported violations or navigation errors. Story choices and event screens depend on the run; inspect the listed screens to see what was covered. Automated checks do not replace device accessibility testing.
+
+## Keyboard and reduced motion
+
+```sh
+node tools/e2e/keyboard.cjs http://localhost:4173/          # Tab, Enter, Escape through the story scene, a choice, the board and a dialog
+node tools/e2e/reduced-motion.cjs http://localhost:4173/    # nothing loops with "reduce motion" on
+```

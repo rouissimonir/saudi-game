@@ -179,6 +179,8 @@ export const ScenePlayer: React.FC<ScenePlayerProps> = ({ sceneId, scene: given,
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setHistoryOpen(false);
       else if (e.key === 'Enter' || e.key === ' ') {
+        // On a focused button (Skip, Auto, History, a dialogue choice) Enter and Space press it; only elsewhere do they advance.
+        if ((e.target as HTMLElement | null)?.closest?.('button,a,input,select,textarea,[role=button]')) return;
         e.preventDefault();
         next();
       }
@@ -198,7 +200,10 @@ export const ScenePlayer: React.FC<ScenePlayerProps> = ({ sceneId, scene: given,
       aria-modal="true"
       aria-label={isAr ? scene.titleAr : scene.titleEn}
       data-testid="scene-player"
-      className={`fixed inset-0 z-[60] bg-black flex justify-center select-none ${finale ? 'scene-finale' : ''}`}
+      // The scene itself takes focus when it opens, so Enter and Space advance the story; Tab still reaches Auto, Skip and History.
+      tabIndex={-1}
+      data-initial-focus="dialog"
+      className={`fixed inset-0 z-[60] bg-black flex justify-center select-none outline-none ${finale ? 'scene-finale' : ''}`}
       onClick={next}
     >
       <div className="relative h-full w-full max-w-[520px] overflow-hidden">
