@@ -1,5 +1,7 @@
 import { Scene } from '../types';
 import { ask, say, titleCard } from './build';
+import { hostDraftFor } from '../hostDrafts';
+import { withHost } from './withHost';
 
 /**
  * The area chapters (5–11), hand-written as one journey across the Kingdom. Rashid follows Layla from city to city:
@@ -330,8 +332,8 @@ export function khobarScene(f: Flags): Scene {
   };
 }
 
-/** The hand-written area chapters by chapter id (area_1 is Jeddah … area_7 is Khobar). */
-export const AREA_SCENES: Record<string, (flags: Flags) => Scene> = {
+/** The chapters as written, before their local host is added. */
+export const BASE_AREA_SCENES: Record<string, (flags: Flags) => Scene> = {
   area_1: jeddahScene,
   area_2: alulaScene,
   area_3: taifScene,
@@ -340,3 +342,8 @@ export const AREA_SCENES: Record<string, (flags: Flags) => Scene> = {
   area_6: riyadhScene,
   area_7: khobarScene,
 };
+
+/** The area chapters by chapter id (area_1 is Jeddah ... area_7 is Khobar), each opened by its local host. */
+export const AREA_SCENES: Record<string, (flags: Flags) => Scene> = Object.fromEntries(
+  Object.entries(BASE_AREA_SCENES).map(([id, build]) => [id, (flags: Flags) => withHost(build(flags), hostDraftFor(id))])
+);

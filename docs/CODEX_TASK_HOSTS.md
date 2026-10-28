@@ -1,6 +1,8 @@
 # Codex task: bring the seven local hosts into the area chapters
 
-**Status: ready to start once the host portraits exist.** The scripts are drafted and tested; the portraits (`docs/ART_BATCH_8.md`) are not delivered yet. Do not start before at least one host has all four expressions in `tools/art/portrait_inbox/`. You can work host by host.
+**Status: done (Claude, after Codex delivered the batch 8 portraits).** Steps 1 to 6 below were carried out in one change; this file is kept as the record of how the hosts were wired and what was checked. What is still open is the review in the last section.
+
+_Original brief follows._
 
 ## Why
 
@@ -48,6 +50,16 @@ Also check each host in both languages in a browser: all four expressions render
 ## Coordination
 
 Another session edits this repository (`main`) frequently, and `areaChapters.ts` has been touched there. Run `git log origin/main -- src/story` before you start, rebase on the latest `main`, and keep the change to small pull requests (portraits and cast first, then the applier, then the wiring).
+
+## What was done
+
+- **Portraits:** all 28 cut out and installed in `public/assets/art/story/` (1.9 MB WebP). The white-robed hosts leaked at the bottom edge, where the robe reaches the frame, so `tools/art/cutout_portrait.py` gained `CUTOUT_BOTTOM_CLOTH` (the share of the bottom edge, centred, from which no backdrop is searched); the hosts were cut with `0.6`.
+- **Cast:** `HostId` and the seven ids in `CastId` / `CAST_NAMES` (`src/story/types.ts`), `EXPRESSIONS` (`art.ts`) and name colours (`ScenePlayer.tsx`).
+- **Applier:** `src/story/scenes/withHost.ts` (`withHost`). Every `next: 'end'` jump is routed through the gift beat, so both choices meet the host on the way out.
+- **Wiring:** `AREA_SCENES` applies each host; `BASE_AREA_SCENES` still exports the chapters as written.
+- **Epilogue:** two short beats (`shelf_intro`, `shelf_list`) list the keepsakes of the hosts whose chapter was played (`endingScene(flags, seenScenes)`).
+- **Tests** (`src/story/withHost.test.ts`): walks both choices of all seven chapters with two sets of earlier choices (opening, only the chosen reaction, gift before the end, still finishes on `end`); the original beats, choices, flags and rewards are unchanged; only Layla and the host on stage; the epilogue shelf fits a bubble and handles partial and no hosts.
+- **Verified in a browser (iPhone SE and 13, English and Arabic):** `story_layout.cjs` measured 618 lines with no bubble over a face; each host's opening screenshot looked right; the smoke test passes (18 steps); the accessibility audit is clean; the epilogue shelf was played through.
 
 ## Review needed before release
 

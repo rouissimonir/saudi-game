@@ -22,6 +22,7 @@ export type { StoryLogEntry } from './StoryLog';
 const FG_LAYERS = new Set<string>();
 const NAME_COLORS: Partial<Record<CastId, string>> = {
   layla: '#047857', noura: '#9F1239', rashid: '#334155', faisal: '#0F766E', tariq: '#57534E', lama: '#BE185D', sultan: '#92400E',
+  hani: '#1D4ED8', reem: '#0E7490', hessa: '#A21CAF', aisha: '#B91C1C', khalid: '#3F6212', dana: '#6D28D9', nasser: '#1E3A8A',
 };
 const TYPE_MS = 26;
 

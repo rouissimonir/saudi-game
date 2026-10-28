@@ -13,6 +13,7 @@ from collections import deque
 from PIL import Image, ImageFilter
 
 W, H = 768, 1024
+BOTTOM_CLOTH = float(os.environ.get("CUTOUT_BOTTOM_CLOTH", "0"))  # 0..1: share of the bottom edge (centred) where the figure's robe reaches the frame, so no backdrop is searched from there; use ~0.6 for white thobes
 TOLERANCE = int(os.environ.get("CUTOUT_TOLERANCE", "12"))  # max RGB distance from the backdrop colour that still counts as backdrop; the generated backdrops are flat, and 30 let shaded cream fabric leak
 
 
@@ -33,7 +34,8 @@ def cutout(src, dst):
 
     mask = Image.new('L', (W, H), 255)
     m = mask.load()
-    queue = deque((x, y) for x in range(W) for y in (0, H - 1))
+    skip_lo, skip_hi = int(W * (0.5 - BOTTOM_CLOTH / 2)), int(W * (0.5 + BOTTOM_CLOTH / 2))
+    queue = deque((x, y) for x in range(W) for y in (0, H - 1) if not (y == H - 1 and skip_lo <= x < skip_hi))
     queue.extend((x, y) for y in range(H) for x in (0, W - 1))
     while queue:
         x, y = queue.popleft()

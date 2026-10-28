@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { AREA_SCENES } from './scenes/areaChapters';
+import { BASE_AREA_SCENES as AREA_SCENES } from './scenes/areaChapters';
 import { HOST_DRAFTS, hostDraftFor } from './hostDrafts';
 
 const ARABIC = /[؀-ۿ]/;

@@ -1,4 +1,4 @@
-import type { Expression } from './types';
+import type { Expression, HostId } from './types';
 
 /**
  * DRAFT scripts for the seven local hosts of the area chapters (docs/ART_BATCH_8.md). Nothing here is shown in the
@@ -18,7 +18,7 @@ import type { Expression } from './types';
  * Hosts only use the four painted expressions (neutral, happy, surprised, worried). Dialect wording and every cultural
  * detail (Hijazi, Taif and Asiri especially) need native review before launch. Names and places are fictional.
  */
-export type HostId = 'hani' | 'reem' | 'hessa' | 'aisha' | 'khalid' | 'dana' | 'nasser';
+export type { HostId };
 export type HostExpression = Exclude<Expression, 'angry'>;
 
 export interface DraftLine {
@@ -44,6 +44,8 @@ export interface HostDraft {
   closing: DraftLine;
   /** A small gift the host leaves with Layla; the epilogue can recall all seven. */
   keepsake: { ar: string; en: string };
+  /** The keepsake in a few words, for the epilogue's shelf of gifts. */
+  shelf: { ar: string; en: string };
 }
 
 export const HOST_DRAFTS: HostDraft[] = [
@@ -87,6 +89,7 @@ export const HOST_DRAFTS: HostDraft[] = [
       en: "Take this tin, the season's first cardamom. And if coffee ever loses its taste, remember the lane of Al-Balad.",
     },
     keepsake: { ar: 'علبة هيل من أول الموسم', en: "a tin of the season's first cardamom" },
+    shelf: { ar: 'هيل أبو هاني', en: "Hani's cardamom" },
   },
   {
     host: 'reem',
@@ -128,6 +131,7 @@ export const HOST_DRAFTS: HostDraft[] = [
       en: 'This is my notebook, with the names the ancestors gave the stars. You finish it.',
     },
     keepsake: { ar: 'دفتر بأسماء النجوم القديمة', en: 'a notebook of old star names' },
+    shelf: { ar: 'دفتر ريم', en: "Reem's notebook" },
   },
   {
     host: 'hessa',
@@ -169,6 +173,7 @@ export const HOST_DRAFTS: HostDraft[] = [
       en: "A bottle from the season's first distilling. Sprinkle a little on your guests, and let the roses speak for us.",
     },
     keepsake: { ar: 'قارورة ماء ورد من أول تقطير', en: 'a bottle of first-distilling rose water' },
+    shelf: { ar: 'ورد حصة', en: "Hessa's rose water" },
   },
   {
     host: 'aisha',
@@ -210,6 +215,7 @@ export const HOST_DRAFTS: HostDraft[] = [
       en: 'Take this brush. If you ever leave a majlis missing a colour, paint it in.',
     },
     keepsake: { ar: 'فرشاة رسم القَطّ', en: 'a painting brush for Al-Qatt' },
+    shelf: { ar: 'فرشاة عائشة', en: "Aisha's brush" },
   },
   {
     host: 'khalid',
@@ -251,6 +257,7 @@ export const HOST_DRAFTS: HostDraft[] = [
       en: "A basket of Khalas from the first harvest. Dates come before the coffee… and don't forget to eat some.",
     },
     keepsake: { ar: 'سلّة خلاص من أول الصرام', en: 'a basket of first-harvest Khalas dates' },
+    shelf: { ar: 'تمر أبو خالد', en: "Khalid's dates" },
   },
   {
     host: 'dana',
@@ -292,6 +299,7 @@ export const HOST_DRAFTS: HostDraft[] = [
       en: 'An all-access pass. The Boulevard closes at the end of the night, but the Majlis never does.',
     },
     keepsake: { ar: 'بطاقة دخول لكل الأبواب', en: 'an all-access pass' },
+    shelf: { ar: 'بطاقة دانة', en: "Dana's pass" },
   },
   {
     host: 'nasser',
@@ -333,6 +341,7 @@ export const HOST_DRAFTS: HostDraft[] = [
       en: 'Take this small shell, with a little pearl inside. A pearl is not sold, it is given.',
     },
     keepsake: { ar: 'محارة فيها لؤلؤة صغيرة', en: 'a small shell with a pearl inside' },
+    shelf: { ar: 'لؤلؤة ناصر', en: "Nasser's pearl" },
   },
 ];
 
