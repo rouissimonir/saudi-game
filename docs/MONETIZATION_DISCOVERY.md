@@ -13,7 +13,7 @@ Status: product and technical discovery, not an implemented store. The owner's f
 
 The shop currently offers a daily in-game gift and earned milestones. It has no purchase SDK, store product IDs, payment or restore flow. The local save and transfer code preserve progress but are not a purchase ledger. Purchases remain unavailable.
 
-RevenueCat documents a [Capacitor SDK](https://www.revenuecat.com/docs/tools/paywalls/installation), and a native StoreKit bridge is another option. Select the provider and product types after checking Capacitor compatibility, account setup, costs, and how transactions and consumable balances are reconciled. No provider, dashboard, products or entitlements have been configured. Never put private store credentials in the client or repository.
+RevenueCat documents a [Capacitor SDK](https://www.revenuecat.com/docs/getting-started/installation/capacitor), and a native StoreKit bridge is another option. On 28 October 2026 the npm registry reported `@revenuecat/purchases-capacitor` version `13.8.0` with a `@capacitor/core >=8.0.0` peer dependency; this project uses Capacitor 8 and its Xcode target specifies Swift 5 and iOS 15. These are metadata checks, not proof that the SDK builds or handles purchases in this app. Recheck versions and [pricing](https://www.revenuecat.com/pricing) before choosing a provider. Select the provider and product types after checking account setup and how transactions and consumable balances are reconciled. No provider, dashboard, products or entitlements have been configured. Never put private store credentials in the client or repository.
 
 ## Required before enabling a real offer
 
