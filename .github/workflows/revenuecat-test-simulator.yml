@@ -8,6 +8,8 @@ name: RevenueCat Test Store simulator
       - '.github/workflows/revenuecat-test-simulator.yml'
       - 'tools/build-revenuecat-test.mjs'
       - 'src/utils/revenueCatTestStore.ts'
+      - 'src/utils/revenueCatTestProbe.ts'
+      - 'src/main.tsx'
       - 'src/components/RevenueCatTestPanel.tsx'
       - 'src/components/ShopAndMadaModal.tsx'
       - 'package.json'
@@ -23,6 +25,7 @@ jobs:
     env:
       # This is the public key of this project's synthetic Test Store, not a secret or an App Store key.
       VITE_REVENUECAT_TEST_KEY: test_WIosChYdpimDTrZuRpZpzZldcpx
+      VITE_REVENUECAT_TEST_PROBE: '1'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -45,8 +48,20 @@ jobs:
           xcrun simctl boot "$SIMULATOR_ID"
           xcrun simctl bootstatus "$SIMULATOR_ID" -b
           xcrun simctl install "$SIMULATOR_ID" "$RUNNER_TEMP/qahwa-test-store/Build/Products/Debug-iphonesimulator/App.app"
-          xcrun simctl launch "$SIMULATOR_ID" sa.qahwamajlis.merge
-          sleep 10
+          xcrun simctl launch --console "$SIMULATOR_ID" sa.qahwamajlis.merge > "$RUNNER_TEMP/qahwa-test-console.log" 2>&1 &
+          LAUNCH_PID=$!
+          trap 'xcrun simctl terminate "$SIMULATOR_ID" sa.qahwamajlis.merge >/dev/null 2>&1 || true; kill "$LAUNCH_PID" >/dev/null 2>&1 || true' EXIT
+          FOUND=0
+          for attempt in $(seq 1 60); do
+            if grep -q 'QAHWA_TEST_STORE_OFFERINGS_OK' "$RUNNER_TEMP/qahwa-test-console.log"; then FOUND=1; break; fi
+            if grep -q 'QAHWA_TEST_STORE_OFFERINGS_FAILED' "$RUNNER_TEMP/qahwa-test-console.log"; then break; fi
+            sleep 2
+          done
+          if [ "$FOUND" != 1 ]; then
+            echo 'Test Store offering probe failed or its console marker was not observed.'
+            exit 1
+          fi
+          echo 'Test Store returned all three expected packages.'
           xcrun simctl io "$SIMULATOR_ID" screenshot "$RUNNER_TEMP/qahwa-test-store.png"
       - name: Save launch screenshot
         uses: actions/upload-artifact@v4

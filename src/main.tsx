@@ -2,9 +2,11 @@ import {createRoot} from 'react-dom/client';
 import {Capacitor} from '@capacitor/core';
 import App from './App.tsx';
 import { initializeRevenueCatTestStore } from './utils/revenueCatTestStore';
+import { probeRevenueCatTestStore } from './utils/revenueCatTestProbe';
 import './index.css';
 
 void initializeRevenueCatTestStore().catch(() => console.warn('RevenueCat Test Store initialization failed.'));
+void probeRevenueCatTestStore();
 createRoot(document.getElementById('root')!).render(<App />);
 
 if (import.meta.env.PROD && !Capacitor.isNativePlatform() && 'serviceWorker' in navigator) {
