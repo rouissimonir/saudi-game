@@ -426,3 +426,8 @@
 @media (prefers-reduced-motion: reduce) {
   .stage-cheer { animation: none; }
 }
+
+/* Looping attention-grabbers (claim buttons, tab badges, loading skeletons) stay still for people who ask for less motion. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse, .animate-bounce, .animate-ping { animation: none !important; }
+}

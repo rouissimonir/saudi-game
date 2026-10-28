@@ -74,6 +74,7 @@ import {
 } from './utils/soundAndHaptics';
 import { CustomerPortrait } from './components/CustomerPortrait';
 import { assetUrl } from './utils/assetUrl';
+import { installDialogFocus } from './utils/dialogFocus';
 import { TITLE_PLACEHOLDER } from './utils/titlePlaceholder';
 import { BoardCell } from './components/BoardCell';
 import { applySceneResult, ScenePlay } from './story/engine';
@@ -422,6 +423,9 @@ export default function App() {
     preloadItemArt();
     prefetchScreens();
   }, []);
+
+  // One keyboard-focus behaviour for every modal dialog: Tab stays inside, focus returns to the opener on close.
+  useEffect(() => installDialogFocus(), []);
 
   // Fetch the Majlis banner for the current area, progress and mood while the board is idle, so opening that tab is instant.
   const majlisBanner = bannerKey(areaInfo(gameState.areaIndex).id, gameState.renovationZones, gameState.ambiance);

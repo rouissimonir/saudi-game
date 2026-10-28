@@ -48,3 +48,10 @@ To run that check with Playwright WebKit, install it with `npx playwright instal
 For the optional accessibility audit, install `axe-core` without saving it to the project (`npm install --no-save axe-core`), then run `node tools/e2e/a11y.cjs en,ar http://127.0.0.1:4173/`. The audit reports the screens reached and exits nonzero for reported violations or navigation errors. Story choices and event screens depend on the run; inspect the listed screens to see what was covered. Automated checks do not replace device accessibility testing.
 
 Run `node tools/e2e/story_layout.cjs http://127.0.0.1:4173/` to check story bubble and choice placement in English and Arabic at an iPhone SE viewport. It uses synthetic saves to visit chapters and both choice paths; it exits nonzero for reported layout problems, page errors, unfinished scenes, or if no lines were measured. It does not validate cultural accuracy or replace visual and device review.
+
+## Keyboard and reduced motion
+
+```sh
+node tools/e2e/keyboard.cjs http://localhost:4173/          # Tab, Enter, Escape through the story scene, a choice, the board and a dialog
+node tools/e2e/reduced-motion.cjs http://localhost:4173/    # nothing loops with "reduce motion" on
+```
