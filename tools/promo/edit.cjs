@@ -117,8 +117,8 @@ function ff(args) { execFileSync('ffmpeg', ['-v', 'error', '-y', ...args], { std
     let audio = '';
     if (withMusic && vo.length) {
       const names = vo.map((line, k) => { const ms = Math.round((starts[line.shot] + 0.6) * 1000); audio += `;[${mi + 1 + k}:a]aformat=sample_rates=44100:channel_layouts=stereo,adelay=${ms}|${ms}[v${k}]`; return `[v${k}]`; });
-      audio = `;${music}[m]` + audio + `;[m]${names.join('')}amix=inputs=${vo.length + 1}:duration=first:normalize=0,alimiter=limit=0.95[a]`;
-    } else if (withMusic) audio = `;${music}[a]`;
+      audio = `;${music}[m]` + audio + `;[m]${names.join('')}amix=inputs=${vo.length + 1}:duration=first:normalize=0,loudnorm=I=-16:TP=-1.5:LRA=11[a]`;
+    } else if (withMusic) audio = `;${music},loudnorm=I=-16:TP=-1.5:LRA=11[a]`;
     ff([...args, '-filter_complex', filter.slice(0, -1) + audio,
       '-map', last, ...(withMusic ? ['-map', '[a]', '-c:a', 'aac', '-b:a', '256k'] : []), '-c:v', 'libx264', '-crf', '17', '-preset', 'medium', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', '-t', total.toFixed(2), dest]);
     return total;
