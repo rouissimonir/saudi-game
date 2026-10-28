@@ -17,11 +17,13 @@ const { chromium } = require('playwright');
         await page.evaluate(() => window.scrollTo(0, 0));
         const bounds = await page.evaluate(() => {
           const rect = selector => document.querySelector(selector).getBoundingClientRect().toJSON();
-          return { dock: rect('[data-testid=guest-order-dock]'), board: rect('[data-testid=merge-board-grid]'), header: rect('header'), nav: rect('[data-testid=bottom-nav]') };
+          const coach = document.querySelector('[data-testid=tutorial-coach]');
+          return { dock: rect('[data-testid=guest-order-dock]'), board: rect('[data-testid=merge-board-grid]'), header: rect('header'), nav: rect('[data-testid=bottom-nav]'), coach: coach?.getBoundingClientRect().toJSON() };
         });
         if (bounds.dock.top < bounds.header.bottom - 1 || bounds.board.bottom > bounds.nav.top + 1 || bounds.dock.bottom > bounds.board.top) {
           throw new Error(`${height}px ${phase}: guests and board are not visible together: ${JSON.stringify(bounds)}`);
         }
+        if (phase === 'coach' && (!bounds.coach || bounds.coach.bottom > bounds.nav.top + 1)) throw new Error(`${height}px: tutorial coach is obscured`);
       }
       await page.locator('[data-cell-index="17"]').tap();
       await page.locator('[data-cell-index="18"]').tap();

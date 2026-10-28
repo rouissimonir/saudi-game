@@ -41,6 +41,6 @@ The guest Majlis check uses a synthetic save to verify that the order guide foll
 
 The restored-places check uses a synthetic completed area, travels through the UI, and checks that the selected styles and artwork remain available after reload without granting a second reward. Set `RESTORED_PLACES_SCREENSHOT` to a file path to capture the phone viewport for visual review.
 
-The board-layout check verifies that the guest dock and full board are both visible at two iPhone 13 Pro-width portrait viewports, with and without the initial coach and after a touch merge and guest order. It does not simulate real Safari chrome or safe areas.
+The board-layout check verifies that the guest dock, full board and initial coach are visible at two iPhone 13 Pro-width portrait viewports, and that the guest dock and board remain visible after the coach and after a touch merge and guest order. It does not simulate real Safari chrome or safe areas.
 
 For the optional accessibility audit, install `axe-core` without saving it to the project (`npm install --no-save axe-core`), then run `node tools/e2e/a11y.cjs en,ar http://127.0.0.1:4173/`. The audit reports the screens reached and exits nonzero for reported violations or navigation errors. Story choices and event screens depend on the run; inspect the listed screens to see what was covered. Automated checks do not replace device accessibility testing.

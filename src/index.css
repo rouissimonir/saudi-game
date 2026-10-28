@@ -55,6 +55,7 @@
   .merge-context > :not(.guest-order-dock) { order: 2; }
   .merge-play > :not(.portrait-board) { order: 3; }
   .portrait-board { max-width: min(100%, max(280px, calc(100dvh - 390px - var(--game-safe-top) - var(--game-safe-bottom)))); }
+  .portrait-board.tutorial-board { max-width: min(100%, max(280px, calc(100dvh - 450px - var(--game-safe-top) - var(--game-safe-bottom)))); }
 }
 
 .majlis-ambiance-afternoon { background: linear-gradient(145deg, rgba(255, 196, 100, 0.18), transparent 55%, rgba(103, 49, 15, 0.08)); }
