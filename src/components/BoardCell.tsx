@@ -56,6 +56,10 @@ export const BoardCell = memo(function BoardCell({
         cell.sandLocked ? (isAr ? 'مغطى بالرمال' : 'Sand-Locked') : ''
       } (${cell.row + 1},${cell.col + 1})`
     : `${isAr ? 'خلية فارغة' : 'Empty Tile'} (${cell.row + 1},${cell.col + 1})`;
+  const highlight = isCelebrating || isDragOver ? 'celebration'
+    : isSelected ? 'selected'
+    : isMergeTarget || isTutorialTarget ? 'merge'
+    : isFocused ? 'focused' : null;
 
   return (
     <button
@@ -68,23 +72,18 @@ export const BoardCell = memo(function BoardCell({
       className={`relative min-w-0 aspect-square rounded-xl flex flex-col items-center justify-center transition-transform cursor-pointer select-none ${!cell.itemId || cell.sandLocked ? 'touch-pan-y' : 'touch-none'} ${tileSurfaceClass} ${
         isDragSource ? 'opacity-40' : ''
       } ${
-        isDragOver ? 'ring-3 ring-[#FDE047] scale-[1.06] z-10' : ''
+        isDragOver ? 'scale-[1.06] z-10' : ''
       } ${
         isSelected
-          ? 'ring-3 ring-[#F59E0B] scale-[1.05] z-10'
-          : ''
-      } ${
-        isMergeTarget || isTutorialTarget
-          ? 'ring-3 ring-[#10B981]'
+          ? 'scale-[1.05] z-10'
           : ''
       } ${
         isCelebrating
-          ? 'merge-tile-celebrate ring-3 ring-[#FDE047] shadow-[0_0_18px_rgba(250,204,21,0.85)] z-20'
+          ? 'merge-tile-celebrate z-20'
           : ''
-      } ${
-        isFocused && !isSelected && !isMergeTarget && !isTutorialTarget ? 'ring-2 ring-[#F59E0B]' : ''
       }`}
     >
+      {highlight && <span aria-hidden="true" data-board-highlight={highlight} className={`pointer-events-none absolute inset-0 z-20 rounded-xl border-solid ${highlight === 'focused' ? 'border-2' : 'border-[3px]'} ${highlight === 'merge' ? 'border-[#10B981]' : highlight === 'celebration' ? 'border-[#FDE047]' : 'border-[#F59E0B]'}`} />}
       {itemDef && (
         <>
           <ItemArtwork itemId={itemDef.id} size="board" />

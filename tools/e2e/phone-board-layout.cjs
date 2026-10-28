@@ -10,6 +10,14 @@ const { chromium, webkit } = require('playwright');
       const page = await browser.newPage({ viewport: { width: 390, height }, isMobile: true, hasTouch: true });
       await page.goto(new URL('?autostart=1', process.argv[2] || 'http://localhost:4173/').href);
       await page.getByTestId('scene-skip').click();
+      const suggested = page.locator('[data-cell-index][aria-label*="مقترح للدمج الأول"]');
+      if (await suggested.count() !== 2) throw new Error('Expected two suggested tutorial pieces');
+      for (const tile of await suggested.all()) {
+        const highlight = tile.locator('[data-board-highlight="merge"]');
+        if (await highlight.count() !== 1 || !(await highlight.isVisible())) throw new Error('A suggested piece lacks a visible merge highlight');
+        const border = await highlight.evaluate(el => ({ width: parseFloat(getComputedStyle(el).borderTopWidth), color: getComputedStyle(el).borderTopColor }));
+        if (border.width < 2 || border.color !== 'rgb(16, 185, 129)') throw new Error(`Suggested piece highlight is not visible: ${JSON.stringify(border)}`);
+      }
       const cards = page.locator('[data-testid^="guest-card-"]');
       if (await cards.count() !== 3) throw new Error('Expected three guest cards');
       for (const card of await cards.all()) {
@@ -34,6 +42,7 @@ const { chromium, webkit } = require('playwright');
         if (phase === 'coach' && (!bounds.coach || bounds.coach.bottom > bounds.nav.top + 1)) throw new Error(`${height}px: tutorial coach is obscured`);
       }
       await page.locator('[data-cell-index="17"]').tap();
+      if (!(await page.locator('[data-cell-index="17"] [data-board-highlight="selected"]').isVisible()) || !(await page.locator('[data-cell-index="18"] [data-board-highlight="merge"]').isVisible())) throw new Error('Selected piece or matching target lacks its highlight');
       await page.locator('[data-cell-index="18"]').tap();
       await page.getByRole('button', { name: /^تقديم طلب / }).first().waitFor();
       await page.evaluate(() => window.scrollTo(0, 0));
