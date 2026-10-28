@@ -83,6 +83,8 @@ The source of truth for the design direction and pacing investigation is [docs/P
 
 - The owner shared the expanded launch step for run 40690488371. It confirms the timeout but the app console was redirected to an ephemeral file and was not printed. The next test reports only fixed startup, eligibility and initialization markers, without exposing raw console output; this is diagnostic preparation, not proof that the SDK or purchases work.
 
+- The owner asked us to choose initial prices. A [RevenueCat App Store product plan](https://app.revenuecat.com/projects/988735a8/product-catalog/product-editor/review-changes?plan_id=bf89a81d-4ae0-4b9e-a050-6a5f1b7d2d2f) proposes SAR 19.99/month membership, SAR 9.99 permanent decorations and SAR 4.99 repeatable refill. The plan is awaiting explicit approval and has not been applied. Benefits, fulfillment, Arabic copy, review materials and sandbox testing remain incomplete.
+
 ## Useful commands
 
 ```sh
