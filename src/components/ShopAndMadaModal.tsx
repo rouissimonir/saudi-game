@@ -4,6 +4,9 @@ import { Language, LiveOpsMilestone, dayKeyFromDate } from '../game/rules';
 import { SHOP_GIFT } from '../game/progression';
 import { useNow } from '../utils/useNow';
 import { Sheet } from './ProgressionModals';
+import { Capacitor } from '@capacitor/core';
+import { canInitializeTestStore } from '../utils/revenueCatTestStore';
+import { RevenueCatTestPanel } from './RevenueCatTestPanel';
 
 interface ShopAndMadaModalProps {
   lang: Language;
@@ -74,6 +77,7 @@ export const ShopAndMadaModal: React.FC<ShopAndMadaModalProps> = ({
 
       {tab === 'shop' && (
         <>
+          {import.meta.env.DEV && canInitializeTestStore(true, Capacitor.getPlatform(), import.meta.env.VITE_REVENUECAT_TEST_KEY) && <RevenueCatTestPanel />}
           <div className="rounded-2xl border-2 border-[#34D399] bg-white p-3 flex items-center gap-3" data-testid="shop-gift">
             <div className="w-12 h-12 rounded-2xl bg-[#ECFDF5] flex items-center justify-center shrink-0">
               <Gift className="w-6 h-6 text-[#059669]" />
