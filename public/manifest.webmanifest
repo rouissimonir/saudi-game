@@ -4,6 +4,7 @@
   "description": "Merge Saudi coffee, sweets and oud treasures, serve guests and restore majlis across the Kingdom.",
   "lang": "ar",
   "dir": "rtl",
+  "id": "./",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
