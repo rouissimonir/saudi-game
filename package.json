@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
     "build": "vite build",
+    "build:revenuecat-test": "node tools/build-revenuecat-test.mjs",
     "check:ios-assets": "node tools/check-ios-assets.mjs",
     "review:export": "tsx tools/review/export_arabic.ts",
     "preview": "vite preview",
