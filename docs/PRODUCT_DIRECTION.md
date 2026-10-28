@@ -2,7 +2,7 @@
 
 ## The promise
 
-Build a warm Saudi hospitality game where players merge to prepare, personalize, welcome and remember. Coffee, guests, family and regional details should affect the decisions a player makes, not only the decoration. The owner selected Saudi Arabia's Casual games chart as the first top-ten target. The chart measure and measurement period remain to be chosen. A top-ten position is an aspiration, not a result that can be established from source code; it requires a released game and independently verified ranking evidence.
+Build a warm Saudi hospitality game where players merge to prepare, personalize, welcome and remember. Coffee, guests, family and regional details should affect the decisions a player makes, not only the decoration. The owner selected Saudi Arabia's iPhone Casual top-grossing chart as the first top-ten target. The measurement period and a verifiable chart source remain to be chosen. A top-ten position is an aspiration, not a result that can be established from source code; it requires a released game, a viable revenue model and independently verified ranking evidence.
 
 ## Ideas to prototype
 
