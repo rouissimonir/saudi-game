@@ -77,6 +77,8 @@ The source of truth for the design direction and pacing investigation is [docs/P
 
 - Revised the proposed membership benefit to automatically deliver a fixed energy credit for each eligible paid period, including periods when the player is absent, rather than requiring a daily claim. Credits and the membership remain design proposals; reliable period reconciliation, refund handling and non-expiring purchased balances must be implemented and tested before any sale.
 
+- [RevenueCat simulator run 40688030390](https://github.com/rouissimonir/saudi-game/actions/runs/40688030390) compiled, booted and installed successfully; its launch/offerings step failed after about four minutes. Its logs are not accessible without GitHub authentication, so the precise cause and whether any offerings loaded are unknown. The next workflow separates screenshot capture and avoids a potentially blocking simulator termination during probe cleanup. No purchase or restore was tested.
+
 ## Useful commands
 
 ```sh

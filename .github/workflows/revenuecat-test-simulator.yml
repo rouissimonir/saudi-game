@@ -61,7 +61,7 @@ jobs:
         run: |
           xcrun simctl launch --console "$SIMULATOR_ID" sa.qahwamajlis.merge > "$RUNNER_TEMP/qahwa-test-console.log" 2>&1 &
           LAUNCH_PID=$!
-          trap 'xcrun simctl terminate "$SIMULATOR_ID" sa.qahwamajlis.merge >/dev/null 2>&1 || true; kill "$LAUNCH_PID" >/dev/null 2>&1 || true' EXIT
+          trap 'kill "$LAUNCH_PID" >/dev/null 2>&1 || true' EXIT
           RESULT=timeout
           for attempt in $(seq 1 60); do
             if grep -q 'QAHWA_TEST_STORE_OFFERINGS_OK' "$RUNNER_TEMP/qahwa-test-console.log"; then RESULT=success; break; fi
@@ -73,7 +73,6 @@ jobs:
           echo "Test Store probe result: $RESULT. No transaction was attempted." | tee -a "$GITHUB_STEP_SUMMARY"
           if [ "$RESULT" != success ]; then exit 0; fi
           echo 'Test Store returned all three expected packages.' | tee -a "$GITHUB_STEP_SUMMARY"
-          xcrun simctl io "$SIMULATOR_ID" screenshot "$RUNNER_TEMP/qahwa-test-store.png"
       - name: Fail when offerings probe reports an error
         if: steps.probe.outputs.result == 'probe_failed'
         run: exit 1
@@ -83,6 +82,9 @@ jobs:
       - name: Fail when offerings probe times out
         if: steps.probe.outputs.result == 'timeout'
         run: exit 1
+      - name: Capture test app screenshot
+        timeout-minutes: 2
+        run: xcrun simctl io "$SIMULATOR_ID" screenshot "$RUNNER_TEMP/qahwa-test-store.png"
       - name: Save launch screenshot
         uses: actions/upload-artifact@v4
         with:
