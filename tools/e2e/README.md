@@ -45,6 +45,8 @@ The board-layout check verifies that the guest dock, full board and initial coac
 
 To run that check with Playwright WebKit, install it with `npx playwright install webkit` and set `PHONE_TEST_BROWSER=webkit` before running `npm run test:phone:board-layout`. In PowerShell, use `$env:PHONE_TEST_BROWSER = 'webkit'`. Playwright WebKit on Windows is not iOS Safari.
 
+Run `node tools/e2e/touch-drag.cjs http://127.0.0.1:4173/` to send a touch drag through Chromium's DevTools protocol and verify the initial merge and drag preview. It uses a fresh save and an emulated phone, not a physical touch screen or iOS Safari.
+
 For the optional accessibility audit, install `axe-core` without saving it to the project (`npm install --no-save axe-core`), then run `node tools/e2e/a11y.cjs en,ar http://127.0.0.1:4173/`. The audit reports the screens reached and exits nonzero for reported violations or navigation errors. Story choices and event screens depend on the run; inspect the listed screens to see what was covered. Automated checks do not replace device accessibility testing.
 
 Run `node tools/e2e/story_layout.cjs http://127.0.0.1:4173/` to check story bubble and choice placement in English and Arabic at an iPhone SE viewport. It uses synthetic saves to visit chapters and both choice paths; it exits nonzero for reported layout problems, page errors, unfinished scenes, or if no lines were measured. It does not validate cultural accuracy or replace visual and device review.
