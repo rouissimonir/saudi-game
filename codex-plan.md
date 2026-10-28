@@ -81,6 +81,8 @@ The source of truth for the design direction and pacing investigation is [docs/P
 
 - [RevenueCat simulator run 40690488371](https://github.com/rouissimonir/saudi-game/actions/runs/40690488371) compiled, booted and installed the test app, then the offering probe timed out without its success or failure console marker. This does not distinguish app startup, console capture or RevenueCat loading failures; product loading, purchase and restore remain unverified. GitHub Actions logs require authentication on this machine.
 
+- The owner shared the expanded launch step for run 40690488371. It confirms the timeout but the app console was redirected to an ephemeral file and was not printed. The next test reports only fixed startup, eligibility and initialization markers, without exposing raw console output; this is diagnostic preparation, not proof that the SDK or purchases work.
+
 ## Useful commands
 
 ```sh

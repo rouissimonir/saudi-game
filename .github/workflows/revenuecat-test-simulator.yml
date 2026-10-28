@@ -69,6 +69,12 @@ jobs:
             if ! kill -0 "$LAUNCH_PID" 2>/dev/null; then RESULT=launch_ended; break; fi
             sleep 2
           done
+          # Report only fixed markers, never the app console, which can contain customer data.
+          for marker in QAHWA_TEST_STORE_PROBE_STARTED QAHWA_TEST_STORE_PROBE_INELIGIBLE QAHWA_TEST_STORE_INITIALIZED; do
+            if grep -q "$marker" "$RUNNER_TEMP/qahwa-test-console.log"; then
+              echo "Observed diagnostic marker: $marker" | tee -a "$GITHUB_STEP_SUMMARY"
+            fi
+          done
           echo "result=$RESULT" >> "$GITHUB_OUTPUT"
           echo "Test Store probe result: $RESULT. No transaction was attempted." | tee -a "$GITHUB_STEP_SUMMARY"
           if [ "$RESULT" != success ]; then exit 0; fi
