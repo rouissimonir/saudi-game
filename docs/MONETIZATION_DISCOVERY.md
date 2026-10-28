@@ -11,6 +11,18 @@ Status: Test Store preparation, not a functioning store. The owner's first targe
 
 ## Current implementation and decisions
 
+### First offer concepts to validate
+
+These are design proposals, not live benefits or promised prices. Show them to Saudi players and compare willingness to pay, perceived fairness and return behavior before deciding what to build or sell.
+
+| Offer | Proposed player experience | Open questions and delivery needs |
+| --- | --- | --- |
+| **Majlis membership — monthly** | An optional members' corner style while membership is active, plus an explicitly claimable daily energy bonus. The original styles, story and guests stay free. Show the billing period and renewal terms clearly; if membership ends, return the corner to the player's last free style. | Test whether a temporary style and recurring bonus justify a subscription. Set the bonus and price only after observing energy waits. Ownership must follow the active store entitlement; daily claims need reliable per-period tracking. |
+| **Hospitality refill pack — repeatable consumable** | A transparent fixed amount of energy and gems for players who want an extra session, with no random rewards. The Test Store calls this the starter pack, but it is currently configured as repeatable. | As a comparison, the existing free daily shop gift gives 40 energy, and the existing in-game exchange gives 50 energy for 20 gems. Use those anchors to test bundle value; amounts and price are undecided. A durable transaction and balance ledger is required before selling it. |
+| **Majlis decor collection — permanent** | A visible set of optional corner details inspired by the game's hospitality theme, previewable before purchase and usable after restoration. | Art and cultural review are needed. Verify ownership and restore across devices; no gameplay progression should depend on owning it. |
+
+Do not describe the test entries as real products or use their test prices as market recommendations. Competitor listings such as [Gossip Harbor](https://apps.apple.com/sa/app/gossip-harbor-merge-story/id1623318294) show energy, gem and themed packs, but their listed names do not establish purchase terms or what our players will value.
+
 The shop currently offers a daily in-game gift and earned milestones. RevenueCat's Capacitor SDK is installed, but the shop has no payment, fulfillment or restore flow. The local save and transfer code preserve progress but are not a purchase ledger. Purchases remain unavailable.
 
 The separate [Qahwa & Majlis RevenueCat project](https://app.revenuecat.com/projects/988735a8/overview) has a Test Store with a monthly subscription, a repeatable starter pack and a permanent decor pack attached to its current test offering. Subscription and decor have separate entitlements; the consumable does not. These are test catalog entries, not App Store products, finalized benefits or prices. The owner asked for a recommendation; monthly membership and one-time packs are the initial test direction, with an annual plan deferred until demand is understood.
