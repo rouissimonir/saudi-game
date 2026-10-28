@@ -4,7 +4,7 @@ import App from './App.tsx';
 import { initializeRevenueCatTestStore } from './utils/revenueCatTestStore';
 import './index.css';
 
-void initializeRevenueCatTestStore();
+void initializeRevenueCatTestStore().catch(() => console.warn('RevenueCat Test Store initialization failed.'));
 createRoot(document.getElementById('root')!).render(<App />);
 
 if (import.meta.env.PROD && !Capacitor.isNativePlatform() && 'serviceWorker' in navigator) {
