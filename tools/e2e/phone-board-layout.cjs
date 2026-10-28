@@ -6,7 +6,7 @@ const { chromium, webkit } = require('playwright');
   const engine = process.env.PHONE_TEST_BROWSER === 'webkit' ? webkit : chromium;
   const browser = await engine.launch(engine === chromium && executablePath ? { executablePath } : {});
   try {
-    for (const height of [844, 740]) {
+    for (const height of [844, 740, 664]) {
       const page = await browser.newPage({ viewport: { width: 390, height }, isMobile: true, hasTouch: true });
       await page.goto(new URL('?autostart=1', process.argv[2] || 'http://localhost:4173/').href);
       await page.getByTestId('scene-skip').click();
@@ -48,6 +48,6 @@ const { chromium, webkit } = require('playwright');
     });
     if (landscapeBounds.board.top < landscapeBounds.header.bottom || landscapeBounds.board.bottom > 390 || landscapeBounds.dock.bottom > 390) throw new Error(`Landscape board or guests are clipped: ${JSON.stringify(landscapeBounds)}`);
     await landscape.close();
-    console.log('Guests and board fit at 390 × 844, 390 × 740 and 844 × 390; portrait checks include a merge and guest order.');
+    console.log('Guests and board fit at 390 × 844, 390 × 740, 390 × 664 and 844 × 390; portrait checks include a merge and guest order.');
   } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });
