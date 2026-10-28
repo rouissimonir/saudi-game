@@ -1,12 +1,16 @@
 /**
  * Cuts the recorded clips (tools/promo/record.cjs) into the marketing video.
  *
- *   node tools/promo/edit.cjs <ar|en> <rawDir> <outDir>
+ *   node tools/promo/edit.cjs <ar|en> <rawDir> <outDir> [voiceoverDir]
  *
  * Writes <outDir>/<lang>_social.mp4 (1080x1920, captions on the game's warm brown, for TikTok, Reels and Shorts) and
  * <outDir>/<lang>_preview.mp4 (886x1920, only footage from the app, no added text or end card, for the App Store app preview).
  * Both are about 28 s, cross-faded, with the game's own generated oud loop (public/assets/audio/ambient.mp3) fading
  * in and out. Captions are the App Store caption lines; the Arabic ones await native review like the rest.
+ *
+ * Optional voiceover: pass a folder as the 4th argument holding vo_<lang>_0.mp3 .. vo_<lang>_5.mp3 (one line per shot,
+ * the last for the end card). Each line starts just after its shot fades in and the music drops under it. The App Store
+ * preview keeps only lines 0 to 4, since it has no end card.
  *
  * Needs ffmpeg and Playwright. Cut points are in SEGMENTS below.
  */
@@ -18,6 +22,7 @@ const { chromium } = require('playwright');
 const lang = process.argv[2] || 'ar';
 const RAW = path.resolve(process.argv[3] || 'promo_raw');
 const OUT = path.resolve(process.argv[4] || 'promo_out');
+const VO = process.argv[5] ? path.resolve(process.argv[5]) : null;
 const ROOT = path.resolve(__dirname, '..', '..');
 const FONTS = path.join(ROOT, 'public', 'fonts');
 const MUSIC = path.join(ROOT, 'public', 'assets', 'audio', 'ambient.mp3');
@@ -95,23 +100,33 @@ function ff(args) { execFileSync('ffmpeg', ['-v', 'error', '-y', ...args], { std
   const endSeg = path.join(OUT, `_${lang}_end.mp4`);
   ff(['-loop', '1', '-t', String(END_LEN), '-i', path.join(dir, 'end.png'), '-vf', 'fps=30,format=yuv420p', '-c:v', 'libx264', '-crf', '17', endSeg]);
 
-  const chain = (files, lens, dest, withMusic) => {
+  const chain = (files, lens, dest, withMusic, vo = []) => {
     const inputs = files.flatMap((f) => ['-i', f]);
     let filter = '', last = '[0:v]', t = lens[0];
+    const starts = [0];
     for (let i = 1; i < files.length; i++) {
       const off = (t - FADE).toFixed(2);
-      filter += `${last}[${i}:v]xfade=transition=fade:duration=${FADE}:offset=${off}[x${i}];`; last = `[x${i}]`; t += lens[i] - FADE;
+      filter += `${last}[${i}:v]xfade=transition=fade:duration=${FADE}:offset=${off}[x${i}];`; last = `[x${i}]`; starts.push(t - FADE); t += lens[i] - FADE;
     }
     const total = t;
     const args = [...inputs];
     if (withMusic) args.push('-stream_loop', '-1', '-i', MUSIC);
-    ff([...args, '-filter_complex', filter.slice(0, -1) + (withMusic ? `;[${files.length}:a]atrim=0:${total.toFixed(2)},afade=t=in:st=0:d=1.5,afade=t=out:st=${(total - 2).toFixed(2)}:d=2,volume=0.85,aformat=sample_rates=44100:channel_layouts=stereo[a]` : ''),
+    vo.forEach((line) => args.push('-i', line.file));
+    const mi = files.length;
+    const music = `[${mi}:a]atrim=0:${total.toFixed(2)},afade=t=in:st=0:d=1.5,afade=t=out:st=${(total - 2).toFixed(2)}:d=2,volume=${vo.length ? 0.32 : 0.85},aformat=sample_rates=44100:channel_layouts=stereo`;
+    let audio = '';
+    if (withMusic && vo.length) {
+      const names = vo.map((line, k) => { const ms = Math.round((starts[line.shot] + 0.6) * 1000); audio += `;[${mi + 1 + k}:a]aformat=sample_rates=44100:channel_layouts=stereo,adelay=${ms}|${ms}[v${k}]`; return `[v${k}]`; });
+      audio = `;${music}[m]` + audio + `;[m]${names.join('')}amix=inputs=${vo.length + 1}:duration=first:normalize=0,alimiter=limit=0.95[a]`;
+    } else if (withMusic) audio = `;${music}[a]`;
+    ff([...args, '-filter_complex', filter.slice(0, -1) + audio,
       '-map', last, ...(withMusic ? ['-map', '[a]', '-c:a', 'aac', '-b:a', '256k'] : []), '-c:v', 'libx264', '-crf', '17', '-preset', 'medium', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', '-t', total.toFixed(2), dest]);
     return total;
   };
+  const voLines = (count) => (VO ? Array.from({ length: count }, (_, shot) => ({ shot, file: path.join(VO, `vo_${lang}_${shot}.mp3`) })).filter((l) => fs.existsSync(l.file)) : []);
   const lens = [...SEGMENTS.map((s) => s.len), END_LEN];
-  const t1 = chain([...SEGMENTS.map((_, i) => seg(i)), endSeg], lens, path.join(OUT, `${lang}_social.mp4`), true);
-  const t2 = chain(SEGMENTS.map((_, i) => prev(i)), SEGMENTS.map((s) => s.len), path.join(OUT, `${lang}_preview.mp4`), true);
+  const t1 = chain([...SEGMENTS.map((_, i) => seg(i)), endSeg], lens, path.join(OUT, `${lang}_social.mp4`), true, voLines(SEGMENTS.length + 1));
+  const t2 = chain(SEGMENTS.map((_, i) => prev(i)), SEGMENTS.map((s) => s.len), path.join(OUT, `${lang}_preview.mp4`), true, voLines(SEGMENTS.length));
   console.log(`wrote ${lang}_social.mp4 (${t1.toFixed(1)} s) and ${lang}_preview.mp4 (${t2.toFixed(1)} s) in ${OUT}`);
   for (const f of fs.readdirSync(OUT)) if (f.startsWith('_') && f.endsWith('.mp4')) fs.rmSync(path.join(OUT, f));
 })().catch((e) => { console.error(e); process.exitCode = 1; });
