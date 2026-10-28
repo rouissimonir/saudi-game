@@ -1,6 +1,6 @@
 # Monetization discovery: Qahwa & Majlis
 
-Status: product and technical discovery, not an implemented store. The owner's first target is Saudi Arabia's iPhone Casual top-grossing chart, and they want to explore a mix of customization and convenience purchases. A chart result depends on release, adoption and revenue; no pricing, revenue target or ranking is established here.
+Status: Test Store preparation, not a functioning store. The owner's first target is Saudi Arabia's iPhone Casual top-grossing chart, and they want to explore a mix of customization and convenience purchases. A chart result depends on release, adoption and revenue; no production pricing, revenue target or ranking is established here.
 
 ## Principles and hypotheses
 
@@ -11,9 +11,11 @@ Status: product and technical discovery, not an implemented store. The owner's f
 
 ## Current implementation and decisions
 
-The shop currently offers a daily in-game gift and earned milestones. It has no purchase SDK, store product IDs, payment or restore flow. The local save and transfer code preserve progress but are not a purchase ledger. Purchases remain unavailable.
+The shop currently offers a daily in-game gift and earned milestones. RevenueCat's Capacitor SDK is installed, but the shop has no payment, fulfillment or restore flow. The local save and transfer code preserve progress but are not a purchase ledger. Purchases remain unavailable.
 
-RevenueCat documents a [Capacitor SDK](https://www.revenuecat.com/docs/getting-started/installation/capacitor), and a native StoreKit bridge is another option. On 28 October 2026 the npm registry reported `@revenuecat/purchases-capacitor` version `13.8.0` with a `@capacitor/core >=8.0.0` peer dependency; this project uses Capacitor 8 and its Xcode target specifies Swift 5 and iOS 15. These are metadata checks, not proof that the SDK builds or handles purchases in this app. Recheck versions and [pricing](https://www.revenuecat.com/pricing) before choosing a provider. Select the provider and product types after checking account setup and how transactions and consumable balances are reconciled. No provider, dashboard, products or entitlements have been configured. Never put private store credentials in the client or repository.
+The separate [Qahwa & Majlis RevenueCat project](https://app.revenuecat.com/projects/988735a8/overview) has a Test Store with a monthly subscription, a repeatable starter pack and a permanent decor pack attached to its current test offering. Subscription and decor have separate entitlements; the consumable does not. These are test catalog entries, not App Store products, finalized benefits or prices. The owner asked for a recommendation; monthly membership and one-time packs are the initial test direction, with an annual plan deferred until demand is understood.
+
+`@revenuecat/purchases-capacitor` 13.8.0 is installed and synced into the local iOS project. Initialization is gated to a development-mode web bundle on native iOS with `VITE_REVENUECAT_TEST_KEY` set to a Test Store public key; ordinary production builds do not initialize it. The Test Store key must never be shipped. No native SDK initialization, offering fetch, purchase or restoration has been verified; the project has no App Store Connect app or production store key. Never put private store credentials in the client or repository. RevenueCat notes that [consumable delivery must be tracked separately](https://www.revenuecat.com/docs/platform-resources/non-subscriptions).
 
 ## Required before enabling a real offer
 

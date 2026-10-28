@@ -1,8 +1,10 @@
 import {createRoot} from 'react-dom/client';
 import {Capacitor} from '@capacitor/core';
 import App from './App.tsx';
+import { initializeRevenueCatTestStore } from './utils/revenueCatTestStore';
 import './index.css';
 
+void initializeRevenueCatTestStore();
 createRoot(document.getElementById('root')!).render(<App />);
 
 if (import.meta.env.PROD && !Capacitor.isNativePlatform() && 'serviceWorker' in navigator) {
