@@ -257,7 +257,7 @@ This does not replace VoiceOver, Switch Control and Voice Control testing on a d
 
 ### App Store screenshots
 
-`store/screenshots/<en|ar>/` holds the five 1290x2796 store screenshots per language, captured from the real game and framed with captions by `tools/store/capture.cjs` and `tools/store/compose.cjs`. See `store/README.md` for the list, how to regenerate them, and the note that the Arabic captions need native review.
+`store/screenshots/<en|ar>/` holds the five 1290x2796 store screenshots per language, captured from the real game and framed with captions by `tools/store/capture.cjs` and `tools/store/compose.cjs`. The full listing text (name, subtitle, keywords, description, privacy and age-rating answers, checklist) is in `docs/APP_STORE_SUBMISSION.md`. See `store/README.md` for the list, how to regenerate them, and the note that the Arabic captions need native review.
 
 ### Running Tests & Building for iOS / Android
 The repository includes the Capacitor iOS project and matching runtime, CLI and platform packages. The native project uses Swift Package Manager and has been synced on Windows, but has not been built in Xcode. Building and testing locally for iOS requires macOS and Xcode; see the [official setup requirements](https://capacitorjs.com/docs/getting-started/environment-setup).
