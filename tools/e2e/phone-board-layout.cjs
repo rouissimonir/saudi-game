@@ -24,7 +24,7 @@ const { chromium, webkit } = require('playwright');
         if (await card.getByRole('button', { name: /^(دليل|Guide)$/ }).count()) throw new Error('A redundant Guide button remains under a guest');
       }
       await cards.first().getByRole('button', { name: /^دليل طلب / }).tap();
-      await page.getByRole('dialog', { name: 'دليل الطلب' }).getByRole('button', { name: 'إغلاق' }).tap();
+      await page.getByTestId('focus-order').tap();
       for (const phase of ['coach', 'normal']) {
         if (phase === 'normal') {
           await page.getByTestId('tutorial-coach').getByRole('button').click();
@@ -41,6 +41,9 @@ const { chromium, webkit } = require('playwright');
         }
         if (phase === 'coach' && (!bounds.coach || bounds.coach.bottom > bounds.nav.top + 1)) throw new Error(`${height}px: tutorial coach is obscured`);
       }
+      await cards.first().getByRole('button', { name: 'إلغاء التركيز على الطلب' }).tap();
+      const unfocusedBounds = await page.evaluate(() => ({ board: document.querySelector('[data-testid=merge-board-grid]').getBoundingClientRect().toJSON(), nav: document.querySelector('[data-testid=bottom-nav]').getBoundingClientRect().toJSON() }));
+      if (unfocusedBounds.board.bottom > unfocusedBounds.nav.top + 1) throw new Error(`${height}px unfocused: board is obscured: ${JSON.stringify(unfocusedBounds)}`);
       await page.locator('[data-cell-index="17"]').tap();
       if (!(await page.locator('[data-cell-index="17"] [data-board-highlight="selected"]').isVisible()) || !(await page.locator('[data-cell-index="18"] [data-board-highlight="merge"]').isVisible())) throw new Error('Selected piece or matching target lacks its highlight');
       if (!(await page.locator('[data-cell-index="17"]').getAttribute('aria-label')).includes('، محدد') || !(await page.locator('[data-cell-index="18"]').getAttribute('aria-label')).includes('يمكن دمجه مع العنصر المحدد')) throw new Error('Arabic selection or matching-target label is missing');

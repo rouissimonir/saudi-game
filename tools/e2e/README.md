@@ -41,7 +41,7 @@ The guest Majlis check uses a synthetic save to verify that the order guide foll
 
 The restored-places check uses a synthetic completed area, travels through the UI, and checks that the selected styles and artwork remain available after reload without granting a second reward. Set `RESTORED_PLACES_SCREENSHOT` to a file path to capture the phone viewport for visual review.
 
-The board-layout check verifies that the guest dock, full board and initial coach are visible at 390 × 844, 390 × 740 and 390 × 664, and that the guest dock and board remain visible after the coach, when a ready-order Serve button appears, and after the order is served. It also checks the board and guest dock at 844 × 390 landscape. It does not simulate real Safari chrome or safe areas.
+The board-layout check verifies that the guest dock, full board and initial coach are visible at 390 × 844, 390 × 740 and 390 × 664, including with an order focused. It checks the board after focus is cleared, when a ready-order Serve button appears, and after the order is served. It also checks the board and guest dock at 844 × 390 landscape. It does not simulate real Safari chrome or safe areas.
 
 To run that check with Playwright WebKit, install it with `npx playwright install webkit` and set `PHONE_TEST_BROWSER=webkit` before running `npm run test:phone:board-layout`. In PowerShell, use `$env:PHONE_TEST_BROWSER = 'webkit'`. Playwright WebKit on Windows is not iOS Safari.
 
