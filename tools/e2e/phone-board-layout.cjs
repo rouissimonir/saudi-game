@@ -38,6 +38,15 @@ const { chromium } = require('playwright');
       }
       await page.close();
     }
-    console.log('Guest cards and full board fit at 390 × 844 and 390 × 740, including after a merge and guest order.');
+    const landscape = await browser.newPage({ viewport: { width: 844, height: 390 }, isMobile: true, hasTouch: true });
+    await landscape.goto(new URL('?autostart=1', process.argv[2] || 'http://localhost:4173/').href);
+    await landscape.getByTestId('scene-skip').click();
+    const landscapeBounds = await landscape.evaluate(() => {
+      const rect = selector => document.querySelector(selector).getBoundingClientRect().toJSON();
+      return { dock: rect('[data-testid=guest-order-dock]'), board: rect('[data-testid=merge-board-grid]'), header: rect('header') };
+    });
+    if (landscapeBounds.board.top < landscapeBounds.header.bottom || landscapeBounds.board.bottom > 390 || landscapeBounds.dock.bottom > 390) throw new Error(`Landscape board or guests are clipped: ${JSON.stringify(landscapeBounds)}`);
+    await landscape.close();
+    console.log('Guests and board fit at 390 × 844, 390 × 740 and 844 × 390; portrait checks include a merge and guest order.');
   } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });
