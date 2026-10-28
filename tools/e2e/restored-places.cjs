@@ -29,6 +29,7 @@ const { chromium } = require('playwright');
     await page.getByTestId('nav-majlis').click();
     await page.getByTestId('advance-area').getByRole('button', { name: 'سافر الآن' }).click();
     await page.getByTestId('scene-skip').click();
+    await page.waitForFunction(key => { const state = JSON.parse(localStorage.getItem(key)); return state.areaIndex === 1 && state.activeStoryId === null && state.completedStoryIds.includes('area_1'); }, key);
     const traveled = await save();
     if (traveled.areaIndex !== 1) throw new Error('Travel did not advance the area');
     const places = page.getByTestId('restored-places');
