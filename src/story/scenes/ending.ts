@@ -1,6 +1,7 @@
 import { Scene } from '../types';
 import { paintedBg } from '../chapterScene';
 import { say, titleCard } from './build';
+import { HOST_DRAFTS } from '../hostDrafts';
 
 type Flags = Record<string, string>;
 
@@ -30,11 +31,27 @@ function recap(f: Flags): { ar: string; en: string }[] {
   return lines;
 }
 
+/** The keepsakes of the local hosts the player actually met (their area chapter was played), as two short beats. */
+function shelf(bg: string, seenScenes?: string[]) {
+  const met = HOST_DRAFTS.filter((d) => !seenScenes || seenScenes.includes(`chapter:${d.chapterId}`));
+  if (met.length === 0) return [];
+  return [
+    say('shelf_intro', bg, ['layla', 'happy'], null, null,
+      'رفّ المجلس مليان هدايا من المدن اللي مرّيتي فيها…',
+      'The Majlis shelf is full of gifts from the cities you visited…',
+      { cast: [{ id: 'layla', pos: 'center', expr: 'happy' }] }),
+    say('shelf_list', bg, ['layla', 'happy'], null, null,
+      met.map((d) => d.shelf.ar).join('، ') + '.',
+      met.map((d) => d.shelf.en).join(', ') + '.',
+      { cast: [{ id: 'layla', pos: 'center', expr: 'happy' }] }),
+  ];
+}
+
 /**
  * The epilogue after the Khobar finale: Noura looks back, the narrator recaps the player's own choices, and the ending
  * is named after the Riyadh decision. Uses the finale backdrop once painted (docs/ART_BATCH_3.md), the lanterns until then.
  */
-export function endingScene(f: Flags): Scene {
+export function endingScene(f: Flags, seenScenes?: string[]): Scene {
   const bg = paintedBg('finale', 'lanterns');
   const partner = f.riyadh === 'partner';
   const name = partner
@@ -53,6 +70,7 @@ export function endingScene(f: Flags): Scene {
       ...recap(f).map((line, i) =>
         say(`recap_${i}`, bg, ['layla', 'happy'], null, null, line.ar, line.en, { cast: [{ id: 'layla', pos: 'center', expr: 'happy' }] })
       ),
+      ...shelf(bg, seenScenes),
       say('ending_name', bg, ['layla', 'happy'], ['noura', 'happy'], null,
         `نهايتك: ${name.ar}`,
         `Your ending: ${name.en}`,

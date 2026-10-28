@@ -4,7 +4,8 @@
  * offer a two-option choice whose flag later scenes can read.
  */
 
-export type CastId = 'layla' | 'noura' | 'rashid' | 'faisal' | 'lama' | 'tariq' | 'sultan' | 'ghabga';
+export type HostId = 'hani' | 'reem' | 'hessa' | 'aisha' | 'khalid' | 'dana' | 'nasser';
+export type CastId = 'layla' | 'noura' | 'rashid' | 'faisal' | 'lama' | 'tariq' | 'sultan' | 'ghabga' | HostId;
 export type Expression = 'neutral' | 'happy' | 'surprised' | 'worried' | 'angry';
 export type StagePos = 'left' | 'center' | 'right';
 export type CameraMove = 'none' | 'pan-down' | 'zoom-in' | 'push' | 'shake';
@@ -67,4 +68,11 @@ export const CAST_NAMES: Record<CastId, { ar: string; en: string }> = {
   tariq: { ar: 'الشيخ طارق', en: 'Sheikh Tariq' },
   sultan: { ar: 'سلطان', en: 'Sultan' },
   ghabga: { ar: 'لجنة الغبقة', en: 'The Ghabga Jury' },
+  hani: { ar: 'أبو هاني', en: 'Abu Hani' },
+  reem: { ar: 'ريم', en: 'Reem' },
+  hessa: { ar: 'حصة', en: 'Hessa' },
+  aisha: { ar: 'عائشة', en: 'Aisha' },
+  khalid: { ar: 'أبو خالد', en: 'Abu Khalid' },
+  dana: { ar: 'دانة', en: 'Dana' },
+  nasser: { ar: 'النوخذة ناصر', en: 'Captain Nasser' },
 };

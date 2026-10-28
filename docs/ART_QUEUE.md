@@ -6,9 +6,7 @@ and moves the batch to "Done" below.
 
 ## Waiting for Codex
 
-| Batch | Prompts | Files | Lands in | Then (Claude) |
-|---|---|---|---|---|
-| Batch 8 | `docs/ART_BATCH_8.md` | 28 portraits: seven new local hosts (`hani`, `reem`, `hessa`, `aisha`, `khalid`, `dana`, `nasser`) x neutral, happy, surprised, worried | `tools/art/portrait_inbox/` | Cut out and install each (`cutout_portrait.py`, `to_webp.py`), add the ids to `CastId`, `EXPRESSIONS` and the name colours, rewrite each area chapter so its local host opens it, check bubble layout, check both languages. Needs Saudi cultural review before release. The scripts are already drafted (`src/story/hostDrafts.ts`); the wiring task is `docs/CODEX_TASK_HOSTS.md` |
+Nothing queued. Next ideas: voice lines for the hosts, painted order-strip avatars for them, a wing interior per area, store listing art.
 
 When a new batch is added:
 - **Portraits:** cut out with `tools/art/cutout_portrait.py`, convert, and add the character to `EXPRESSIONS` in `src/components/story/art.ts`.
@@ -16,6 +14,7 @@ When a new batch is added:
 
 ## Done
 
+- Batch 8: seven local hosts (`hani`, `reem`, `hessa`, `aisha`, `khalid`, `dana`, `nasser`), four expressions each, wired into the area chapters and the epilogue (`docs/CODEX_TASK_HOSTS.md`). Still needs Saudi cultural review.
 - All 30 painted board icons from Codex (qahwa, barista, sweets, oud chains, 2 chests, 4 generators), installed with `tools/art/install_item_icons.py`. No Blender renders remain in `public/assets/art/items/`.
 - Painted qahwa chain icons (`qahwa_1`..`qahwa_6`), Codex's icon trial, replacing the Blender renders.
 - Batch 7: wing pictures for Al-Ahsa's Qaisariya Souq and Al-Khobar's Pearl Divers' Majlis (run-down and restored), used by `make_wing_thumbs.py` instead of the crop.

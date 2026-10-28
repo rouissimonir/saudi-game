@@ -10,6 +10,13 @@ const EXPRESSIONS: Partial<Record<CastId, Expression[]>> = {
   tariq: ['neutral', 'happy', 'surprised', 'worried'],
   lama: ['neutral', 'happy', 'surprised', 'worried'],
   sultan: ['neutral', 'happy', 'surprised', 'worried'],
+  hani: ['neutral', 'happy', 'surprised', 'worried'],
+  reem: ['neutral', 'happy', 'surprised', 'worried'],
+  hessa: ['neutral', 'happy', 'surprised', 'worried'],
+  aisha: ['neutral', 'happy', 'surprised', 'worried'],
+  khalid: ['neutral', 'happy', 'surprised', 'worried'],
+  dana: ['neutral', 'happy', 'surprised', 'worried'],
+  nasser: ['neutral', 'happy', 'surprised', 'worried'],
 };
 
 export function actorSrc(id: CastId, expr: Expression): string {

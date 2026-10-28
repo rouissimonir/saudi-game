@@ -1184,7 +1184,7 @@ export default function App() {
     // The Khobar finale leads straight into the epilogue the first time.
     if (storyChapterId === areaChapterId(AREA_COUNT_BEFORE_PRESTIGE - 1) && !gameState.seenScenes.includes('ending')) setEndingOpen(true);
   };
-  const endingSceneData = useLazyScene(endingOpen ? 'ending' : null, (m) => m.endingScene(gameState.storyFlags));
+  const endingSceneData = useLazyScene(endingOpen ? 'ending' : null, (m) => m.endingScene(gameState.storyFlags, gameState.seenScenes));
 
   // Story log: every chapter in order; finished ones can be rewatched (no second reward).
   const storyLogEntries = useMemo<StoryLogEntry[]>(() => {

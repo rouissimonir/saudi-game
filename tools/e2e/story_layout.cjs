@@ -10,7 +10,8 @@ const FLAGS = [
 const CHAPTERS = ['chap_1', 'chap_2', 'chap_3', 'chap_4', 'area_1', 'area_2', 'area_3', 'area_4', 'area_5', 'area_6', 'area_7'];
 (async () => {
   const base = process.argv[2] || 'http://localhost:4173/';
-  const b = await chromium.launch();
+  const executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH;
+  const b = await chromium.launch(executablePath ? { executablePath } : {});
   const issues = []; let lines = 0, worst = { top: 1, where: '' };
   for (const lang of ['en', 'ar']) {
     const ctx = await b.newContext({ ...devices['iPhone SE'] });

@@ -231,6 +231,10 @@ The engine lives in `src/game/progression.ts` (pure, seeded RNG in `state.rngSee
 
 On phones the splash shown in `index.html` while the game code loads, and the title screen while its full-size key art loads, sit on a tiny blurred copy of the title painting (about 0.5 KB as a data URI, `src/utils/titlePlaceholder.ts`). Loading therefore looks like the title that follows, and the full art sharpens in over it. `python3 tools/art/make_title_placeholder.py` regenerates both copies after the key art changes. Measured on a fast-3G, 4x slower CPU profile it moves first paint by about +50 ms (1.34 to 1.39 s) with the title ready at the same time. Desktop is unchanged.
 
+### Local hosts
+
+Each area chapter (5 to 11) is opened by a local host with four painted expressions: Abu Hani (Jeddah), Reem (AlUla), Hessa (Taif), Aisha (Abha), Abu Khalid (Al-Ahsa), Dana (Riyadh) and Captain Nasser (Al-Khobar). Their lines live in `src/story/hostDrafts.ts` and `withHost` (`src/story/scenes/withHost.ts`) adds them to the chapters without changing any choice, flag or reward. Each leaves Layla a keepsake that the epilogue lists for the hosts the player met. Dialect wording and cultural details need native review before launch.
+
 ### What ships in the app
 
 Everything under `public/` is copied into the web build and into the iOS app, so it counts toward the download. The built game is about 21 MB. Art that is kept for reference but not loaded by the game lives in `tools/art/archive/` (see its README), not in `public/`. Before adding a large file under `public/`, check that something loads it; `npm run check:ios-assets` (after `npx cap copy ios`) confirms the iOS copy matches the web build.
