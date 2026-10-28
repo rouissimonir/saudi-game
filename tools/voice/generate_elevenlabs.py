@@ -89,16 +89,17 @@ def file_hash(text, voice, cfg):
     return hashlib.sha256(blob.encode('utf-8')).hexdigest()[:16]
 
 
-def normalise(src, dst):
+def normalise(src, dst, small=False):
     """Trim edge silence and match loudness so every character sits at a similar level (needs ffmpeg)."""
     af = ('silenceremove=start_periods=1:start_threshold=-50dB:start_duration=0.02,areverse,'
           'silenceremove=start_periods=1:start_threshold=-50dB:start_duration=0.02,areverse,'
-          'loudnorm=I=-18:TP=-2:LRA=7')
-    subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-i', src, '-af', af, '-ar', '44100', '-b:a', '128k', dst], check=True)
+          'loudnorm=I=%s:TP=-2:LRA=7' % ('-18.5' if small else '-18'))
+    tail = ['-ac', '1', '-b:a', '64k'] if small else ['-b:a', '128k']  # story clips: mono 64 kbps like pro_*.mp3
+    subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-i', src, '-af', af, '-ar', '44100', *tail, dst], check=True)
 
 
 def cmd_generate(args):
-    plan = json.load(open(LINES, encoding='utf-8'))['lines']
+    plan = json.load(open(args.lines, encoding='utf-8'))['lines']
     cfg = json.load(open(CONFIG, encoding='utf-8'))
     only = set(args.only.split(',')) if args.only else None
     todo = [l for l in plan if not only or l['character'] in only]
@@ -141,7 +142,7 @@ def cmd_generate(args):
             with tempfile.NamedTemporaryFile(suffix='.mp3', delete=False) as tmp:
                 tmp.write(audio)
             try:
-                normalise(tmp.name, out_path)
+                normalise(tmp.name, out_path, small=args.small)
             finally:
                 os.unlink(tmp.name)
         else:
@@ -166,6 +167,8 @@ def main():
     g.add_argument('--limit', type=int, help='only the first N lines (cheap trial)')
     g.add_argument('--dry-run', action='store_true'); g.add_argument('--force', action='store_true')
     g.add_argument('--no-normalize', action='store_true'); g.add_argument('--out', default=DEFAULT_OUT)
+    g.add_argument('--small', action='store_true', help='mono 64 kbps, -18.5 LUFS (story clips)')
+    g.add_argument('--lines', default=LINES, help='line list json (default tools/voice/lines.json)')
     g.set_defaults(fn=cmd_generate)
     args = ap.parse_args()
     args.fn(args)

@@ -1,0 +1,340 @@
+{
+  "lines": [
+    {
+      "id": "area_1_host_welcome",
+      "character": "hani",
+      "chapter": "area_1",
+      "ar": "أهلاً بنت الدرعية! أنا أبو هاني، أبيع الهيل في هالزقاق من أربعين سنة.",
+      "en": "Welcome, daughter of Diriyah! I'm Abu Hani, and I've sold cardamom in this lane for forty years.",
+      "file": "public/assets/audio/story/area_1_host_welcome.mp3"
+    },
+    {
+      "id": "area_1_host_worry",
+      "character": "hani",
+      "chapter": "area_1",
+      "ar": "بس الزقاق ما عاد يفوح قهوة مثل أول… الناس مشغولة، والبيوت القديمة تنتظر.",
+      "en": "But the lane doesn't smell of coffee like it used to… people are busy, and the old houses are waiting.",
+      "file": "public/assets/audio/story/area_1_host_worry.mp3"
+    },
+    {
+      "id": "area_1_host_promise",
+      "character": "layla",
+      "chapter": "area_1",
+      "ar": "نرجّع له ريحته يا عم أبو هاني. هذا وعد.",
+      "en": "We'll bring its smell back, Uncle Abu Hani. That's a promise.",
+      "file": "public/assets/audio/story/area_1_host_promise.mp3"
+    },
+    {
+      "id": "area_1_host_souq",
+      "character": "hani",
+      "chapter": "area_1",
+      "ar": "ركن في سوق العلوي؟ أعطيك أحسن مكان قدام دكاني، والهيل علي!",
+      "en": "A corner in Al-Alawi souq? I'll give you the best spot in front of my shop, and the cardamom is on me!",
+      "file": "public/assets/audio/story/area_1_host_souq.mp3"
+    },
+    {
+      "id": "area_1_host_rawshan",
+      "character": "hani",
+      "chapter": "area_1",
+      "ar": "هالروشان؟ أبوي كان يقعد تحته يشرب شاهي. رجّعيه وأنا أول ضيف!",
+      "en": "That rawshan? My father used to sit under it drinking tea. Bring it back and I will be your first guest!",
+      "file": "public/assets/audio/story/area_1_host_rawshan.mp3"
+    },
+    {
+      "id": "area_1_host_gift",
+      "character": "hani",
+      "chapter": "area_1",
+      "ar": "خذي هالعلبة، أول هيل الموسم. وإذا مرّ يوم وطعم القهوة ضاع، تذكّري زقاق البلد.",
+      "en": "Take this tin, the season's first cardamom. And if coffee ever loses its taste, remember the lane of Al-Balad.",
+      "file": "public/assets/audio/story/area_1_host_gift.mp3"
+    },
+    {
+      "id": "area_2_host_welcome",
+      "character": "reem",
+      "chapter": "area_2",
+      "ar": "مرحبا ليلى! أنا ريم، مرشدة التراث هنا. هالجبال تشوف المسافرين من آلاف السنين.",
+      "en": "Hello, Layla! I'm Reem, a heritage guide here. These cliffs have watched travellers for thousands of years.",
+      "file": "public/assets/audio/story/area_2_host_welcome.mp3"
+    },
+    {
+      "id": "area_2_host_caravans",
+      "character": "reem",
+      "chapter": "area_2",
+      "ar": "كل قافلة كانت توقف هنا تشرب وتستريح. الواحة دايماً كانت مجلساً مفتوحاً.",
+      "en": "Every caravan stopped here to drink and rest. This oasis has always been an open majlis.",
+      "file": "public/assets/audio/story/area_2_host_caravans.mp3"
+    },
+    {
+      "id": "area_2_host_wonder",
+      "character": "layla",
+      "chapter": "area_2",
+      "ar": "مجلس مفتوح من آلاف السنين… وحنا نحسب نفسنا أول من فكّر فيه!",
+      "en": "An open majlis for thousands of years… and we thought we invented it!",
+      "file": "public/assets/audio/story/area_2_host_wonder.mp3"
+    },
+    {
+      "id": "area_2_host_live",
+      "character": "reem",
+      "chapter": "area_2",
+      "ar": "بث مباشر؟ حطّوا الكاميرات عند المنصة… بس لا تقربون الصخور المنقوشة، هذي أمانة.",
+      "en": "A live stream? Set the cameras at the deck… but keep clear of the carved rocks, they're a trust.",
+      "file": "public/assets/audio/story/area_2_host_live.mp3"
+    },
+    {
+      "id": "area_2_host_quiet",
+      "character": "reem",
+      "chapter": "area_2",
+      "ar": "ليلة هادية؟ هذا اللي كانت تسويه القوافل: نجمة، وفنجال، وسالفة.",
+      "en": "A quiet night? That is what the caravans did: a star, a cup and a story.",
+      "file": "public/assets/audio/story/area_2_host_quiet.mp3"
+    },
+    {
+      "id": "area_2_host_gift",
+      "character": "reem",
+      "chapter": "area_2",
+      "ar": "هذا دفتري، كتبت فيه الأسماء اللي سمّاها الأجداد للنجوم. كمّليه أنتِ.",
+      "en": "This is my notebook, with the names the ancestors gave the stars. You finish it.",
+      "file": "public/assets/audio/story/area_2_host_gift.mp3"
+    },
+    {
+      "id": "area_3_host_welcome",
+      "character": "hessa",
+      "chapter": "area_3",
+      "ar": "يا هلا! أنا حصة. أقطّر ماء الورد من صغري، في قدر أمي النحاس.",
+      "en": "Welcome! I'm Hessa. I've distilled rose water since I was a girl, in my mother's copper still.",
+      "file": "public/assets/audio/story/area_3_host_welcome.mp3"
+    },
+    {
+      "id": "area_3_host_season",
+      "character": "hessa",
+      "chapter": "area_3",
+      "ar": "الورد يتفتح كم أسبوع بس، ويذبل بسرعة. نقطفه بدري ونقطّره نفس اليوم.",
+      "en": "The roses bloom for only a few weeks, and fade fast. We pick them early and distil them the same day.",
+      "file": "public/assets/audio/story/area_3_host_season.mp3"
+    },
+    {
+      "id": "area_3_host_scent",
+      "character": "layla",
+      "chapter": "area_3",
+      "ar": "يعني ريحة الفنجال… هي ريحة صباح واحد.",
+      "en": "So the scent in a cup is the scent of one single morning.",
+      "file": "public/assets/audio/story/area_3_host_scent.mp3"
+    },
+    {
+      "id": "area_3_host_rose",
+      "character": "hessa",
+      "chapter": "area_3",
+      "ar": "فنجال الخطوبة؟ أعطيك أول قطرات التقطير. هذي ما تنباع… تنقدَّم.",
+      "en": "The Proposal Cup? I will give you the first drops from the still. Those are not sold, they are served.",
+      "file": "public/assets/audio/story/area_3_host_rose.mp3"
+    },
+    {
+      "id": "area_3_host_pomegranate",
+      "character": "hessa",
+      "chapter": "area_3",
+      "ar": "ورد ورمان للصغار! أنا أقطف لهم الرمان بنفسي من مدرّجي.",
+      "en": "Rose and pomegranate for the kids! I will pick the pomegranates for them myself from my terrace.",
+      "file": "public/assets/audio/story/area_3_host_pomegranate.mp3"
+    },
+    {
+      "id": "area_3_host_gift",
+      "character": "hessa",
+      "chapter": "area_3",
+      "ar": "هذي قارورة من أول تقطير الموسم. رشّي منها على ضيوفك، وخلّي الورد يتكلم عنّا.",
+      "en": "A bottle from the season's first distilling. Sprinkle a little on your guests, and let the roses speak for us.",
+      "file": "public/assets/audio/story/area_3_host_gift.mp3"
+    },
+    {
+      "id": "area_4_host_welcome",
+      "character": "aisha",
+      "chapter": "area_4",
+      "ar": "أهلاً فوق الغيم. أنا عائشة، أرسم القَطّ على جدران البيوت مثل ما علّمتني أمي.",
+      "en": "Welcome above the clouds. I'm Aisha. I paint Al-Qatt on house walls, the way my mother taught me.",
+      "file": "public/assets/audio/story/area_4_host_welcome.mp3"
+    },
+    {
+      "id": "area_4_host_lines",
+      "character": "aisha",
+      "chapter": "area_4",
+      "ar": "نرسم البيت قبل ما يجي الضيوف، والخطوط تقول لهم: أنتم من أهلنا.",
+      "en": "We paint the house before the guests arrive, and the lines tell them: you are family.",
+      "file": "public/assets/audio/story/area_4_host_lines.mp3"
+    },
+    {
+      "id": "area_4_host_invite",
+      "character": "layla",
+      "chapter": "area_4",
+      "ar": "ارسمي لنا جداراً في المجلس، ويحس الدرعية إن الجبال بيتها.",
+      "en": "Paint us a wall of the Majlis, and Diriyah will feel the mountains are home.",
+      "file": "public/assets/audio/story/area_4_host_invite.mp3"
+    },
+    {
+      "id": "area_4_host_farmers",
+      "character": "aisha",
+      "chapter": "area_4",
+      "ar": "تشترون من المزارعين مباشرة؟ أرسم لهم باب المخزن… بركة وخير.",
+      "en": "You'll buy straight from the farmers? I'll paint their storehouse door, for blessing and plenty.",
+      "file": "public/assets/audio/story/area_4_host_farmers.mp3"
+    },
+    {
+      "id": "area_4_host_train",
+      "character": "aisha",
+      "chapter": "area_4",
+      "ar": "والشباب يتعلمون؟ ابعثي لي البنات بعد: أعلّمهم الرسم وهم ينتظرون البن يتحمّص.",
+      "en": "And the youth are learning? Send me the girls too: I'll teach them to paint while the beans roast.",
+      "file": "public/assets/audio/story/area_4_host_train.mp3"
+    },
+    {
+      "id": "area_4_host_gift",
+      "character": "aisha",
+      "chapter": "area_4",
+      "ar": "خذي هالفرشاة. إذا طلعتي من مجلس ناقصه لون، ارسميه.",
+      "en": "Take this brush. If you ever leave a majlis missing a colour, paint it in.",
+      "file": "public/assets/audio/story/area_4_host_gift.mp3"
+    },
+    {
+      "id": "area_5_host_welcome",
+      "character": "khalid",
+      "chapter": "area_5",
+      "ar": "تفضّلي يا بنتي! أنا أبو خالد، أسقي هالنخل من نفس عين أبوي وجدّي.",
+      "en": "Welcome, my girl! I'm Abu Khalid. I water these palms from the same spring as my father and grandfather.",
+      "file": "public/assets/audio/story/area_5_host_welcome.mp3"
+    },
+    {
+      "id": "area_5_host_patience",
+      "character": "khalid",
+      "chapter": "area_5",
+      "ar": "النخلة تعلّمك الصبر. تاخذ سنين لين تثمر، وتعطي أجيال. وهالسنة الماي يبي حسابه.",
+      "en": "A palm teaches patience: years before it fruits, then it gives for generations. And this year the water needs counting.",
+      "file": "public/assets/audio/story/area_5_host_patience.mp3"
+    },
+    {
+      "id": "area_5_host_turns",
+      "character": "khalid",
+      "chapter": "area_5",
+      "ar": "نقسمه بالدور مثل ما كان أهلنا. الكل ياخذ حقه، والكل يترك للثاني.",
+      "en": "We share it in turns, as our elders did. Everyone takes their share, and everyone leaves some for the next.",
+      "file": "public/assets/audio/story/area_5_host_turns.mp3"
+    },
+    {
+      "id": "area_5_host_dibs",
+      "character": "khalid",
+      "chapter": "area_5",
+      "ar": "سر الدبس تنقالينه؟ جدّتك سخية. بس بشرط: اللي يتعلمه يعزم جيرانه.",
+      "en": "Share the date-syrup secret? Your grandmother is generous. One condition: whoever learns it invites the neighbours.",
+      "file": "public/assets/audio/story/area_5_host_dibs.mp3"
+    },
+    {
+      "id": "area_5_host_tasting",
+      "character": "khalid",
+      "chapter": "area_5",
+      "ar": "مجلس تمر! أجيب لك من كل نخلة وكل موسم، وقارني بين الخلاص والرزيز.",
+      "en": "A date majlis! I will bring you dates from every palm and every season, and you compare Khalas and Ruzeiz.",
+      "file": "public/assets/audio/story/area_5_host_tasting.mp3"
+    },
+    {
+      "id": "area_5_host_gift",
+      "character": "khalid",
+      "chapter": "area_5",
+      "ar": "هذي سلّة خلاص من أول الصرام. التمر قبل القهوة… ولا تنسين تاكلين منه.",
+      "en": "A basket of Khalas from the first harvest. Dates come before the coffee… and don't forget to eat some.",
+      "file": "public/assets/audio/story/area_5_host_gift.mp3"
+    },
+    {
+      "id": "area_6_host_welcome",
+      "character": "dana",
+      "chapter": "area_6",
+      "ar": "أنتِ ليلى؟ أنا دانة، منتجة الفعاليات. عندي لك أحلى ركن، بس عندي مشكلة.",
+      "en": "You're Layla? I'm Dana, the event producer. I've got you the best stand, but I also have a problem.",
+      "file": "public/assets/audio/story/area_6_host_welcome.mp3"
+    },
+    {
+      "id": "area_6_host_problem",
+      "character": "dana",
+      "chapter": "area_6",
+      "ar": "الشاشات والأضواء تسرق الليل. وزوارنا يبون شي حقيقي يمسكونه بإيديهم: فنجال.",
+      "en": "Screens and lights steal the night. Our visitors want something real to hold in their hands: a cup.",
+      "file": "public/assets/audio/story/area_6_host_problem.mp3"
+    },
+    {
+      "id": "area_6_host_cup",
+      "character": "layla",
+      "chapter": "area_6",
+      "ar": "نعطيهم فنجال بحجم الدرعية.",
+      "en": "We'll hand them a cup as big as Diriyah.",
+      "file": "public/assets/audio/story/area_6_host_cup.mp3"
+    },
+    {
+      "id": "area_6_host_partner",
+      "character": "dana",
+      "chapter": "area_6",
+      "ar": "شراكة مع راشد؟! ممتاز. أصلاً كنت أبي أحطكم على المسرح مع بعض.",
+      "en": "A partnership with Rashid?! Perfect. I was hoping to put you on the same stage.",
+      "file": "public/assets/audio/story/area_6_host_partner.mp3"
+    },
+    {
+      "id": "area_6_host_own",
+      "character": "dana",
+      "chapter": "area_6",
+      "ar": "مجلس مستقل؟ عادي، الطابور يحكم. أجهّز لكم ماي وكراسي للصف.",
+      "en": "Staying independent? Fine by me, the queue will decide. I will set out water and chairs for the line.",
+      "file": "public/assets/audio/story/area_6_host_own.mp3"
+    },
+    {
+      "id": "area_6_host_gift",
+      "character": "dana",
+      "chapter": "area_6",
+      "ar": "هذي بطاقة تفتح كل الأبواب. البوليفارد يسكر آخر الليل، بس المجلس ما يسكر.",
+      "en": "An all-access pass. The Boulevard closes at the end of the night, but the Majlis never does.",
+      "file": "public/assets/audio/story/area_6_host_gift.mp3"
+    },
+    {
+      "id": "area_7_host_welcome",
+      "character": "nasser",
+      "chapter": "area_7",
+      "ar": "حيّاك الله يا ليلى! أنا النوخذة ناصر، قدت سفينة غوص أربعين موسم.",
+      "en": "God welcome you, Layla! I'm Captain Nasser. I led a pearl-diving ship for forty seasons.",
+      "file": "public/assets/audio/story/area_7_host_welcome.mp3"
+    },
+    {
+      "id": "area_7_host_cup",
+      "character": "nasser",
+      "chapter": "area_7",
+      "ar": "وإذا طلع الغواص من القاع، أول شي ينتظره على السفينة فنجال قهوة.",
+      "en": "And when a diver came up from the seabed, the first thing waiting on deck was a cup of coffee.",
+      "file": "public/assets/audio/story/area_7_host_cup.mp3"
+    },
+    {
+      "id": "area_7_host_order",
+      "character": "layla",
+      "chapter": "area_7",
+      "ar": "يعني الفنجال بعد اللؤلؤة؟",
+      "en": "So the cup came after the pearl?",
+      "file": "public/assets/audio/story/area_7_host_order.mp3"
+    },
+    {
+      "id": "area_7_host_grandpa",
+      "character": "nasser",
+      "chapter": "area_7",
+      "ar": "جدّك؟ عرفته! كان يرسل البن من نجد لسفننا. رجّال كريم.",
+      "en": "Your grandfather? I knew him. He sent coffee beans from Najd to our ships. A generous man.",
+      "file": "public/assets/audio/story/area_7_host_grandpa.mp3"
+    },
+    {
+      "id": "area_7_host_team",
+      "character": "nasser",
+      "chapter": "area_7",
+      "ar": "للفريق! اللؤلؤة الحقيقية دايماً الرجال على السفينة، ومن ينتظرنا عند الشاطئ.",
+      "en": "For the team! The real pearl is always the crew on the deck, and those who wait for us on the shore.",
+      "file": "public/assets/audio/story/area_7_host_team.mp3"
+    },
+    {
+      "id": "area_7_host_gift",
+      "character": "nasser",
+      "chapter": "area_7",
+      "ar": "خذي هالمحارة، فيها لؤلؤة صغيرة. اللؤلؤة ما تنباع… تنهدى.",
+      "en": "Take this small shell, with a little pearl inside. A pearl is not sold, it is given.",
+      "file": "public/assets/audio/story/area_7_host_gift.mp3"
+    }
+  ]
+}
