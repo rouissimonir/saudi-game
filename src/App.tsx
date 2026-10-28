@@ -1552,7 +1552,7 @@ export default function App() {
                   : (isAr ? 'اسحب عنصرين متطابقين أو انقرهما لدمجهما.' : 'Drag two matching items together, or tap both to merge.')
                 : tutorialReady
                   ? (isAr ? 'طلب جاهز! اضغط «تقديم» لاستقبال الضيف.' : 'An order is ready! Tap Serve to welcome your guest.')
-                  : (isAr ? 'اضغط «دليل» بجانب الضيف لمعرفة طريقة تجهيز العناصر الناقصة.' : 'Tap Guide beside a guest to find the missing items.')}</span>
+                  : (isAr ? 'اضغط صورة الضيف لمعرفة طريقة تجهيز العناصر الناقصة.' : 'Tap a guest’s portrait to find the missing items.')}</span>
               <button type="button" onClick={() => setGameState(prev => ({ ...prev, tutorialDismissed: true }))} className="min-h-11 shrink-0 underline">{isAr ? 'تخطي' : 'Skip'}</button>
             </div>}
             {!tutorialStep && <div className={`w-full flex items-center gap-1 rounded-xl border ${tastingReady ? 'border-[#059669] bg-[#D1FAE5] text-[#064E3B]' : 'border-[#C68B59] bg-[#3E2723] text-[#FEF3C7]'}`}><button type="button" onClick={() => tastingFocus?.kind === 'taif' ? setTaifWelcomeOpen(true) : setTastingOpen(true)} data-testid="open-tasting" data-ready={tastingReady} className="flex-1 min-w-0 min-h-11 px-3 py-1.5 text-start text-xs font-bold">
@@ -1578,6 +1578,7 @@ export default function App() {
                 return (
                   <div
                     key={order.id}
+                    data-testid={`guest-card-${order.id}`}
                     className={`relative rounded-2xl p-1.5 sm:p-2 border-2 flex flex-col justify-between transition-all shadow-md overflow-hidden ${focusedOrder?.id === order.id ? 'ring-2 ring-[#F59E0B]' : ''} ${
                       isReady
                         ? 'bg-gradient-to-b from-[#ECFDF5] to-[#D1FAE5] border-[#059669] ring-2 ring-[#10B981]/40'
@@ -1648,25 +1649,15 @@ export default function App() {
                         })}
                       </div>
 
-                      <button
+                      {isReady && <button
                         type="button"
-                        onClick={() => isReady ? handleFulfillOrder(order.id) : setGuideOrderId(order.id)}
+                        onClick={() => handleFulfillOrder(order.id)}
                         data-testid={`order-action-${order.id}`}
-                        aria-label={isAr ? `${isReady ? 'تقديم طلب' : 'فتح دليل طلب'} ${order.customerNameAr}` : `${isReady ? 'Serve order for' : 'Open order guide for'} ${order.customerNameEn}`}
-                        className={`min-h-11 min-w-11 px-1.5 py-1 rounded-lg text-[10px] font-black transition-all cursor-pointer whitespace-nowrap text-center shrink-0 ${
-                          isReady
-                            ? 'btn-3d-green text-white'
-                            : 'bg-[#E6D5B8] text-[#6B4F33] hover:bg-[#DBC6A4]'
-                        }`}
+                        aria-label={isAr ? `تقديم طلب ${order.customerNameAr}` : `Serve order for ${order.customerNameEn}`}
+                        className="min-h-11 min-w-11 px-1.5 py-1 rounded-lg text-[10px] font-black transition-all cursor-pointer whitespace-nowrap text-center shrink-0 btn-3d-green text-white"
                       >
-                        {isReady
-                          ? isAr
-                            ? 'تقديم!'
-                            : 'Serve!'
-                          : isAr
-                          ? 'دليل'
-                          : 'Guide'}
-                      </button>
+                        {isAr ? 'تقديم!' : 'Serve!'}
+                      </button>}
                     </div>
                   </div>
                 );

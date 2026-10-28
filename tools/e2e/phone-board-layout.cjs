@@ -10,6 +10,13 @@ const { chromium, webkit } = require('playwright');
       const page = await browser.newPage({ viewport: { width: 390, height }, isMobile: true, hasTouch: true });
       await page.goto(new URL('?autostart=1', process.argv[2] || 'http://localhost:4173/').href);
       await page.getByTestId('scene-skip').click();
+      const cards = page.locator('[data-testid^="guest-card-"]');
+      if (await cards.count() !== 3) throw new Error('Expected three guest cards');
+      for (const card of await cards.all()) {
+        if (await card.getByRole('button', { name: /^(دليل|Guide)$/ }).count()) throw new Error('A redundant Guide button remains under a guest');
+      }
+      await cards.first().getByRole('button', { name: /^دليل طلب / }).tap();
+      await page.getByRole('dialog', { name: 'دليل الطلب' }).getByRole('button', { name: 'إغلاق' }).tap();
       for (const phase of ['coach', 'normal']) {
         if (phase === 'normal') {
           await page.getByTestId('tutorial-coach').getByRole('button').click();
