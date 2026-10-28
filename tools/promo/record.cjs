@@ -71,6 +71,7 @@ async function freshSetup(b) {
 }
 async function travel(pg, steps) {
   for (let a = 0; a < steps; a++) {
+    console.log(`travel ${a + 1}/${steps}`);
     await patch(pg, (s) => { s.renovationZones.forEach((z) => { z.unlockedLevel = 2; }); s.stars = 40; }, null); await reopen(pg);
     await pg.locator('[data-testid=nav-majlis]').tap(); await pg.waitForTimeout(900);
     await pg.locator('[data-testid=advance-area] button').first().tap(); await pg.waitForTimeout(1200);
