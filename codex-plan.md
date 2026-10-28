@@ -75,6 +75,8 @@ The source of truth for the design direction and pacing investigation is [docs/P
 
 - RevenueCat Test Store simulator run [40684502023](https://github.com/rouissimonir/saudi-game/actions/runs/40684502023) compiled the app but failed in its combined install/launch/probe step; the public job result does not identify the cause. The workflow now separates simulator selection, boot, installation and offering verification, with distinct probe failure labels and bounded boot/install steps. This improves diagnostics; it does not establish successful product loading or a purchase.
 
+- Revised the proposed membership benefit to automatically deliver a fixed energy credit for each eligible paid period, including periods when the player is absent, rather than requiring a daily claim. Credits and the membership remain design proposals; reliable period reconciliation, refund handling and non-expiring purchased balances must be implemented and tested before any sale.
+
 ## Useful commands
 
 ```sh
