@@ -1707,7 +1707,7 @@ export default function App() {
                     className="px-2.5 py-1 rounded-xl bg-[#FFFDF9] hover:bg-[#FEF3C7] border border-[#D4B483] text-[#5C3A21] text-[11px] font-extrabold inline-flex items-center gap-1 cursor-pointer whitespace-nowrap shadow-sm"
                   >
                     <Info className="w-3 h-3 text-[#D97706]" />
-                    <span className="tutorial-toolbar-label hidden min-[360px]:inline">{isAr ? 'دليل السلاسل' : 'Chains'}</span>
+                    <span className="tutorial-toolbar-label hidden min-[360px]:inline">{isAr ? 'السلاسل' : 'Chains'}</span>
                     {newDiscoveries.length > 0 && (
                       <span data-testid="discovery-badge" className="min-w-[16px] h-4 px-1 rounded-full bg-[#EF4444] text-white text-[10px] font-black flex items-center justify-center">
                         {newDiscoveries.length}

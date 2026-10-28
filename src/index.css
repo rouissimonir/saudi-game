@@ -58,6 +58,15 @@
   .portrait-board.tutorial-board { max-width: min(100%, max(280px, calc(100dvh - 450px - var(--game-safe-top) - var(--game-safe-bottom)))); }
 }
 
+/* On short phones the board is narrow; the toolbar chips drop their text (their spoken names stay) rather than spill out
+   of the board, which in Arabic also widened the whole page. */
+@media (orientation: portrait) and (max-height: 700px) and (max-width: 600px) {
+  .board-toolbar .tutorial-toolbar-label { display: none; }
+}
+@media (orientation: portrait) and (max-height: 760px) and (max-width: 600px) {
+  .board-toolbar:dir(rtl) .tutorial-toolbar-label { display: none; }
+}
+
 /* The full board is already in view here; preserve room for the first instructions. */
 @media (orientation: portrait) and (min-height: 640px) and (max-height: 700px) and (max-width: 600px) {
   .portrait-board.tutorial-board { max-width: min(100%, max(272px, calc(100dvh - 450px - var(--game-safe-top) - var(--game-safe-bottom)))); }
