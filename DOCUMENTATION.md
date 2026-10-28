@@ -239,6 +239,10 @@ Each area chapter (5 to 11) is opened by a local host with four painted expressi
 
 `npm run review:export` writes `docs/arabic-review/arabic_review.csv`: every Arabic string in the game (story, voice, data tables, screens, store captions) with its English meaning, where it lives and columns for a native reviewer. `docs/ARABIC_REVIEW.md` explains how to review and lists the dialect and cultural questions only a Saudi reviewer can answer. Nothing in the game is reviewed until that sheet comes back.
 
+### Home Screen app on iPhone
+
+Opened from the Home Screen, the game runs as a standalone app (`manifest.webmanifest`, painted icon, status bar and safe areas handled). iOS ignores the manifest's background colour and would show a blank screen until the page paints, so `index.html` names a launch image for each of twelve iPhone screen sizes (`public/icons/splash/`, about 0.5 MB, made by `tools/art/make_startup_images.py`). `node tools/e2e/launch-images.cjs <url>` checks that every size matches exactly one correctly sized image. These are not used by the native app. Verified in a desktop browser with emulated screen sizes, not on an iPhone: iOS caches launch images when the app is added, so remove and re-add the Home Screen icon to see a changed one.
+
 ### What ships in the app
 
 Everything under `public/` is copied into the web build and into the iOS app, so it counts toward the download. The built game is about 21 MB. Art that is kept for reference but not loaded by the game lives in `tools/art/archive/` (see its README), not in `public/`. Before adding a large file under `public/`, check that something loads it; `npm run check:ios-assets` (after `npx cap copy ios`) confirms the iOS copy matches the web build.
