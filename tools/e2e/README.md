@@ -55,3 +55,5 @@ Run `node tools/e2e/story_layout.cjs http://127.0.0.1:4173/` to check story bubb
 node tools/e2e/keyboard.cjs http://localhost:4173/          # Tab, Enter, Escape through the story scene, a choice, the board and a dialog
 node tools/e2e/reduced-motion.cjs http://localhost:4173/    # nothing loops with "reduce motion" on
 ```
+
+The reduced-motion check verifies that each named screen opens before inspecting its animations; it does not test every game screen or replace iOS accessibility testing.

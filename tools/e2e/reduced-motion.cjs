@@ -21,11 +21,17 @@ const { chromium, devices } = require('playwright');
     if (found.length) looping[screen] = found;
   };
   await pg.goto(base); await probe('title');
-  await pg.getByRole('button', { name: /play|start/i }).first().tap(); await probe('story scene');
-  await pg.locator('[data-testid=scene-skip]').tap().catch(() => {}); await pg.waitForTimeout(1200);
+  await pg.getByRole('button', { name: /play|start/i }).first().tap();
+  await pg.getByTestId('scene-player').waitFor({ state: 'visible' }); await probe('story scene');
+  await pg.locator('[data-testid=scene-skip]').tap(); await pg.waitForTimeout(1200);
   const cb = pg.locator('[data-testid=tutorial-coach] button'); if (await cb.count()) await cb.first().tap().catch(() => {});
-  await pg.waitForTimeout(500); await close(); await pg.evaluate(() => window.scrollTo(0, 0)); await probe('board');
-  for (const id of ['quests', 'workshop', 'shop', 'majlis']) { await pg.locator(`[data-testid=nav-${id}]`).tap().catch(() => {}); await probe(id); await close(); }
+  await pg.waitForTimeout(500); await close(); await pg.evaluate(() => window.scrollTo(0, 0));
+  await pg.getByTestId('merge-board-grid').waitFor({ state: 'visible' }); await probe('board');
+  for (const [id, target] of [['quests', 'quests-modal'], ['workshop', 'workshop-modal'], ['shop', 'shop-gift'], ['majlis', 'majlis-stage']]) {
+    await pg.getByTestId(`nav-${id}`).tap();
+    await pg.getByTestId(target).waitFor({ state: 'visible' });
+    await probe(id); await close();
+  }
   const bad = Object.entries(looping);
   console.log(bad.length ? bad.map(([s, l]) => `FAIL ${s}: ${l.join('; ')}`).join('\n') : 'ok   no looping animation with reduce motion on, on 7 screens');
   await b.close();
