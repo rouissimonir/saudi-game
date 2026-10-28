@@ -4,7 +4,7 @@ Last updated: 2026-10-28
 
 ## Goal and product identity
 
-Build a leading Capacitor iOS merge game around Saudi hospitality: players prepare coffee and treats, welcome guests, personalize a majlis, and see their choices remembered. The owner selected the Saudi Arabia App Store Casual games chart as the first top-10 target. A ranking is an outcome to verify after release, not something source code or automated tests can establish. The chart's free/paid/grossing measure and measurement period still need to be chosen.
+Build a leading Capacitor iOS merge game around Saudi hospitality: players prepare coffee and treats, welcome guests, personalize a majlis, and see their choices remembered. The owner selected the Saudi Arabia App Store Casual games chart as the first top-10 target. Apple's Saudi iPhone Casual chart has separate [free](https://apps.apple.com/sa/iphone/charts/7003?chart=top-free) and [paid](https://apps.apple.com/sa/iphone/charts/7003?chart=top-paid) views. A ranking is an outcome to verify after release, not something source code or automated tests can establish. The chart's free/paid/grossing measure and measurement period still need to be chosen; record the source, device, territory, metric and observation time when checking it.
 
 The source of truth for the design direction and pacing investigation is [docs/PRODUCT_DIRECTION.md](docs/PRODUCT_DIRECTION.md). Treat competitor rankings and other market claims in older documentation as historical and unverified until independently rechecked.
 
