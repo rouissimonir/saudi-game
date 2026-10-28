@@ -154,12 +154,12 @@ async function drag(pg, cdp, from, to, ms = 700) {
   for (const name of ['taif', 'night']) {
     if (!only.includes(name)) continue;
     const target = name === 'taif' ? 3 : 6, frac = name === 'taif' ? 0.5 : 1;
-    const mood = name === 'taif' ? (lang === 'ar' ? /عصاري نجد/ : /Golden Afternoon/) : (lang === 'ar' ? /ليالي الفوانيس/ : /Lantern Night/);
+    const mood = name === 'taif' ? (lang === 'ar' ? 'عصاري نجد' : 'Golden Afternoon') : (lang === 'ar' ? 'ليالي الفوانيس' : 'Lantern Night'); // exact names: the event bar shares a word with the night mood
     const setup = await freshSetup(b); const { pg } = setup;
     await travel(pg, target);
     await patch(pg, (s, f) => { s.renovationZones.forEach((z) => { z.unlockedLevel = Math.round(2 * f); }); s.stars = 6; s.tutorialDismissed = true; }, frac); await reopen(pg);
     await pg.locator('[data-testid=nav-majlis]').tap(); await pg.waitForTimeout(1200);
-    await pg.getByRole('button', { name: mood }).tap(); await pg.waitForTimeout(1500);
+    await pg.getByRole('button', { name: mood, exact: true }).tap(); await pg.waitForTimeout(1500);
     const state = await saveState(setup.ctx, name); await setup.ctx.close();
     const ctx = await context(b, { record: OUT, storageState: state }); const rec = await ctx.newPage(); const cap = await startCapture(ctx, rec, name);
     await rec.goto(BASE); await rec.waitForTimeout(1200);
@@ -171,4 +171,4 @@ async function drag(pg, cdp, from, to, ms = 700) {
     await finish(ctx, rec, name, cap);
   }
   await b.close();
-})().catch((e) => { console.error(e); process.exitCode = 1; });
+})().catch((e) => { console.error(e); process.exit(1); });
