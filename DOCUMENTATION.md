@@ -237,7 +237,7 @@ Each area chapter (5 to 11) is opened by a local host with four painted expressi
 
 ### Arabic and cultural review
 
-`npm run review:export` writes `docs/arabic-review/arabic_review.csv`: every Arabic string in the game (story, voice, data tables, screens, store captions) with its English meaning, where it lives and columns for a native reviewer. `docs/ARABIC_REVIEW.md` explains how to review and lists the dialect and cultural questions only a Saudi reviewer can answer. Nothing in the game is reviewed until that sheet comes back.
+`npm run review:export` writes `docs/arabic-review/arabic_review.csv`: every Arabic string in the game (story, voice, data tables, screens, store captions) with its English meaning, where it lives and columns for a native reviewer. `docs/ARABIC_REVIEW.md` explains how to review and lists the dialect and cultural questions only a Saudi reviewer can answer. Nothing in the game is reviewed until that sheet comes back. `tools/review/check_review.ts` validates a filled sheet (stale IDs, placeholders, bubble length, drift), lists every change for approval, and with `--write --source` applies the accepted ones and logs them in `docs/arabic-review/changes_log.csv`; it is covered by `tools/review/review.test.ts`.
 
 ### Home Screen app on iPhone
 

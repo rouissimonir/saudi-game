@@ -52,4 +52,17 @@ Row order puts story first because it carries the most voice and tone. If time i
 
 Send the filled sheet back. Each row's **Where** column names the file and line (or the scene and beat) to edit, so corrections are mechanical to apply; the story and voice lines also feed the recorded voice sheet (`docs/VOICE_LINES.md`), so an edited voice line means a re-recording. Keep a copy of the reviewer's name, the date and the build commit in the sheet or in `codex-plan.md`, so the review is on record.
 
+### Checking and applying a filled sheet
+
+`npx tsx tools/review/check_review.ts <filled.csv>` reads the sheet back and changes nothing. It reports:
+
+- **Blocked rows**: an ID that no longer exists (the sheet is out of date, so export again), a suggestion identical to the current text, changed `${...}` placeholders, line breaks or backslashes, a story or voice line over 90 characters (it will not fit a speech bubble), or an OK verdict that also has a suggestion.
+- **Would be applied**: each Fix with its before and after, the file it lives in, and any warnings (much longer text, Latin letters, stray spaces).
+- **Edit by hand**: a valid suggestion whose old text is built from parts rather than a whole string, so it cannot be replaced mechanically.
+- **Voice lines to re-record**, and every reviewer note or question that needs an answer rather than an edit.
+
+Read the report, drop or correct any change you disagree with in the sheet, then apply with `--write --source "Saudi reviewer, Name, date"`. Every applied change is appended to `docs/arabic-review/changes_log.csv` (date, commit, ID, before, after, source, note), so who changed what, and who reviewed it, stays on record. `--report out.md` also saves the report. After applying, run `npm run review:export`, `npm test`, the story-layout, accessibility and smoke checks in `tools/e2e/`, and re-record any listed voice lines.
+
+The `--source` text is the honest record of who reviewed. An AI-assisted pass (for example "AI review (Codex)") can catch typos and stiff phrasing, but it is not a native Saudi review: label it as such, and keep the questions above open until a Saudi reviewer answers them.
+
 This packet checks nothing by itself. It does not replace a Saudi reviewer, and no Arabic in the game should be treated as reviewed until the sheet is back.
