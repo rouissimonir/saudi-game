@@ -1,6 +1,6 @@
 # Monetization discovery: Qahwa & Majlis
 
-Status: product and technical discovery, not an implemented store. The owner's first target is Saudi Arabia's iPhone Casual top-grossing chart. A chart result depends on release, adoption and revenue; no pricing, revenue target or ranking is established here.
+Status: product and technical discovery, not an implemented store. The owner's first target is Saudi Arabia's iPhone Casual top-grossing chart, and they want to explore a mix of customization and convenience purchases. A chart result depends on release, adoption and revenue; no pricing, revenue target or ranking is established here.
 
 ## Principles and hypotheses
 
