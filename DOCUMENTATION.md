@@ -235,6 +235,10 @@ On phones the splash shown in `index.html` while the game code loads, and the ti
 
 Each area chapter (5 to 11) is opened by a local host with four painted expressions: Abu Hani (Jeddah), Reem (AlUla), Hessa (Taif), Aisha (Abha), Abu Khalid (Al-Ahsa), Dana (Riyadh) and Captain Nasser (Al-Khobar). Their lines live in `src/story/hostDrafts.ts` and `withHost` (`src/story/scenes/withHost.ts`) adds them to the chapters without changing any choice, flag or reward. Each leaves Layla a keepsake that the epilogue lists for the hosts the player met. Dialect wording and cultural details need native review before launch.
 
+### Marketing video
+
+`tools/promo/record.cjs` records real gameplay clips from the running game (title and prologue, finger-drag merges, a half-restored Majlis, a restored Majlis at night) on an iPhone-sized screen at 2x, with a soft dot showing taps. `tools/promo/edit.cjs` cuts them into `<lang>_social.mp4` (1080x1920 with captions on the game's brown, for TikTok, Reels and Shorts) and `<lang>_preview.mp4` (886x1920, app footage only, for the App Store app preview), cross-faded, with the generated oud loop as music. The commands are in each file's header. The Arabic captions reuse the store captions and await native review.
+
 ### Arabic and cultural review
 
 `npm run review:export` writes `docs/arabic-review/arabic_review.csv`: every Arabic string in the game (story, voice, data tables, screens, store captions) with its English meaning, where it lives and columns for a native reviewer. `docs/ARABIC_REVIEW.md` explains how to review and lists the dialect and cultural questions only a Saudi reviewer can answer. Nothing in the game is reviewed until that sheet comes back. `tools/review/check_review.ts` validates a filled sheet (stale IDs, placeholders, bubble length, drift), lists every change for approval, and with `--write --source` applies the accepted ones and logs them in `docs/arabic-review/changes_log.csv`; it is covered by `tools/review/review.test.ts`.
