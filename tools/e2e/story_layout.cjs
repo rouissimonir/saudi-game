@@ -21,7 +21,9 @@ const CHAPTERS = ['chap_1', 'chap_2', 'chap_3', 'chap_4', 'area_1', 'area_2', 'a
     await pg.goto(base);
     const H = pg.viewportSize().height;
     const play = async (label, pick) => {
-      await pg.locator('[data-testid=scene-player]').waitFor({ timeout: 10000 });
+      console.log(`Checking ${lang} ${label}`);
+      try { await pg.locator('[data-testid=scene-player]').waitFor({ timeout: 10000 }); }
+      catch { throw new Error(`${lang} ${label}: scene did not open within 10 seconds`); }
       for (let i = 0; i < 30; i++) {
         await pg.waitForTimeout(80);
         if (!(await pg.locator('[data-testid=scene-player]').count())) return;
@@ -41,6 +43,7 @@ const CHAPTERS = ['chap_1', 'chap_2', 'chap_3', 'chap_4', 'area_1', 'area_2', 'a
         if (await pg.locator('[data-testid=scene-choices]').count()) { await pg.locator('[data-testid^=scene-choice-]').nth(pick).tap(); continue; }
         await pg.mouse.click(180, 200);
       }
+      if (await pg.locator('[data-testid=scene-player]').count()) issues.push(`${lang} ${label}: scene did not finish within 30 steps`);
     };
     // prologue, both branches
     for (const pick of [0, 1]) {
@@ -59,4 +62,5 @@ const CHAPTERS = ['chap_1', 'chap_2', 'chap_3', 'chap_4', 'area_1', 'area_2', 'a
   console.log(`lines measured: ${lines}; highest bubble top: ${(worst.top * 100).toFixed(0)}% (${worst.where})`);
   console.log(issues.length ? issues.join('\n') : 'no issues');
   await b.close();
+  if (issues.length || lines === 0) process.exitCode = 1;
 })();
