@@ -1563,7 +1563,8 @@ export default function App() {
             {/* A. GOSSIP HARBOR-STYLE CUSTOMER ORDER TRAY (Directly Above the Board) */}
             <section
               aria-label={isAr ? 'شريط طلبات الضيوف العلوي' : 'Top Customer Order Dock'}
-              className="w-full grid grid-cols-3 gap-1.5"
+              data-testid="guest-order-dock"
+              className="guest-order-dock w-full grid grid-cols-3 gap-1.5"
             >
               {gameState.activeOrders.map((order) => {
                 const readyIndices = findCellsForOrder(
@@ -1675,7 +1676,7 @@ export default function App() {
             </div>
             {/* C. CARVED NAJDI WOOD & SUN-LIT IVORY 7×7 MERGE BOARD */}
             <div className="merge-play w-full flex flex-col items-center gap-1.5">
-            <div className={`w-full rounded-3xl board-wood-frame p-2 sm:p-2.5 border-2 border-[#563216] ${tutorialStep ? 'tutorial-board' : ''}`}>
+            <div className={`portrait-board w-full rounded-3xl board-wood-frame p-2 sm:p-2.5 border-2 border-[#563216] ${tutorialStep ? 'tutorial-board' : ''}`}>
               {/* Top Bezel Booster Bar */}
               <div className="board-toolbar flex items-center justify-between mb-1.5 px-1 gap-1">
                 <div className="flex items-center gap-1.5">

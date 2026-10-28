@@ -26,6 +26,7 @@ npm run test:phone:gathering -- http://127.0.0.1:4173/
 npm run test:phone:restoration -- http://127.0.0.1:4173/
 npm run test:phone:guest-majlis -- http://127.0.0.1:4173/
 npm run test:phone:restored-places -- http://127.0.0.1:4173/
+npm run test:phone:board-layout -- http://127.0.0.1:4173/
 ```
 
 These scripts use fresh browser contexts and exit nonzero on a failure. To use a compatible local Chromium executable instead of Playwright's browser, set `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` to its absolute path. The transfer check simulates a denied clipboard and checks text selection, then delays decompression and changes the input to check that the old code cannot be confirmed.
@@ -39,5 +40,9 @@ The restoration check starts from a fresh game, selects a free style, restores a
 The guest Majlis check uses a synthetic save to verify that the order guide follows the saved wing style after reload and does not show another guest's reaction.
 
 The restored-places check uses a synthetic completed area, travels through the UI, and checks that the selected styles and artwork remain available after reload without granting a second reward. Set `RESTORED_PLACES_SCREENSHOT` to a file path to capture the phone viewport for visual review.
+
+The board-layout check verifies that the guest dock, full board and initial coach are visible at 390 × 844, 390 × 740 and 390 × 664, and that the guest dock and board remain visible after the coach and after a touch merge and guest order. It also checks the board and guest dock at 844 × 390 landscape. It does not simulate real Safari chrome or safe areas.
+
+To run that check with Playwright WebKit, install it with `npx playwright install webkit` and set `PHONE_TEST_BROWSER=webkit` before running `npm run test:phone:board-layout`. In PowerShell, use `$env:PHONE_TEST_BROWSER = 'webkit'`. Playwright WebKit on Windows is not iOS Safari.
 
 For the optional accessibility audit, install `axe-core` without saving it to the project (`npm install --no-save axe-core`), then run `node tools/e2e/a11y.cjs en,ar http://127.0.0.1:4173/`. The audit reports the screens reached and exits nonzero for reported violations or navigation errors. Story choices and event screens depend on the run; inspect the listed screens to see what was covered. Automated checks do not replace device accessibility testing.
