@@ -45,6 +45,18 @@
 }
 .landscape-event-merge { display: none; }
 
+/* Keep guests beside the board in the first screenful on portrait phones.
+   Secondary guidance follows the board and stays available by scrolling. */
+@media (orientation: portrait) and (max-width: 600px) {
+  .merge-context { display: contents; }
+  .merge-play { display: contents; }
+  .merge-context > .guest-order-dock { order: 0; }
+  .merge-play > .portrait-board { order: 1; }
+  .merge-context > :not(.guest-order-dock) { order: 2; }
+  .merge-play > :not(.portrait-board) { order: 3; }
+  .portrait-board { max-width: min(100%, max(280px, calc(100dvh - 390px - var(--game-safe-top) - var(--game-safe-bottom)))); }
+}
+
 .majlis-ambiance-afternoon { background: linear-gradient(145deg, rgba(255, 196, 100, 0.18), transparent 55%, rgba(103, 49, 15, 0.08)); }
 .majlis-ambiance-ramadan_night { background: linear-gradient(180deg, rgba(20, 24, 62, 0.56), rgba(25, 19, 38, 0.25)); }
 .majlis-ambiance-courtyard_rain { background: linear-gradient(180deg, rgba(29, 44, 59, 0.38), rgba(36, 48, 56, 0.18)); }
