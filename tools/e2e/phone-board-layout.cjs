@@ -35,6 +35,10 @@ const { chromium, webkit } = require('playwright');
       }
       await page.locator('[data-cell-index="17"]').tap();
       await page.locator('[data-cell-index="18"]').tap();
+      await page.getByRole('button', { name: /^تقديم طلب / }).first().waitFor();
+      await page.evaluate(() => window.scrollTo(0, 0));
+      const readyBounds = await page.evaluate(() => ({ board: document.querySelector('[data-testid=merge-board-grid]').getBoundingClientRect().toJSON(), nav: document.querySelector('[data-testid=bottom-nav]').getBoundingClientRect().toJSON() }));
+      if (readyBounds.board.bottom > readyBounds.nav.top + 1) throw new Error(`${height}px ready order: board is obscured: ${JSON.stringify(readyBounds)}`);
       await page.getByRole('button', { name: /^تقديم طلب / }).first().tap();
       await page.evaluate(() => window.scrollTo(0, 0));
       const afterOrder = await page.evaluate(() => {
