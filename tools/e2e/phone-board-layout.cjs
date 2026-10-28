@@ -1,9 +1,10 @@
 // Verify that guests and the full board share the initial screen on iPhone 13 Pro-sized viewports.
-const { chromium } = require('playwright');
+const { chromium, webkit } = require('playwright');
 
 (async () => {
   const executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH;
-  const browser = await chromium.launch(executablePath ? { executablePath } : {});
+  const engine = process.env.PHONE_TEST_BROWSER === 'webkit' ? webkit : chromium;
+  const browser = await engine.launch(engine === chromium && executablePath ? { executablePath } : {});
   try {
     for (const height of [844, 740]) {
       const page = await browser.newPage({ viewport: { width: 390, height }, isMobile: true, hasTouch: true });
