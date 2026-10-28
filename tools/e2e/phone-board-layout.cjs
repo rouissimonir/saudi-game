@@ -43,6 +43,7 @@ const { chromium, webkit } = require('playwright');
       }
       await page.locator('[data-cell-index="17"]').tap();
       if (!(await page.locator('[data-cell-index="17"] [data-board-highlight="selected"]').isVisible()) || !(await page.locator('[data-cell-index="18"] [data-board-highlight="merge"]').isVisible())) throw new Error('Selected piece or matching target lacks its highlight');
+      if (!(await page.locator('[data-cell-index="17"]').getAttribute('aria-label')).includes('، محدد') || !(await page.locator('[data-cell-index="18"]').getAttribute('aria-label')).includes('يمكن دمجه مع العنصر المحدد')) throw new Error('Arabic selection or matching-target label is missing');
       await page.locator('[data-cell-index="18"]').tap();
       await page.getByRole('button', { name: /^تقديم طلب / }).first().waitFor();
       await page.evaluate(() => window.scrollTo(0, 0));
@@ -59,6 +60,15 @@ const { chromium, webkit } = require('playwright');
       }
       await page.close();
     }
+    const english = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+    await english.addInitScript(() => localStorage.setItem('qahwa_lang', 'en'));
+    await english.goto(new URL('?autostart=1', process.argv[2] || 'http://localhost:4173/').href);
+    await english.getByTestId('scene-skip').click();
+    await english.getByTestId('tutorial-coach').getByRole('button').click();
+    await english.getByTestId('daily-login-claim').click();
+    await english.locator('[data-cell-index="17"]').tap();
+    if (!(await english.locator('[data-cell-index="17"]').getAttribute('aria-label')).includes(', selected') || !(await english.locator('[data-cell-index="18"]').getAttribute('aria-label')).includes('can merge with the selected item')) throw new Error('English selection or matching-target label is missing');
+    await english.close();
     const landscape = await browser.newPage({ viewport: { width: 844, height: 390 }, isMobile: true, hasTouch: true });
     await landscape.goto(new URL('?autostart=1', process.argv[2] || 'http://localhost:4173/').href);
     await landscape.getByTestId('scene-skip').click();

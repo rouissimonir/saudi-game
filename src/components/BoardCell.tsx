@@ -64,7 +64,7 @@ export const BoardCell = memo(function BoardCell({
   return (
     <button
       type="button"
-      aria-label={`${accessibleLabel}${isFocused ? (isAr ? '، مفيد للمهمة المختارة' : ', useful for the focused goal') : ''}${isTutorialTarget ? (isAr ? '، مقترح للدمج الأول' : ', suggested for your first merge') : ''}${isRecipeNeeded ? (isAr ? '، جاهز للوصفة المختارة' : ', ready for the focused recipe') : ''}`}
+      aria-label={`${accessibleLabel}${isSelected ? (isAr ? '، محدد' : ', selected') : ''}${isMergeTarget ? (isAr ? '، يمكن دمجه مع العنصر المحدد' : ', can merge with the selected item') : ''}${isFocused ? (isAr ? '، مفيد للمهمة المختارة' : ', useful for the focused goal') : ''}${isTutorialTarget ? (isAr ? '، مقترح للدمج الأول' : ', suggested for your first merge') : ''}${isRecipeNeeded ? (isAr ? '، جاهز للوصفة المختارة' : ', ready for the focused recipe') : ''}`}
       data-cell-index={cell.index}
       data-recipe-needed={isRecipeNeeded || undefined}
       onPointerDown={(e) => onPointerDown(e, cell.index)}
