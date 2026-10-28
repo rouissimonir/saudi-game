@@ -31,14 +31,14 @@ const SEGMENTS = {
     { clip: 'ar_prologue.mp4', from: 5.8, len: 7.0, caption: ['حكاية تعيشها،', 'مو بس تقراها.'] },
     { clip: 'ar_board.mp4', from: 7.0, len: 9.0, caption: ['ادمج، حضّر،', 'وأكرم ضيوفك.'] },
     { clip: 'ar_taif.mp4', from: 4.5, len: 5.5, caption: ['رمّم المجلس', 'جناحاً بعد جناح.'] },
-    { clip: 'ar_night.mp4', from: 4.0, len: 5.5, caption: ['سافر عبر', 'أرجاء المملكة.'] },
+    { clip: 'ar_night.mp4', from: 3.6, len: 5.5, caption: ['سافر عبر', 'أرجاء المملكة.'] },
   ],
   en: [
     { clip: 'en_prologue.mp4', from: 0.6, len: 3.4, caption: ['Welcome', 'to the Majlis'] },
     { clip: 'en_prologue.mp4', from: 5.8, len: 7.0, caption: ['A story you play,', 'not just read.'] },
     { clip: 'en_board.mp4', from: 7.0, len: 9.0, caption: ['Merge. Brew.', 'Serve your guests.'] },
     { clip: 'en_taif.mp4', from: 4.5, len: 5.5, caption: ['Restore the Majlis,', 'wing by wing.'] },
-    { clip: 'en_night.mp4', from: 4.0, len: 5.5, caption: ['Travel across', 'the Kingdom.'] },
+    { clip: 'en_night.mp4', from: 3.6, len: 5.5, caption: ['Travel across', 'the Kingdom.'] },
   ],
 }[lang];
 const END = { ar: ['قهوة ومجلس', 'ضيافة سعودية بنكهة القهوة'], en: ['Qahwa & Majlis', 'Saudi hospitality, one cup at a time'] }[lang];
