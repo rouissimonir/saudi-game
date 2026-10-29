@@ -1,10 +1,25 @@
 # Getting a build onto your iPhone (TestFlight) from Windows
 
-You do not need a Mac. A cloud Mac (GitHub Actions, workflow `.github/workflows/testflight.yml`) builds, signs and uploads the app to App Store Connect; you install it on your iPhone with Apple's TestFlight app.
+You do not need a Mac. A cloud Mac builds, signs and uploads the app to App Store Connect; you install it on your iPhone with Apple's TestFlight app. There are two ways to run that cloud Mac; use one of them.
+
+## Option A: Codemagic (`codemagic.yaml`)
+
+1. In Codemagic: **Teams > Integrations > App Store Connect**, add your API key (Issuer ID, Key ID and the `.p8` file; the key needs the **Admin** role so Codemagic can create the signing certificate). Name the integration exactly `QahwaMajlis`, or change the name in `codemagic.yaml`.
+2. **Add application**, pick this repository, and choose the **codemagic.yaml** configuration.
+3. Pick a workflow and press **Start new build**:
+   - `iOS TestFlight (no purchases)`: no RevenueCat; nothing contacts RevenueCat.
+   - `iOS TestFlight (with RevenueCat purchases)`: first create an environment variable group named `revenuecat` containing `VITE_REVENUECAT_IOS_KEY` (your public key, starts with `appl_`), marked secure.
+4. Codemagic signs automatically (distribution certificate and App Store profile for `sa.qahwamajlis.merge`), sets the next build number from TestFlight, builds and uploads. Then continue at "Each build", step 2, below.
+
+The Codemagic file has not been run: expect to read the build log and adjust on the first try.
+
+## Option B: GitHub Actions (`.github/workflows/testflight.yml`)
+
+Builds, signs and uploads the same way with GitHub's cloud Mac.
 
 **Status:** the workflow is written but has not been run. Signing and upload have not been verified. Expect to fix small things on the first run and read the log.
 
-## One-time setup (about 15 minutes)
+## One-time setup for Option B (about 15 minutes)
 
 1. **App Store Connect API key.** App Store Connect > Users and Access > Integrations > App Store Connect API > Team Keys > add a key with the **Admin** role (cloud signing needs it). Download the `.p8` file once (Apple lets you download it only one time) and note the **Key ID** and the **Issuer ID** shown at the top of that page. Never send these to anyone, and never commit them.
 2. **Team ID.** developer.apple.com > Account > Membership details: the 10-character **Team ID**.
@@ -18,7 +33,7 @@ You do not need a Mac. A cloud Mac (GitHub Actions, workflow `.github/workflows/
 
 ## Each build
 
-1. GitHub > Actions > **TestFlight build** > Run workflow. It runs the lint and tests, builds, signs and uploads. It takes roughly 15 to 30 minutes.
+1. (Option B) GitHub > Actions > **TestFlight build** > Run workflow. It runs the lint and tests, builds, signs and uploads. It takes roughly 15 to 30 minutes.
 2. In App Store Connect > your app > TestFlight, the build appears after Apple finishes processing it (usually 5 to 30 minutes). If it asks about export compliance, answer that the app uses only standard encryption (see `docs/APP_STORE_SUBMISSION.md`, section 12).
 3. Add yourself under **Internal Testing** (internal testers need no Apple review), then open the **TestFlight** app on your iPhone and install.
 

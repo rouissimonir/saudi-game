@@ -1,0 +1,116 @@
+# Codemagic: build the iOS app, sign it automatically, and send it to TestFlight.
+# Setup is in docs/TESTFLIGHT.md. Run a workflow from the Codemagic dashboard (Start new build).
+#
+# Before the first run, in Codemagic:
+#  1. Teams > Integrations > App Store Connect: add your App Store Connect API key and name the
+#     integration exactly  QahwaMajlis  (or change the name below).
+#  2. Add this repository as an app and choose "codemagic.yaml" as the configuration.
+#  3. Only for the purchases workflow: create an environment variable group named  revenuecat
+#     with one variable  VITE_REVENUECAT_IOS_KEY  (your RevenueCat public App Store key, appl_...).
+#
+# Two workflows, so a missing group can never break the plain build:
+#   ios-testflight             no purchases: the SDK is not configured and nothing contacts RevenueCat.
+#   ios-testflight-purchases   configures RevenueCat in the production build (needs the group above).
+
+workflows:
+  ios-testflight:
+    name: iOS TestFlight (no purchases)
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    integrations:
+      app_store_connect: QahwaMajlis
+    environment:
+      node: 24
+      xcode: latest
+      vars:
+        APP_STORE_APPLE_ID: 6827965054
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: sa.qahwamajlis.merge
+    scripts:
+      - name: Install dependencies
+        script: npm ci
+      - name: Lint and test
+        script: |
+          npm run lint
+          npm test
+      - name: Build the web app
+        script: npm run build
+      - name: Sync and audit the iOS project
+        script: |
+          npx cap sync ios
+          npm run check:ios-assets
+      - name: Choose the next build number
+        script: |
+          LATEST=$(app-store-connect get-latest-testflight-build-number "$APP_STORE_APPLE_ID" 2>/dev/null | tail -n 1 || true)
+          case "$LATEST" in ''|*[!0-9]*) BUILD_NUMBER="$PROJECT_BUILD_NUMBER" ;; *) BUILD_NUMBER=$((LATEST + 1)) ;; esac
+          echo "Build number: $BUILD_NUMBER"
+          echo "BUILD_NUMBER=$BUILD_NUMBER" >> "$CM_ENV"
+      - name: Apply the signing profiles
+        script: xcode-project use-profiles
+      - name: Build the signed ipa
+        script: |
+          xcode-project build-ipa \
+            --project "ios/App/App.xcodeproj" \
+            --scheme "App" \
+            --archive-flags="CURRENT_PROJECT_VERSION=$BUILD_NUMBER"
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+
+  ios-testflight-purchases:
+    name: iOS TestFlight (with RevenueCat purchases)
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    integrations:
+      app_store_connect: QahwaMajlis
+    environment:
+      node: 24
+      xcode: latest
+      groups:
+        - revenuecat
+      vars:
+        APP_STORE_APPLE_ID: 6827965054
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: sa.qahwamajlis.merge
+    scripts:
+      - name: Install dependencies
+        script: npm ci
+      - name: Lint and test
+        script: |
+          npm run lint
+          npm test
+      - name: Build the web app (RevenueCat key is read from the revenuecat group)
+        script: |
+          case "$VITE_REVENUECAT_IOS_KEY" in appl_*) ;; *) echo "VITE_REVENUECAT_IOS_KEY must be a RevenueCat public App Store key starting with appl_"; exit 1 ;; esac
+          npm run build
+      - name: Sync and audit the iOS project
+        script: |
+          npx cap sync ios
+          npm run check:ios-assets
+      - name: Choose the next build number
+        script: |
+          LATEST=$(app-store-connect get-latest-testflight-build-number "$APP_STORE_APPLE_ID" 2>/dev/null | tail -n 1 || true)
+          case "$LATEST" in ''|*[!0-9]*) BUILD_NUMBER="$PROJECT_BUILD_NUMBER" ;; *) BUILD_NUMBER=$((LATEST + 1)) ;; esac
+          echo "Build number: $BUILD_NUMBER"
+          echo "BUILD_NUMBER=$BUILD_NUMBER" >> "$CM_ENV"
+      - name: Apply the signing profiles
+        script: xcode-project use-profiles
+      - name: Build the signed ipa
+        script: |
+          xcode-project build-ipa \
+            --project "ios/App/App.xcodeproj" \
+            --scheme "App" \
+            --archive-flags="CURRENT_PROJECT_VERSION=$BUILD_NUMBER"
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
