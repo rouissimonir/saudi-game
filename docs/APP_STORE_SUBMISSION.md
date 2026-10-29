@@ -1,6 +1,6 @@
 # App Store submission pack: Qahwa & Majlis Merge
 
-Draft for App Store Connect. Everything here describes the game as it is today (version 1.0, no purchases, no ads, no accounts). Limits are Apple's; the character counts below were measured when written, so re-count after any edit.
+Draft for App Store Connect. Everything here describes the game as it is today (version 1.0, no purchases on sale, no ads, no accounts). Last checked against `main` on 29 October 2026 (commit `da307a7`). Limits are Apple's; the character counts below were measured when written, so re-count after any edit.
 
 **Not yet true, so do not claim it:** any chart position or ranking, "best", "#1", real-money purchases, voice acting by a licensed actor (see the voice licence note in `codex-plan.md`), or that the Arabic has been reviewed by a native Saudi reviewer (see `docs/ARABIC_REVIEW.md`).
 
@@ -136,17 +136,20 @@ The Arabic text is written by a non-native speaker and must go through `docs/ARA
 
 Ready in `store/screenshots/en/01.jpg` to `05.jpg` and `store/screenshots/ar/01.jpg` to `05.jpg`, 1290x2796 (the 6.7" and 6.9" slots). Apple scales them for other iPhone sizes. Captions are listed in `store/README.md`; the Arabic captions still need native review. An iPad set is only needed if the app is submitted as iPad compatible.
 
-An app preview video is optional. If you make one, it must be captured from the real game.
+The five screenshots were re-captured from `main` on 29 October 2026, because the board layout, guest cards, painted icons and host scenes changed after the first set (27 October). Re-capture again after any visible change (`store/README.md`, Regenerating).
+
+**App preview video (optional):** the Arabic version is finished (886x1920, 28 s, app footage only, with a voiceover and the game's own music). It is not stored in the repository (about 10 MB); regenerate it with `tools/promo/record.cjs` and `tools/promo/edit.cjs`, or keep the delivered file. The English version is planned for a later update. Apple sizes and rules for previews change, so check the live App Store Connect requirements when uploading.
 
 ## 9. App Privacy (the "nutrition label")
 
-As built, version 1.0 collects no data: there are no accounts, no analytics, no ads and no network calls to a server of ours. Progress is saved on the device. In App Store Connect, answer **Data Not Collected**.
+The answer depends on how the release build is made, so decide it before you answer:
 
-Verify before you answer, because the answer is a legal statement:
-1. The RevenueCat SDK is installed in the project. A production build leaves out its initialisation (`docs/MONETIZATION_DISCOVERY.md`), but confirm in the Xcode archive that it makes no network call. If you cannot confirm that, declare purchase data as App Store Connect instructs for SDKs.
-2. If you add analytics or crash reporting later, update the label first.
+- **Source as of 29 October 2026:** no accounts, no analytics, no ads and no server of our own. Progress is saved on the device. But commit `da307a7` makes a **production iOS build configure RevenueCat at startup whenever `VITE_REVENUECAT_IOS_KEY` (an `appl_` key) is set at build time** (`src/utils/revenueCatAppStore.ts`). RevenueCat then contacts its servers and creates an anonymous app user ID.
+- **Option A, no purchases in 1.0:** build the release **without** that key. The SDK is never configured and nothing leaves the device, so you can answer **Data Not Collected**. Confirm it in the Xcode archive (inspect the network traffic of the installed build) before you answer, because the answer is a legal statement.
+- **Option B, purchases in 1.0 (or the key is set anyway):** do **not** answer Data Not Collected. Declare what RevenueCat receives, following RevenueCat's current App Privacy guidance (it covers purchase history and identifiers; read the live page, do not guess), as collected for app functionality and not used for tracking. The privacy policy must then say that Apple processes payment and RevenueCat receives the purchase record.
+- If you add analytics or crash reporting later, update the label first.
 
-Privacy policy contents (short is fine): the game stores progress on the device only; no personal data is collected or sold; contact address for questions; if purchases are added, the policy must say that Apple processes payment and (if used) RevenueCat receives the purchase record.
+Privacy policy (https://qahwa-majlis-merge.ai.studio/privacy.html, supplied by the owner; not yet read by us): for Option A it should say progress is stored on the device only, no personal data is collected or sold, and give a contact address. For Option B it must also name Apple and RevenueCat as above. Whichever option you pick, the policy and the App Privacy answers must say the same thing.
 
 ## 10. Age rating questionnaire
 
@@ -173,21 +176,22 @@ Expected rating: 4+. The story has a rivalry and a threatened family home but no
 | Contact | Your name, phone and email |
 | Notes | "Single-player offline game. No account. Choose a language on first launch. The story prologue plays once and can be skipped. There are no purchases in this version." |
 
-Add the note about purchases only while it is true.
+Add the note about purchases only while it is true. If draft in-app purchase products exist in App Store Connect (the owner created three), do not attach them to the 1.0 build unless real purchase and restore flows exist and are tested; unfinished products with placeholder review screenshots are a rejection risk.
 
 ## 12. Export compliance and content rights
 
 - Encryption: the app uses only standard HTTPS provided by the system, so answer **Yes, exempt** (uses encryption, qualifies for the exemption). Setting `ITSAppUsesNonExemptEncryption` to `false` in `Info.plist` removes the prompt on each build; confirm the value in the Xcode project.
-- Content rights: you own or have a licence for all content. Records to keep: the art was generated by Codex under the owner's account, so keep the generation records; the audio comes from ElevenLabs and **needs a paid plan with a commercial licence before release** (free-tier output is non-commercial); fonts and icons are listed in `docs/ASSETS.md`.
+- Content rights: you own or have a licence for all content. Records to keep: the art was generated by Codex under the owner's account, so keep the generation records; the audio comes from ElevenLabs. The owner is on the paid Starter plan (confirmed 28 October 2026; the failed invoice was then paid), which includes a commercial licence. Keep the invoices. The 32 character lines were generated on 24 October: confirm the plan was already paid then, or regenerate them (free-tier output is non-commercial). Several voices, and the promo voiceover voice "Joud" (`9xjgPVEwVEUuUxRAxKc9`), are public voice-library voices: read each voice's library terms and keep a copy; fonts and icons are listed in `docs/ASSETS.md`.
 - Third-party content: none that needs a separate licence, as far as the repo shows. Check `docs/ASSETS.md` before you answer.
 
 ## 13. Pre-flight checklist
 
-1. Arabic reviewed by a native Saudi reviewer, applied with `tools/review/check_review.ts`, and logged.
-2. Paid ElevenLabs plan and the voice lines regenerated, or recordings from an actor with a written licence.
-3. Native build: archive in Xcode, install on a real iPhone, play the first 10 minutes, kill and relaunch, airplane mode.
-4. Support page, privacy policy page and support email live.
-5. TestFlight with 5 to 10 testers, including Saudi players.
-6. Screenshots re-captured if any screen changed (`store/README.md`, Regenerating).
-7. Fill the sections above in App Store Connect, add the build, and submit for review.
-8. No real-money purchase appears anywhere until purchase and restore flows exist (`codex-plan.md`).
+1. Arabic reviewed by a native Saudi reviewer, applied with `tools/review/check_review.ts`, and logged. (Not done. An AI review pass, if it arrives, is not a native review.)
+2. Voice licence: Starter plan active with invoices kept; the 24 October voice lines checked or regenerated; library-voice terms read and saved; or recordings from an actor with a written licence.
+3. Decide purchases in 1.0 or later (section 9, Option A or B), then set the release build's RevenueCat key to match, and make the privacy label and policy say the same.
+4. Native build: archive in Xcode, install on a real iPhone, play the first 10 minutes, kill and relaunch, airplane mode.
+5. Privacy page supplied (https://qahwa-majlis-merge.ai.studio/privacy.html): read it and compare it with section 9. Support page and support email live.
+6. TestFlight with 5 to 10 testers, including Saudi players.
+7. Screenshots: re-captured 29 October 2026. Re-capture after any visible change (`store/README.md`, Regenerating). Arabic app preview video ready (section 8).
+8. Fill the sections above in App Store Connect, add the build, and submit for review.
+9. No real-money purchase appears anywhere until purchase and restore flows exist (`codex-plan.md`).

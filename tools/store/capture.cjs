@@ -44,7 +44,8 @@ async function setSave(pg, { area, frac, mood }) {
   await pg.waitForTimeout(1000); await settle(pg);
 }
 (async () => {
-  const b = await chromium.launch();
+  const executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH;
+  const b = await chromium.launch(executablePath ? { executablePath } : {});
   if (only.includes('2')) { // story scene: tap through the prologue to a two-person beat
     const { ctx, pg } = await open(b, {});
     await pg.waitForTimeout(2500);
@@ -71,7 +72,7 @@ async function setSave(pg, { area, frac, mood }) {
       await pg.locator('[data-testid=nav-board]').tap().catch(() => {}); await pg.waitForTimeout(500);
     }
   };
-  const GOLD = lang === 'ar' ? /عصاري نجد/ : /Golden Afternoon/; const NIGHT = lang === 'ar' ? /ليالي الفوانيس/ : /Lantern Night/;
+  const GOLD = lang === 'ar' ? 'عصاري نجد' : 'Golden Afternoon'; const NIGHT = lang === 'ar' ? 'ليالي الفوانيس' : 'Lantern Night'; // exact names: the event bar shares a word with the night mood
   if (['3', '4', '5'].some((n) => only.includes(n))) {
     const { ctx, pg } = await open(b, {});
     await pg.locator('[data-testid=scene-skip]').tap(); await pg.waitForTimeout(1500); await settle(pg);
@@ -83,10 +84,10 @@ async function setSave(pg, { area, frac, mood }) {
       await reopen(pg);
       await pg.locator('[data-testid=nav-majlis]').tap(); await pg.waitForTimeout(1200);
     };
-    if (only.includes('3')) { await goto(3); await view(0.5); await pg.getByRole('button', { name: GOLD }).tap(); await pg.waitForTimeout(2200); await pg.screenshot({ path: OUT + `${lang}_3.png` }); }
-    if (only.includes('4')) { await goto(6); await view(1); await pg.getByRole('button', { name: NIGHT }).tap(); await pg.waitForTimeout(2200); await pg.screenshot({ path: OUT + `${lang}_4.png` }); }
+    if (only.includes('3')) { await goto(3); await view(0.5); await pg.getByRole('button', { name: GOLD, exact: true }).tap(); await pg.waitForTimeout(2200); await pg.screenshot({ path: OUT + `${lang}_3.png` }); }
+    if (only.includes('4')) { await goto(6); await view(1); await pg.getByRole('button', { name: NIGHT, exact: true }).tap(); await pg.waitForTimeout(2200); await pg.screenshot({ path: OUT + `${lang}_4.png` }); }
     if (only.includes('5')) {
-      await goto(7); await view(0.5); await pg.getByRole('button', { name: GOLD }).tap(); await pg.waitForTimeout(1500);
+      await goto(7); await view(0.5); await pg.getByRole('button', { name: GOLD, exact: true }).tap(); await pg.waitForTimeout(1500);
       await pg.evaluate(() => { const el = document.querySelector('[data-testid=wing-pic-0]'); el.scrollIntoView(); const r = el.getBoundingClientRect(); window.scrollBy(0, r.top - 118); });
       await pg.waitForTimeout(1500);
       await pg.screenshot({ path: OUT + `${lang}_5.png` });
