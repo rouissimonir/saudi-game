@@ -134,11 +134,16 @@ The Arabic text is written by a non-native speaker and must go through `docs/ARA
 
 ## 8. Screenshots
 
-Ready in `store/screenshots/en/01.jpg` to `05.jpg` and `store/screenshots/ar/01.jpg` to `05.jpg`, 1290x2796 (the 6.7" and 6.9" slots). Apple scales them for other iPhone sizes. Captions are listed in `store/README.md`; the Arabic captions still need native review. An iPad set is only needed if the app is submitted as iPad compatible.
+App Store Connect asks for one iPhone size; its slot name and the sizes it accepts change, so read the sizes printed under the upload box. Two sets are ready:
+
+- **6.1" / 6.3" slot ("iPhone with Dynamic Island, medium display"), as seen on 29 October 2026:** it accepts 1179x2556, 2556x1179, 1206x2622 and 2622x1206. Use `store/screenshots/<en|ar>/iphone-6.3/01.jpg` to `05.jpg` (1179x2556). Making them again: `python3 tools/store/resize_for_6_3.py`.
+- **6.7" / 6.9" slot:** `store/screenshots/<en|ar>/01.jpg` to `05.jpg`, 1290x2796.
+
+A screenshot of the wrong size is rejected with a size error, so match the slot. Apple scales the screenshots down for smaller iPhones. Apple scales them for other iPhone sizes. Captions are listed in `store/README.md`; the Arabic captions still need native review. An iPad set is only needed if the app is submitted as iPad compatible.
 
 The five screenshots were re-captured from `main` on 29 October 2026, because the board layout, guest cards, painted icons and host scenes changed after the first set (27 October). Re-capture again after any visible change (`store/README.md`, Regenerating).
 
-**App preview video (optional):** the Arabic version is finished (886x1920, 28 s, app footage only, with a voiceover and the game's own music). It is not stored in the repository (about 10 MB); regenerate it with `tools/promo/record.cjs` and `tools/promo/edit.cjs`, or keep the delivered file. The English version is planned for a later update. Apple sizes and rules for previews change, so check the live App Store Connect requirements when uploading.
+**App preview video (optional):** the Arabic version is finished (886x1920, 28 s, app footage only, with a voiceover and the game's own music). The slot accepts 886x1920 and 1920x886 previews. The audio must be 44.1 or 48 kHz stereo AAC (an earlier render had 96 kHz audio, which `tools/promo/edit.cjs` now fixes with `aresample=48000`), 15 to 30 s. It is not stored in the repository (about 10 MB); regenerate it with `tools/promo/record.cjs` and `tools/promo/edit.cjs`, or keep the delivered file. The English version is planned for a later update. Apple sizes and rules for previews change, so check the live App Store Connect requirements when uploading.
 
 ## 9. App Privacy (the "nutrition label")
 
