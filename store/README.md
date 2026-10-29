@@ -14,6 +14,10 @@
 
 **Arabic captions are written by a non-native speaker, like the game's dialect lines: have a native speaker review them before upload.**
 
+## Sizes
+
+`<lang>/01.jpg` to `05.jpg` are 1290x2796 (6.7" and 6.9" iPhones). `<lang>/iphone-6.3/` holds the same shots at 1179x2556, the size App Store Connect's 6.1" / 6.3" slot accepts (`python3 tools/store/resize_for_6_3.py`). Upload the set whose size the slot lists.
+
 ## Regenerating
 
 The screens are captured from the real game, so re-run after any visible change.
