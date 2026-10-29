@@ -89,6 +89,8 @@ The source of truth for the design direction and pacing investigation is [docs/P
 
 - Prepared App Store SDK initialization for production-mode native iOS builds that supply an `appl_` public key through `VITE_REVENUECAT_IOS_KEY`. Without that build variable initialization remains disabled; no paid flow or benefits were enabled. Guard tests passed, and isolated production and Test Store bundles each excluded the other environment’s dummy key. Native App Store initialization and purchases remain unverified.
 
+- The [iOS simulator run for App Store initialization commit da307a7](https://github.com/rouissimonir/saudi-game/actions/runs/40838876094) passed the web checks, bundle audit, simulator compilation, install, launch request and screenshot upload. This workflow did not supply an App Store key, so it did not verify RevenueCat initialization; the screenshot has not been inspected and purchases and physical-device behavior remain untested.
+
 ## Useful commands
 
 ```sh
