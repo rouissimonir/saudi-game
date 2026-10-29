@@ -1,0 +1,85 @@
+name: TestFlight build
+
+# Builds a signed release of the iOS app on a cloud Mac and uploads it to App Store Connect (TestFlight).
+# Run it by hand: Actions > TestFlight build > Run workflow. It needs these repository secrets
+# (Settings > Secrets and variables > Actions), see docs/TESTFLIGHT.md for how to get each one:
+#   ASC_KEY_ID       App Store Connect API key ID
+#   ASC_ISSUER_ID    App Store Connect API issuer ID
+#   ASC_KEY_P8       the full text of the downloaded AuthKey_XXXX.p8 file
+#   APPLE_TEAM_ID    the 10-character Apple developer Team ID
+#   REVENUECAT_IOS_KEY   (optional) RevenueCat public App Store key, starts with appl_
+# Without REVENUECAT_IOS_KEY the build ships without RevenueCat (no purchases, nothing contacts RevenueCat).
+
+'on':
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  testflight:
+    runs-on: macos-26
+    timeout-minutes: 60
+    env:
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      VITE_REVENUECAT_IOS_KEY: ${{ secrets.REVENUECAT_IOS_KEY }}
+    steps:
+      - name: Check the signing secrets exist
+        run: |
+          missing=""
+          for name in ASC_KEY_ID ASC_ISSUER_ID ASC_KEY_P8 APPLE_TEAM_ID; do
+            if [ -z "${!name}" ]; then missing="$missing $name"; fi
+          done
+          if [ -n "$missing" ]; then echo "Missing repository secrets:$missing (see docs/TESTFLIGHT.md)"; exit 1; fi
+          if [ -n "$VITE_REVENUECAT_IOS_KEY" ]; then echo "RevenueCat key present: this build will configure RevenueCat."; else echo "No RevenueCat key: this build has no purchases."; fi
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Install dependencies and run the checks
+        run: |
+          npm ci
+          npm run lint
+          npm test
+      - name: Build the web app and sync the iOS project
+        run: |
+          npm run build
+          npx cap sync ios
+          npm run check:ios-assets
+      - name: Archive and sign (cloud signing with the App Store Connect key)
+        run: |
+          mkdir -p "$HOME/private_keys"
+          KEY_FILE="$HOME/private_keys/AuthKey_${ASC_KEY_ID}.p8"
+          printf '%s\n' "$ASC_KEY_P8" > "$KEY_FILE"
+          xcodebuild -version
+          xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release \
+            -destination 'generic/platform=iOS' -archivePath "$RUNNER_TEMP/App.xcarchive" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$KEY_FILE" -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
+            DEVELOPMENT_TEAM="$APPLE_TEAM_ID" CURRENT_PROJECT_VERSION="${{ github.run_number }}" \
+            archive
+      - name: Export and upload to TestFlight
+        run: |
+          KEY_FILE="$HOME/private_keys/AuthKey_${ASC_KEY_ID}.p8"
+          cat > "$RUNNER_TEMP/ExportOptions.plist" <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>upload</string>
+            <key>teamID</key><string>${APPLE_TEAM_ID}</string>
+            <key>signingStyle</key><string>automatic</string>
+            <key>uploadSymbols</key><true/>
+          </dict></plist>
+          EOF
+          xcodebuild -exportArchive -archivePath "$RUNNER_TEMP/App.xcarchive" \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" -exportPath "$RUNNER_TEMP/export" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$KEY_FILE" -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER_ID"
+      - name: Remove the key file
+        if: always()
+        run: rm -rf "$HOME/private_keys"
