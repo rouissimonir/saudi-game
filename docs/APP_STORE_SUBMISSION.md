@@ -139,7 +139,7 @@ App Store Connect asks for one iPhone size; its slot name and the sizes it accep
 - **6.1" / 6.3" slot ("iPhone with Dynamic Island, medium display"), as seen on 29 October 2026:** it accepts 1179x2556, 2556x1179, 1206x2622 and 2622x1206. Use `store/screenshots/<en|ar>/iphone-6.3/01.jpg` to `05.jpg` (1179x2556). Making them again: `python3 tools/store/resize_for_6_3.py`.
 - **6.7" / 6.9" slot:** `store/screenshots/<en|ar>/01.jpg` to `05.jpg`, 1290x2796.
 
-A screenshot of the wrong size is rejected with a size error, so match the slot. Apple scales the screenshots down for smaller iPhones. Apple scales them for other iPhone sizes. Captions are listed in `store/README.md`; the Arabic captions still need native review. An iPad set is only needed if the app is submitted as iPad compatible.
+A screenshot of the wrong size is rejected with a size error, so match the slot. Apple scales the screenshots down for smaller iPhones. Apple scales them for other iPhone sizes. Captions are listed in `store/README.md`; the Arabic captions still need native review. The app is **iPhone-only for 1.0** (owner decision, 29 October 2026; `TARGETED_DEVICE_FAMILY = 1` in the Xcode project), so no iPad, iPhone Duo or Apple Watch screenshot sets are needed. It still runs on an iPad in compatibility mode. The optional header and search-result artwork, Custom Product Pages and Product Page Optimization are not needed for 1.0.
 
 The five screenshots were re-captured from `main` on 29 October 2026, because the board layout, guest cards, painted icons and host scenes changed after the first set (27 October). Re-capture again after any visible change (`store/README.md`, Regenerating).
 
