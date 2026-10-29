@@ -3,7 +3,7 @@
 #
 # Before the first run, in Codemagic:
 #  1. Teams > Integrations > App Store Connect: add your App Store Connect API key and name the
-#     integration exactly  QahwaMajlis  (or change the name below).
+#     integration exactly  majlis  (or change the name below).
 #  2. Add this repository as an app and choose "codemagic.yaml" as the configuration.
 #  3. Only for the purchases workflow: create an environment variable group named  revenuecat
 #     with one variable  VITE_REVENUECAT_IOS_KEY  (your RevenueCat public App Store key, appl_...).
@@ -18,7 +18,7 @@ workflows:
     instance_type: mac_mini_m2
     max_build_duration: 60
     integrations:
-      app_store_connect: QahwaMajlis
+      app_store_connect: majlis
     environment:
       node: 24
       xcode: latest
@@ -67,7 +67,7 @@ workflows:
     instance_type: mac_mini_m2
     max_build_duration: 60
     integrations:
-      app_store_connect: QahwaMajlis
+      app_store_connect: majlis
     environment:
       node: 24
       xcode: latest

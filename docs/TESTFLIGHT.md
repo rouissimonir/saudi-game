@@ -4,7 +4,7 @@ You do not need a Mac. A cloud Mac builds, signs and uploads the app to App Stor
 
 ## Option A: Codemagic (`codemagic.yaml`)
 
-1. In Codemagic: **Teams > Integrations > App Store Connect**, add your API key (Issuer ID, Key ID and the `.p8` file; the key needs the **Admin** role so Codemagic can create the signing certificate). Name the integration exactly `QahwaMajlis`, or change the name in `codemagic.yaml`.
+1. In Codemagic: **Teams > Integrations > App Store Connect**, add your API key (Issuer ID, Key ID and the `.p8` file; the key needs the **Admin** role so Codemagic can create the signing certificate). Name the integration exactly `majlis`, or change the name in `codemagic.yaml`.
 2. **Add application**, pick this repository, and choose the **codemagic.yaml** configuration.
 3. Pick a workflow and press **Start new build**:
    - `iOS TestFlight (no purchases)`: no RevenueCat; nothing contacts RevenueCat.
