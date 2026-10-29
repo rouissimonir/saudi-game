@@ -30,7 +30,8 @@ const CAPTIONS = {
 };
 
 (async () => {
-  const browser = await chromium.launch();
+  const executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH;
+  const browser = await chromium.launch(executablePath ? { executablePath } : {});
   for (const lang of ['en', 'ar']) {
     fs.mkdirSync(path.join(outDir, lang), { recursive: true });
     for (let n = 1; n <= 5; n++) {

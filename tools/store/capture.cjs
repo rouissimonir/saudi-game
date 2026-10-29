@@ -61,6 +61,8 @@ async function setSave(pg, { area, frac, mood }) {
     await pg.waitForTimeout(800);
     await pg.screenshot({ path: OUT + `${lang}_1.png` }); await ctx.close();
   }
+  // bring the painted scene of the current area up under the header, as a player would scroll to it
+  const stage = async (pg) => { await pg.evaluate(() => { const el = document.querySelector('[data-testid=area-name]'); if (!el) return; el.scrollIntoView(); window.scrollBy(0, el.getBoundingClientRect().top - 150); }); await pg.waitForTimeout(1500); };
   const allDone = (pg) => pg.evaluate(() => { const k = 'qahwa_majlis_merge_save_v3'; const s = JSON.parse(localStorage.getItem(k)); s.renovationZones.forEach((z) => { z.unlockedLevel = 2; }); s.stars = 40; localStorage.setItem(k, JSON.stringify(s)); });
   const reopen = async (pg) => { await pg.reload(); await pg.waitForTimeout(900); const st = pg.getByRole('button', { name: /play|start|continue|العب|ابدأ|متابعة/i }).first(); if (await st.count()) await st.tap(); await pg.waitForTimeout(900); await settle(pg); };
   const travelTo = async (pg, target) => {
@@ -84,8 +86,8 @@ async function setSave(pg, { area, frac, mood }) {
       await reopen(pg);
       await pg.locator('[data-testid=nav-majlis]').tap(); await pg.waitForTimeout(1200);
     };
-    if (only.includes('3')) { await goto(3); await view(0.5); await pg.getByRole('button', { name: GOLD, exact: true }).tap(); await pg.waitForTimeout(2200); await pg.screenshot({ path: OUT + `${lang}_3.png` }); }
-    if (only.includes('4')) { await goto(6); await view(1); await pg.getByRole('button', { name: NIGHT, exact: true }).tap(); await pg.waitForTimeout(2200); await pg.screenshot({ path: OUT + `${lang}_4.png` }); }
+    if (only.includes('3')) { await goto(3); await view(0.5); await pg.getByRole('button', { name: GOLD, exact: true }).tap(); await pg.waitForTimeout(1800); await stage(pg); await pg.screenshot({ path: OUT + `${lang}_3.png` }); }
+    if (only.includes('4')) { await goto(6); await view(1); await pg.getByRole('button', { name: NIGHT, exact: true }).tap(); await pg.waitForTimeout(1800); await stage(pg); await pg.screenshot({ path: OUT + `${lang}_4.png` }); }
     if (only.includes('5')) {
       await goto(7); await view(0.5); await pg.getByRole('button', { name: GOLD, exact: true }).tap(); await pg.waitForTimeout(1500);
       await pg.evaluate(() => { const el = document.querySelector('[data-testid=wing-pic-0]'); el.scrollIntoView(); const r = el.getBoundingClientRect(); window.scrollBy(0, r.top - 118); });
