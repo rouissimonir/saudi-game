@@ -2,10 +2,12 @@ import {createRoot} from 'react-dom/client';
 import {Capacitor} from '@capacitor/core';
 import App from './App.tsx';
 import { initializeRevenueCatTestStore } from './utils/revenueCatTestStore';
+import { initializeRevenueCatAppStore } from './utils/revenueCatAppStore';
 import { probeRevenueCatTestStore } from './utils/revenueCatTestProbe';
 import './index.css';
 
 void initializeRevenueCatTestStore().catch(() => console.warn('RevenueCat Test Store initialization failed.'));
+void initializeRevenueCatAppStore().catch(() => console.warn('RevenueCat App Store initialization failed.'));
 void probeRevenueCatTestStore();
 createRoot(document.getElementById('root')!).render(<App />);
 

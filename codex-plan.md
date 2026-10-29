@@ -87,6 +87,8 @@ The source of truth for the design direction and pacing investigation is [docs/P
 
 - RevenueCat now associates the App Store monthly and decor products with the existing `majlis_membership` and `majlis_decor_pack` entitlements, and all three App Store products with their corresponding packages in the current offering. Read-back confirms their Test Store counterparts remain attached. The refill has no entitlement; durable consumable delivery is still required. This is catalog configuration only, not verified transactions or live benefits.
 
+- Prepared App Store SDK initialization for production-mode native iOS builds that supply an `appl_` public key through `VITE_REVENUECAT_IOS_KEY`. Without that build variable initialization remains disabled; no paid flow or benefits were enabled. Guard tests passed, and isolated production and Test Store bundles each excluded the other environment’s dummy key. Native App Store initialization and purchases remain unverified.
+
 ## Useful commands
 
 ```sh
