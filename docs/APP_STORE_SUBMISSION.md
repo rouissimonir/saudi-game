@@ -128,9 +128,9 @@ The Arabic text is written by a non-native speaker and must go through `docs/ARA
 
 | Field | Value |
 |---|---|
-| Support URL | **You supply.** A page with a contact email is enough. |
-| Marketing URL | Optional. The web version is at https://rouissimonir.github.io/saudi-game/ |
-| Privacy Policy URL | **You supply.** Required, see section 9. |
+| Support URL | **You supply.** A page with a contact email is enough (the owner's website may serve as this if it shows one). |
+| Marketing URL | Optional. The owner's website is https://qahwa-majlis-merge.ai.studio/ and the web version of the game is at https://rouissimonir.github.io/saudi-game/ |
+| Privacy Policy URL | https://qahwa-majlis-merge.ai.studio/privacy.html (supplied by the owner on 29 October 2026; its text has **not** been checked against section 9 yet, because the page was unreachable from the build environment) |
 
 ## 8. Screenshots
 
