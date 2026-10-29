@@ -18,6 +18,10 @@
 
 `<lang>/01.jpg` to `05.jpg` are 1290x2796 (6.7" and 6.9" iPhones). `<lang>/iphone-6.3/` holds the same shots at 1179x2556, the size App Store Connect's 6.1" / 6.3" slot accepts (`python3 tools/store/resize_for_6_3.py`). Upload the set whose size the slot lists.
 
+## Header artwork (optional)
+
+App Store Connect's optional "Header" slot takes wide landscape art (3840x1646 or 5244x2950 at the time of writing; read the sizes printed under the upload box). `node tools/store/make_header.cjs` writes `header_en_3840x1646.png` and `header_ar_3840x1646.png` (brand panel plus three painted places, mirrored for Arabic). The PNGs (about 5 MB each) are not committed; regenerate them. Check the slot's Preview and "Explore templates", because Apple may crop the header on some devices. Upload the Arabic file to the Arabic localization and the English file to English (U.S.).
+
 ## Regenerating
 
 The screens are captured from the real game, so re-run after any visible change.
