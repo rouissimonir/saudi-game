@@ -85,6 +85,8 @@ The source of truth for the design direction and pacing investigation is [docs/P
 
 - The owner asked us to choose initial prices. A [RevenueCat App Store product plan](https://app.revenuecat.com/projects/988735a8/product-catalog/product-editor/review-changes?plan_id=bf89a81d-4ae0-4b9e-a050-6a5f1b7d2d2f) proposes SAR 19.99/month membership, SAR 9.99 permanent decorations and SAR 4.99 repeatable refill. The owner approved the plan; RevenueCat reports all three items applied. Store-state reads confirm the Saudi prices. Apple reports the membership as MISSING_METADATA and both one-time products as READY_TO_SUBMIT; none was submitted for review. The plan used blank fallback review screenshots, which must be replaced. Benefits, fulfillment, Arabic copy, review materials and sandbox testing remain incomplete.
 
+- RevenueCat now associates the App Store monthly and decor products with the existing `majlis_membership` and `majlis_decor_pack` entitlements, and all three App Store products with their corresponding packages in the current offering. Read-back confirms their Test Store counterparts remain attached. The refill has no entitlement; durable consumable delivery is still required. This is catalog configuration only, not verified transactions or live benefits.
+
 ## Useful commands
 
 ```sh
