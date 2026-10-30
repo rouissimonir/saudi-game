@@ -17,7 +17,7 @@ The Codemagic file has not been run: expect to read the build log and adjust on 
 
 Builds, signs and uploads the same way with GitHub's cloud Mac.
 
-**Status:** [GitHub Actions run 41108311497](https://github.com/rouissimonir/saudi-game/actions/runs/41108311497) successfully signed and uploaded build 3 to App Store Connect. Apple processing, TestFlight availability and installation on the owner’s iPhone have not yet been verified. This build did not include a RevenueCat key and cannot test purchases.
+**Status:** [GitHub Actions run 41108311497](https://github.com/rouissimonir/saudi-game/actions/runs/41108311497) successfully signed and uploaded build 3 to App Store Connect. App Store Connect shows build 3 with status Missing Compliance; installation on the owner’s iPhone has not yet been verified. This build did not include a RevenueCat key and cannot test purchases.
 
 ## One-time setup for Option B (about 15 minutes)
 

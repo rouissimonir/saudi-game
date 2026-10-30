@@ -103,6 +103,8 @@ The source of truth for the design direction and pacing investigation is [docs/P
 
 - The [GitHub TestFlight retry 41108311497](https://github.com/rouissimonir/saudi-game/actions/runs/41108311497) signed and uploaded build 3 successfully. Its logs say Apple began processing and no RevenueCat key was supplied, so this build cannot test purchases. Apple processing, TestFlight availability and installation on the owner’s iPhone remain unverified.
 
+- App Store Connect now lists TestFlight build 3 as Missing Compliance and displays the encryption algorithm declaration. The app source search found no explicit cryptographic implementation, but the complete dependency chain has not been independently audited; the owner must make the declaration based on the actual build. No TestFlight installation has been verified.
+
 ## Useful commands
 
 ```sh
