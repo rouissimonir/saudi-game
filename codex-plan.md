@@ -95,6 +95,8 @@ The source of truth for the design direction and pacing investigation is [docs/P
 
 - Reviewed the new TestFlight build configurations. Renamed the Codemagic display label to clarify that supplying the RevenueCat SDK key does not implement purchases, and made both cloud workflows reject invalid nonempty App Store public keys using the same format as app initialization. YAML parsing passed locally; neither signing, upload, nor native RevenueCat initialization was tested by this change.
 
+- After GitHub CLI sign-in, the [instrumented RevenueCat run 40713403974](https://github.com/rouissimonir/saudi-game/actions/runs/40713403974) reported a timeout with no startup, ineligibility or initialization markers printed. The result does not distinguish app startup from simulator console capture; no transaction was attempted.
+
 ## Useful commands
 
 ```sh
