@@ -2,6 +2,27 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { loadMuted, saveMuted, SoundAndHapticsManager } from './soundAndHaptics';
 
+test('player gesture resumes a suspended audio context immediately and respects mute', () => {
+  const originalWindow = globalThis.window;
+  let resumes = 0;
+  class FakeAudioContext {
+    state = 'suspended';
+    resume() { resumes++; return Promise.resolve(); }
+  }
+  Object.defineProperty(globalThis, 'window', { configurable: true, value: { AudioContext: FakeAudioContext } });
+  try {
+    const sound = new SoundAndHapticsManager();
+    sound.unlockAudio();
+    assert.equal(resumes, 1, 'resume is invoked within the player gesture');
+    sound.muted = true;
+    sound.unlockAudio();
+    assert.equal(resumes, 1, 'muted audio remains inactive');
+  } finally {
+    if (originalWindow === undefined) Reflect.deleteProperty(globalThis, 'window');
+    else Object.defineProperty(globalThis, 'window', { configurable: true, value: originalWindow });
+  }
+});
+
 test('mute preference persists and unavailable storage does not interrupt play', () => {
   const original = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
   const values = new Map<string, string>();

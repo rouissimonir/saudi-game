@@ -122,3 +122,10 @@ npm run check:ios-assets
 ```
 
 The asset audit checks the synced local bundle; it does not compile or run the native iOS application.
+
+# iPhone audio feedback (30 October 2026)
+
+- Build 3 playtest: the owner heard neither music nor opening speech, and said the voices did not sound like the Saudi sample heard earlier. The prologue recordings are in the source build; the exact cause of silence on the phone is not yet established.
+- The Start and unmute gestures now explicitly resume Web Audio synchronously, including when sound files have already been cached. Unit coverage checks gesture-time resume and mute. Verify a new TestFlight build on the iPhone, including the in-game sound setting, media volume, and Ring/Silent switch; compare the opening and later game sounds. The app's default iOS audio session can be silenced by the switch.
+- The opening uses generated recordings (its narrator uses a voice labelled MSA); later character lines use their recordings when available and device Arabic speech as a fallback. Voice labels do not verify accent quality. Identify which sample and characters the owner means, then have a native Saudi speaker review auditioned replacements and the dialogue before recasting or regenerating assets. Do not claim this change fixes dialect quality.
+

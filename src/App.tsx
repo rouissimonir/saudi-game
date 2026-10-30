@@ -472,6 +472,7 @@ export default function App() {
   );
 
   const handleStartGame = useCallback(() => {
+    soundFX.unlockAudio();
     setShellState('playing');
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
@@ -489,12 +490,11 @@ export default function App() {
 
   const handleToggleMute = useCallback((e?: React.MouseEvent<HTMLButtonElement>) => {
     e?.currentTarget.blur();
-    setMuted((prev) => {
-      const next = !prev;
-      soundFX.muted = next;
-      saveMuted(next);
-      return next;
-    });
+    const next = !soundFX.muted;
+    soundFX.muted = next;
+    if (!next) soundFX.unlockAudio();
+    saveMuted(next);
+    setMuted(next);
   }, []);
 
   const handleTogglePause = useCallback((e?: React.MouseEvent<HTMLButtonElement>) => {

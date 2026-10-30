@@ -371,6 +371,11 @@ export class SoundAndHapticsManager {
     return this.ctx;
   }
 
+  /** Call synchronously from a player gesture so iOS can activate Web Audio. */
+  public unlockAudio(): void {
+    this.ensureContext();
+  }
+
   /** A shared output makes the mute control silence already-playing Web Audio nodes immediately. */
   private output(ctx: AudioContext): AudioNode {
     if (!this.masterGain) {
