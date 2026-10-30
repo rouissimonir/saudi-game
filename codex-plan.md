@@ -93,6 +93,8 @@ The source of truth for the design direction and pacing investigation is [docs/P
 
 - The [iOS simulator run for App Store initialization commit da307a7](https://github.com/rouissimonir/saudi-game/actions/runs/40838876094) passed the web checks, bundle audit, simulator compilation, install, launch request and screenshot upload. This workflow did not supply an App Store key, so it did not verify RevenueCat initialization; the screenshot has not been inspected and purchases and physical-device behavior remain untested.
 
+- Reviewed the new TestFlight build configurations. Renamed the Codemagic display label to clarify that supplying the RevenueCat SDK key does not implement purchases, and made both cloud workflows reject invalid nonempty App Store public keys using the same format as app initialization. YAML parsing passed locally; neither signing, upload, nor native RevenueCat initialization was tested by this change.
+
 ## Useful commands
 
 ```sh

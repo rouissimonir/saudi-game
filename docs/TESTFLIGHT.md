@@ -8,7 +8,7 @@ You do not need a Mac. A cloud Mac builds, signs and uploads the app to App Stor
 2. **Add application**, pick this repository, and choose the **codemagic.yaml** configuration.
 3. Pick a workflow and press **Start new build**:
    - `iOS TestFlight (no purchases)`: no RevenueCat; nothing contacts RevenueCat.
-   - `iOS TestFlight (with RevenueCat purchases)`: first create an environment variable group named `revenuecat` containing `VITE_REVENUECAT_IOS_KEY` (your public key, starts with `appl_`), marked secure.
+   - `iOS TestFlight (RevenueCat SDK, no purchases)`: first create an environment variable group named `revenuecat` containing `VITE_REVENUECAT_IOS_KEY` (your public key, starts with `appl_`), marked secure. This initializes the SDK but does not add a purchase screen or enable paid benefits.
 4. Codemagic signs automatically (distribution certificate and App Store profile for `sa.qahwamajlis.merge`), sets the next build number from TestFlight, builds and uploads. Then continue at "Each build", step 2, below.
 
 The Codemagic file has not been run: expect to read the build log and adjust on the first try.

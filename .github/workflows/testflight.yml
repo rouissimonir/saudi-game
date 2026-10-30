@@ -34,7 +34,14 @@ jobs:
             if [ -z "${!name}" ]; then missing="$missing $name"; fi
           done
           if [ -n "$missing" ]; then echo "Missing repository secrets:$missing (see docs/TESTFLIGHT.md)"; exit 1; fi
-          if [ -n "$VITE_REVENUECAT_IOS_KEY" ]; then echo "RevenueCat key present: this build will configure RevenueCat."; else echo "No RevenueCat key: this build has no purchases."; fi
+          if [ -n "$VITE_REVENUECAT_IOS_KEY" ]; then
+            if [[ ! "$VITE_REVENUECAT_IOS_KEY" =~ ^appl_[A-Za-z0-9]+$ ]]; then
+              echo "REVENUECAT_IOS_KEY must be a valid RevenueCat public App Store key"; exit 1
+            fi
+            echo "RevenueCat initialization is enabled; purchases are not implemented."
+          else
+            echo "No RevenueCat key: initialization and purchases are unavailable."
+          fi
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:

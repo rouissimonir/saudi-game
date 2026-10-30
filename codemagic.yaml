@@ -63,7 +63,7 @@ workflows:
         submit_to_testflight: true
 
   ios-testflight-purchases:
-    name: iOS TestFlight (with RevenueCat purchases)
+    name: iOS TestFlight (RevenueCat SDK, no purchases)
     instance_type: mac_mini_m2
     max_build_duration: 60
     integrations:
@@ -87,7 +87,9 @@ workflows:
           npm test
       - name: Build the web app (RevenueCat key is read from the revenuecat group)
         script: |
-          case "$VITE_REVENUECAT_IOS_KEY" in appl_*) ;; *) echo "VITE_REVENUECAT_IOS_KEY must be a RevenueCat public App Store key starting with appl_"; exit 1 ;; esac
+          if [[ ! "$VITE_REVENUECAT_IOS_KEY" =~ ^appl_[A-Za-z0-9]+$ ]]; then
+            echo "VITE_REVENUECAT_IOS_KEY must be a valid RevenueCat public App Store key"; exit 1
+          fi
           npm run build
       - name: Sync and audit the iOS project
         script: |
