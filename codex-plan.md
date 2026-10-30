@@ -109,6 +109,8 @@ The source of truth for the design direction and pacing investigation is [docs/P
 
 - A targeted search of RevenueCat purchases-hybrid-common 19.17.0 iOS source found no matches for CryptoKit, CommonCrypto, AES, encrypt/decrypt, OpenSSL or SecKey; its package manifest depends on RevenueCat iOS 5.99.0. This complements the earlier core-SDK search but is not a complete audit of the signed binary or an export classification.
 
+- App Store Connect now shows build 3 as Ready to Submit rather than Missing Compliance. No internal testing group was listed. The group creation form warns that automatic distribution cannot be changed later; a group, tester invitation, and installation have not yet been confirmed.
+
 ## Useful commands
 
 ```sh
