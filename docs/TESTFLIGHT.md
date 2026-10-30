@@ -24,7 +24,7 @@ Builds, signs and uploads the same way with GitHub's cloud Mac.
 1. **App Store Connect API key.** App Store Connect > Users and Access > Integrations > App Store Connect API > Team Keys > add a key with the **Admin** role (cloud signing needs it). Download the `.p8` file once (Apple lets you download it only one time) and note the **Key ID** and the **Issuer ID** shown at the top of that page. Never send these to anyone, and never commit them.
 2. **Team ID.** developer.apple.com > Account > Membership details: the 10-character **Team ID**.
 3. **RevenueCat public key (only if you want purchases in this build).** RevenueCat > your project > API keys > the App Store public key, starts with `appl_`. Skip it for a build with no purchases.
-4. **GitHub secrets.** In the repository: Settings > Secrets and variables > Actions > New repository secret. Add:
+4. **GitHub secrets.** In the repository: Settings > Environments > `dev` > Environment secrets > Add environment secret. The TestFlight job uses this environment. Add:
    - `ASC_KEY_ID` (the Key ID)
    - `ASC_ISSUER_ID` (the Issuer ID)
    - `ASC_KEY_P8` (open the `.p8` file in a text editor and paste its whole text, including the BEGIN and END lines)

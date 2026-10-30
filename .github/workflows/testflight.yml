@@ -2,7 +2,7 @@ name: TestFlight build
 
 # Builds a signed release of the iOS app on a cloud Mac and uploads it to App Store Connect (TestFlight).
 # Run it by hand: Actions > TestFlight build > Run workflow. It needs these repository secrets
-# (Settings > Secrets and variables > Actions), see docs/TESTFLIGHT.md for how to get each one:
+# (Settings > Environments > dev > Environment secrets), see docs/TESTFLIGHT.md for how to get each one:
 #   ASC_KEY_ID       App Store Connect API key ID
 #   ASC_ISSUER_ID    App Store Connect API issuer ID
 #   ASC_KEY_P8       the full text of the downloaded AuthKey_XXXX.p8 file
@@ -19,6 +19,7 @@ permissions:
 jobs:
   testflight:
     runs-on: macos-26
+    environment: dev
     timeout-minutes: 60
     env:
       ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
@@ -33,7 +34,7 @@ jobs:
           for name in ASC_KEY_ID ASC_ISSUER_ID ASC_KEY_P8 APPLE_TEAM_ID; do
             if [ -z "${!name}" ]; then missing="$missing $name"; fi
           done
-          if [ -n "$missing" ]; then echo "Missing repository secrets:$missing (see docs/TESTFLIGHT.md)"; exit 1; fi
+          if [ -n "$missing" ]; then echo "Missing GitHub secrets:$missing (see docs/TESTFLIGHT.md)"; exit 1; fi
           if [ -n "$VITE_REVENUECAT_IOS_KEY" ]; then
             if [[ ! "$VITE_REVENUECAT_IOS_KEY" =~ ^appl_[A-Za-z0-9]+$ ]]; then
               echo "REVENUECAT_IOS_KEY must be a valid RevenueCat public App Store key"; exit 1

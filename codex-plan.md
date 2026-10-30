@@ -97,6 +97,8 @@ The source of truth for the design direction and pacing investigation is [docs/P
 
 - After GitHub CLI sign-in, the [instrumented RevenueCat run 40713403974](https://github.com/rouissimonir/saudi-game/actions/runs/40713403974) reported a timeout with no startup, ineligibility or initialization markers printed. The result does not distinguish app startup from simulator console capture; no transaction was attempted.
 
+- The owner chose GitHub Actions for TestFlight and added the App Store key, key ID and issuer ID as GitHub `dev` environment secrets. The TestFlight job now targets that environment; `APPLE_TEAM_ID` is still missing. The owner must confirm the exposed key was revoked and replaced before signing. No signed build or upload has run.
+
 ## Useful commands
 
 ```sh
