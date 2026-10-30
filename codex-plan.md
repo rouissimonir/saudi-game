@@ -105,6 +105,8 @@ The source of truth for the design direction and pacing investigation is [docs/P
 
 - App Store Connect now lists TestFlight build 3 as Missing Compliance and displays the encryption algorithm declaration. The app source search found no explicit cryptographic implementation, but the complete dependency chain has not been independently audited; the owner must make the declaration based on the actual build. No TestFlight installation has been verified.
 
+- For the TestFlight encryption question, the signed build log resolves RevenueCat iOS 5.99.0. A targeted search of that version’s `Sources` found imports of Apple CryptoKit and CommonCrypto and no matches for AES/encrypt/decrypt/OpenSSL; Capacitor’s iOS source imports CommonCrypto. This is evidence about the searched code, not a complete dependency or legal export classification. Apple’s declaration remains for the owner to review.
+
 ## Useful commands
 
 ```sh
