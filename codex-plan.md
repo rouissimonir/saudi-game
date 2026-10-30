@@ -107,6 +107,8 @@ The source of truth for the design direction and pacing investigation is [docs/P
 
 - For the TestFlight encryption question, the signed build log resolves RevenueCat iOS 5.99.0. A targeted search of that version’s `Sources` found imports of Apple CryptoKit and CommonCrypto and no matches for AES/encrypt/decrypt/OpenSSL; Capacitor’s iOS source imports CommonCrypto. This is evidence about the searched code, not a complete dependency or legal export classification. Apple’s declaration remains for the owner to review.
 
+- A targeted search of RevenueCat purchases-hybrid-common 19.17.0 iOS source found no matches for CryptoKit, CommonCrypto, AES, encrypt/decrypt, OpenSSL or SecKey; its package manifest depends on RevenueCat iOS 5.99.0. This complements the earlier core-SDK search but is not a complete audit of the signed binary or an export classification.
+
 ## Useful commands
 
 ```sh
