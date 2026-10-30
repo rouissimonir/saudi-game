@@ -101,6 +101,8 @@ The source of truth for the design direction and pacing investigation is [docs/P
 
 - The owner chose to try the existing Apple signing key despite its prior exposure; key rotation remains recommended. The first [GitHub TestFlight build](https://github.com/rouissimonir/saudi-game/actions/runs/41096810817) passed checks and web build, but archive/sign failed with `CryptoKitASN1Error.invalidPEMDocument`; the signing key secret needs to be corrected. No upload or device installation was verified.
 
+- The [GitHub TestFlight retry 41108311497](https://github.com/rouissimonir/saudi-game/actions/runs/41108311497) signed and uploaded build 3 successfully. Its logs say Apple began processing and no RevenueCat key was supplied, so this build cannot test purchases. Apple processing, TestFlight availability and installation on the owner’s iPhone remain unverified.
+
 ## Useful commands
 
 ```sh
