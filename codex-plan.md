@@ -99,7 +99,7 @@ The source of truth for the design direction and pacing investigation is [docs/P
 
 - The owner chose GitHub Actions for TestFlight and added the App Store key, key ID and issuer ID as GitHub `dev` environment secrets. The TestFlight job now targets that environment; `APPLE_TEAM_ID` is still missing. The owner must confirm the exposed key was revoked and replaced before signing. No signed build or upload has run.
 
-- The owner chose to try the existing Apple signing key despite its prior exposure; key rotation remains recommended. The first [GitHub TestFlight build](https://github.com/rouissimonir/saudi-game/actions/runs/41096810817) was started and is queued. Signing, upload and device installation remain unverified until the workflow and Apple processing complete.
+- The owner chose to try the existing Apple signing key despite its prior exposure; key rotation remains recommended. The first [GitHub TestFlight build](https://github.com/rouissimonir/saudi-game/actions/runs/41096810817) passed checks and web build, but archive/sign failed with `CryptoKitASN1Error.invalidPEMDocument`; the signing key secret needs to be corrected. No upload or device installation was verified.
 
 ## Useful commands
 
