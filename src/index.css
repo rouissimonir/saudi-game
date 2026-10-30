@@ -14,6 +14,9 @@
   /* Pinch-zoom stays available (WCAG 1.4.4); this only stops the browser zooming on a double tap while merging. */
   html {
     touch-action: manipulation;
+    /* Keep the page anchored horizontally even if a child extends past the phone viewport. */
+    overflow-x: clip;
+    overscroll-behavior-x: none;
   }
 
   body {
@@ -22,7 +25,7 @@
     color: #2C1E14;
     margin: 0;
     padding: 0;
-    overflow-x: hidden;
+    overflow-x: clip;
     -webkit-font-smoothing: antialiased;
     user-select: none;
     -webkit-user-select: none;
