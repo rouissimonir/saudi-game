@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { ArrowRightLeft, BookOpen, Castle, Coins, Gem, Gift, Grid3x3, Hammer, Languages, Menu, Pause, ScrollText, ShoppingBag, Smartphone, Star, Trophy, Volume2, VolumeX, X, Zap } from 'lucide-react';
+import { ArrowRightLeft, AudioLines, BookOpen, Castle, Coins, Gem, Gift, Grid3x3, Hammer, Languages, Menu, Pause, ScrollText, ShoppingBag, Smartphone, Star, Trophy, Volume2, VolumeX, X, Zap } from 'lucide-react';
 import { Language } from '../game/rules';
 import { formatCountdown } from './ProgressionModals';
 import { useNow } from '../utils/useNow';
+import { soundFX } from '../utils/soundAndHaptics';
 
 /** 980 -> "980", 12_480 -> "12.4k", 2_300_000 -> "2.3M" so pills never truncate on small phones. */
 export function compact(n: number): string {
@@ -44,6 +45,7 @@ export const GameHud: React.FC<{
 }> = (p) => {
   const isAr = p.lang === 'ar';
   const [menuOpen, setMenuOpen] = useState(false);
+  const [audioReport, setAudioReport] = useState<string | null>(null);
   const energyCountdownMs = p.energyCountdownAt(useNow());
   const ring = 2 * Math.PI * 17;
   return (
@@ -97,6 +99,16 @@ export const GameHud: React.FC<{
         {p.overlay}
       </div>
 
+      {audioReport !== null && (
+        <div className="absolute end-2 top-full mt-1 w-72 max-w-[calc(100vw-1rem)] rounded-2xl bg-[#FFFDF9] border-2 border-[#D97706] shadow-2xl p-3 text-[#3E2723] z-50" data-testid="audio-check" dir="ltr">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-sm font-black">Audio check</span>
+            <button type="button" onClick={() => setAudioReport(null)} aria-label="Close" className="p-1"><X className="w-4 h-4" /></button>
+          </div>
+          <pre className="whitespace-pre-wrap break-words text-[11px] leading-snug select-text">{audioReport}</pre>
+        </div>
+      )}
+
       {menuOpen && (
         <div className="absolute end-2 top-full mt-1 w-56 rounded-2xl bg-[#FFFDF9] border-2 border-[#D97706] shadow-2xl p-2 grid gap-1 text-[#3E2723]" data-testid="hud-menu">
           {[
@@ -107,6 +119,7 @@ export const GameHud: React.FC<{
             { icon: <Smartphone className="w-4 h-4" />, label: p.hapticsEnabled ? (isAr ? 'إيقاف الاهتزاز' : 'Turn haptics off') : (isAr ? 'تشغيل الاهتزاز' : 'Turn haptics on'), on: p.onToggleHaptics },
             { icon: <BookOpen className="w-4 h-4" />, label: isAr ? 'حلقات القصة' : 'Story episodes', on: p.onReplayStory },
             { icon: <ArrowRightLeft className="w-4 h-4" />, label: isAr ? 'نقل التقدم لجهاز آخر' : 'Transfer progress', on: p.onTransfer },
+            { icon: <AudioLines className="w-4 h-4" />, label: isAr ? 'فحص الصوت' : 'Audio check', on: () => { setAudioReport('…'); void soundFX.runAudioSelfTest().then(setAudioReport, (e: unknown) => setAudioReport(`Audio check failed: ${e instanceof Error ? e.message : String(e)}`)); } },
             { icon: <Pause className="w-4 h-4" />, label: isAr ? 'إيقاف مؤقت' : 'Pause', on: p.onPause },
           ].map((row) => (
             <button

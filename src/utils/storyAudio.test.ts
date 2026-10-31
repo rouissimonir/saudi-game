@@ -148,3 +148,60 @@ test('muting cancels a spoken character line', async () => {
     globalThis.fetch = originalFetch;
   }
 });
+
+test('a shipped voice file that fails to load is never read with the device voice, and the failure is reported', async () => {
+  const originalWindow = globalThis.window;
+  const originalFetch = globalThis.fetch;
+  const originalUtterance = globalThis.SpeechSynthesisUtterance;
+  let spoken = 0;
+  class FakeAudioContext { state = 'running'; currentTime = 0; destination = {}; decodeAudioData() { return Promise.reject(new Error('EncodingError')); } }
+  const speechSynthesis = { getVoices: () => [{ lang: 'ar-SA', name: 'Arabic' }], cancel: () => {}, speak: () => { spoken++; } };
+  Object.defineProperty(globalThis, 'window', { configurable: true, value: { AudioContext: FakeAudioContext, speechSynthesis } });
+  Object.defineProperty(globalThis, 'SpeechSynthesisUtterance', { configurable: true, value: class {} });
+  globalThis.fetch = (() => Promise.resolve(new Response(new Uint8Array([1, 2, 3])))) as typeof fetch;
+  try {
+    const sound = new SoundAndHapticsManager();
+    sound.playVoice('noura', 'served');
+    await new Promise(resolve => setTimeout(resolve, 0));
+    assert.equal(spoken, 0, 'formal-Arabic device speech must not replace a dialect recording');
+    const d = sound.getAudioDiagnostics();
+    assert.equal(d.files.length, 1);
+    assert.equal(d.files[0].ok, false);
+    assert.match(d.files[0].detail, /decode failed.*EncodingError/);
+    assert.match(d.lastVoicePlayback, /silent/);
+  } finally {
+    if (originalWindow === undefined) Reflect.deleteProperty(globalThis, 'window');
+    else Object.defineProperty(globalThis, 'window', { configurable: true, value: originalWindow });
+    if (originalUtterance === undefined) Reflect.deleteProperty(globalThis, 'SpeechSynthesisUtterance');
+    else Object.defineProperty(globalThis, 'SpeechSynthesisUtterance', { configurable: true, value: originalUtterance });
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('an interrupted audio context is resumed and the callback form of decodeAudioData works', async () => {
+  const originalWindow = globalThis.window;
+  const originalFetch = globalThis.fetch;
+  let resumes = 0, started = 0;
+  class FakeAudioContext {
+    state = 'interrupted'; currentTime = 0; destination = {};
+    resume() { resumes++; return Promise.resolve(); }
+    decodeAudioData(_d: ArrayBuffer, ok: (b: unknown) => void) { ok({ duration: 1 }); return undefined; }
+    createGain() { return { gain: { value: 1, setValueAtTime() {} }, connect() {} }; }
+    createBufferSource() { return { buffer: null, connect() {}, onended: null, start() { started++; }, stop() {} }; }
+  }
+  Object.defineProperty(globalThis, 'window', { configurable: true, value: { AudioContext: FakeAudioContext } });
+  globalThis.fetch = (() => Promise.resolve(new Response(new Uint8Array([1])))) as typeof fetch;
+  try {
+    const sound = new SoundAndHapticsManager();
+    sound.unlockAudio();
+    assert.equal(resumes, 1);
+    sound.playVoice('tariq', 'greet');
+    await new Promise(resolve => setTimeout(resolve, 0));
+    assert.equal(started, 1);
+    assert.match(sound.getAudioDiagnostics().lastVoicePlayback, /recorded file \(Web Audio\)/);
+  } finally {
+    if (originalWindow === undefined) Reflect.deleteProperty(globalThis, 'window');
+    else Object.defineProperty(globalThis, 'window', { configurable: true, value: originalWindow });
+    globalThis.fetch = originalFetch;
+  }
+});

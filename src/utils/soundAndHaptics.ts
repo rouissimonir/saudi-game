@@ -24,6 +24,23 @@ export function saveMuted(muted: boolean): void {
   try { localStorage.setItem(MUTE_KEY, String(muted)); } catch { /* The setting remains active for this session. */ }
 }
 
+export interface AudioFileReport {
+  url: string;
+  ok: boolean;
+  stage: 'decoded' | 'not found' | 'error';
+  detail: string;
+}
+
+export interface AudioDiagnostics {
+  contextState: string;
+  muted: boolean;
+  audioSession: string;
+  lastVoicePlayback: string;
+  files: AudioFileReport[];
+}
+
+class NotFoundError extends Error {}
+
 export class SoundAndHapticsManager {
   private ctx: AudioContext | null = null;
   private masterGain: GainNode | null = null;
@@ -43,6 +60,10 @@ export class SoundAndHapticsManager {
         try { this.voiceSource.stop(); } catch { /* already stopped */ }
         this.voiceSource = null;
       }
+      if (this.voiceElement) {
+        try { this.voiceElement.pause(); } catch { /* already stopped */ }
+        this.voiceElement = null;
+      }
       if (this.speaking && typeof window !== 'undefined' && 'speechSynthesis' in window) window.speechSynthesis.cancel();
       this.speaking = false;
       this.setDuck(false);
@@ -60,7 +81,57 @@ export class SoundAndHapticsManager {
   private fileBuffers = new Map<string, AudioBuffer | 'missing'>();
   private fileLoading = new Map<string, Promise<AudioBuffer | null>>();
 
-  /** Fetch and decode an audio file once; resolves null if it is missing or unreadable. */
+  /** Why each audio file loaded or failed; read by the in-game Audio check so a phone failure is visible. */
+  private reports = new Map<string, AudioFileReport>();
+  /** Files the server answered with 404: genuinely absent, as opposed to present but unreadable. */
+  private notFound = new Set<string>();
+  private lastPlayback = 'none yet';
+
+  private report(url: string, r: Omit<AudioFileReport, 'url'>) {
+    this.reports.set(url, { url, ...r });
+  }
+
+  /** Read a file as bytes. fetch first; XMLHttpRequest as a second try, because some WebViews serve app files to one and not the other. */
+  private async readBytes(url: string): Promise<ArrayBuffer> {
+    let fetchError = '';
+    try {
+      const r = await fetch(url);
+      if (r.status === 404) {
+        this.notFound.add(url);
+        throw new NotFoundError();
+      }
+      if (!r.ok) throw new Error(`fetch status ${r.status}`);
+      const data = await r.arrayBuffer();
+      if (data.byteLength === 0) throw new Error('fetch returned 0 bytes');
+      return data;
+    } catch (e) {
+      if (e instanceof NotFoundError) throw e;
+      fetchError = e instanceof Error ? e.message : String(e);
+    }
+    if (typeof XMLHttpRequest === 'undefined') throw new Error(`fetch failed: ${fetchError}`);
+    return new Promise<ArrayBuffer>((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('GET', url);
+      xhr.responseType = 'arraybuffer';
+      xhr.onload = () => {
+        const data = xhr.response as ArrayBuffer | null;
+        if ((xhr.status === 200 || xhr.status === 0) && data && data.byteLength > 0) resolve(data);
+        else reject(new Error(`fetch failed: ${fetchError}; xhr status ${xhr.status}`));
+      };
+      xhr.onerror = () => reject(new Error(`fetch failed: ${fetchError}; xhr network error`));
+      xhr.send();
+    });
+  }
+
+  /** Decode with both the promise and the callback form of decodeAudioData, so older WebKit also works. */
+  private decode(ctx: AudioContext, data: ArrayBuffer): Promise<AudioBuffer> {
+    return new Promise<AudioBuffer>((resolve, reject) => {
+      const maybe = ctx.decodeAudioData(data, resolve, (err) => reject(err ?? new Error('decodeAudioData failed')));
+      if (maybe && typeof maybe.then === 'function') maybe.then(resolve, reject);
+    });
+  }
+
+  /** Fetch and decode an audio file once; resolves null if it is missing or unreadable (the reason is kept in `reports`). */
   private loadBuffer(url: string): Promise<AudioBuffer | null> {
     const cached = this.fileBuffers.get(url);
     if (cached) return Promise.resolve(cached === 'missing' ? null : cached);
@@ -68,18 +139,21 @@ export class SoundAndHapticsManager {
     if (inflight) return inflight;
     const ctx = this.ensureContext();
     if (!ctx || typeof fetch === 'undefined') return Promise.resolve(null);
-    const p = fetch(url)
-      .then((r) => {
-        if (!r.ok) throw new Error('missing');
-        return r.arrayBuffer();
+    const p = this.readBytes(url)
+      .then(async (data) => {
+        const bytes = data.byteLength;
+        try {
+          const buf = await this.decode(ctx, data);
+          this.report(url, { ok: true, stage: 'decoded', detail: `${bytes} bytes` });
+          this.fileBuffers.set(url, buf);
+          return buf as AudioBuffer | null;
+        } catch (e) {
+          throw new Error(`decode failed (${bytes} bytes): ${e instanceof Error ? e.message : String(e)}`);
+        }
       })
-      .then((data) => ctx.decodeAudioData(data))
-      .then((buf) => {
-        this.fileBuffers.set(url, buf);
-        return buf as AudioBuffer | null;
-      })
-      .catch(() => {
-        // 404, or a dev server answering with index.html: treat as "no file" and use the synth
+      .catch((e: unknown) => {
+        const notFound = e instanceof NotFoundError;
+        this.report(url, { ok: false, stage: notFound ? 'not found' : 'error', detail: notFound ? '404' : e instanceof Error ? e.message : String(e) });
         this.fileBuffers.set(url, 'missing');
         return null;
       })
@@ -115,8 +189,9 @@ export class SoundAndHapticsManager {
     this.voiceCounts.set(key, count + 1);
     const { id, line, profile } = pickVoiceLine(character, event, count);
     const generation = this.audioGeneration;
+    const url = voiceFileUrl(id);
 
-    void this.loadBuffer(voiceFileUrl(id)).then((buf) => {
+    void this.loadBuffer(url).then((buf) => {
       if (this.muted || generation !== this.audioGeneration) return;
       const ctx = this.ensureContext();
       if (buf && ctx) {
@@ -127,10 +202,93 @@ export class SoundAndHapticsManager {
         src.onended = () => { if (this.voiceSource === src) { this.voiceSource = null; this.setDuck(false); } };
         src.start();
         this.voiceSource = src;
+        this.lastPlayback = `${id}: recorded file (Web Audio)`;
         return;
       }
-      this.speakArabic(line.ar, profile);
+      if (this.notFound.has(url)) {
+        // Only a file that genuinely is not shipped falls back to the phone's formal-Arabic voice.
+        this.lastPlayback = `${id}: file not found, device Arabic voice`;
+        this.speakArabic(line.ar, profile);
+        return;
+      }
+      // The file is shipped but Web Audio could not load or play it. Try a plain audio element before giving up;
+      // never read a dialect line with the device's formal-Arabic voice.
+      this.playWithElement(url, id);
     });
+  }
+
+  private voiceElement: HTMLAudioElement | null = null;
+
+  /** Second route for a shipped file that Web Audio could not load: an <audio> element. */
+  private playWithElement(url: string, id: string) {
+    if (typeof Audio === 'undefined') {
+      this.lastPlayback = `${id}: recorded file could not be loaded; silent`;
+      return;
+    }
+    try {
+      const el = new Audio(url);
+      const done = () => { if (this.voiceElement === el) { this.voiceElement = null; this.setDuck(false); } };
+      el.onended = done;
+      el.onerror = () => { done(); this.lastPlayback = `${id}: <audio> element error; silent`; };
+      this.voiceElement = el;
+      this.setDuck(true);
+      const started = el.play();
+      this.lastPlayback = `${id}: recorded file (<audio> element)`;
+      if (started && typeof started.catch === 'function') {
+        started.catch((e: unknown) => { done(); this.lastPlayback = `${id}: <audio> play() rejected (${e instanceof Error ? e.name : String(e)}); silent`; });
+      }
+    } catch (e) {
+      this.lastPlayback = `${id}: <audio> element failed (${e instanceof Error ? e.message : String(e)}); silent`;
+    }
+  }
+
+  /** Snapshot for the Audio check screen. */
+  public getAudioDiagnostics(): AudioDiagnostics {
+    const audioSession = typeof navigator !== 'undefined' ? (navigator as unknown as { audioSession?: { type?: string } }).audioSession?.type : undefined;
+    return {
+      contextState: this.ctx ? this.ctx.state : 'not created',
+      muted: this.muted,
+      audioSession: audioSession ?? 'n/a',
+      lastVoicePlayback: this.lastPlayback,
+      files: [...this.reports.values()],
+    };
+  }
+
+  /**
+   * Load and play one real character line, then describe what happened. Used by the menu's Audio check:
+   * if this says "loaded and played" but nothing is heard, the phone is silencing Web Audio (Ring/Silent switch or volume).
+   */
+  public async runAudioSelfTest(): Promise<string> {
+    if (typeof window === 'undefined') return 'No window.';
+    this.unlockAudio();
+    const id = 'noura_served_1';
+    const url = voiceFileUrl(id);
+    const ctx = this.ensureContext();
+    const lines: string[] = [];
+    if (!ctx) lines.push('Web Audio could not be created (muted or unsupported).');
+    else {
+      lines.push(`Audio context: ${ctx.state}`);
+      this.fileBuffers.delete(url);
+      const buf = await this.loadBuffer(url);
+      if (buf) {
+        const src = ctx.createBufferSource();
+        src.buffer = buf;
+        src.connect(this.output(ctx));
+        src.start();
+        lines.push(`${id}: loaded (${buf.duration.toFixed(1)} s) and played with Web Audio.`);
+        lines.push('If you heard nothing: turn the Ring/Silent switch to ring and raise the media volume.');
+      } else {
+        const r = this.reports.get(url);
+        lines.push(`${id}: FAILED to load. ${r ? `${r.stage}: ${r.detail}` : 'no report'}`);
+      }
+    }
+    const d = this.getAudioDiagnostics();
+    lines.push(`Audio session: ${d.audioSession}`);
+    lines.push(`Last character line: ${d.lastVoicePlayback}`);
+    const failed = d.files.filter((f) => !f.ok);
+    lines.push(`Files loaded: ${d.files.length - failed.length}, failed: ${failed.length}`);
+    failed.slice(0, 4).forEach((f) => lines.push(`  ${f.url.split('/').slice(-2).join('/')} - ${f.stage}: ${f.detail}`));
+    return lines.join('\n');
   }
 
   private storySource: AudioBufferSourceNode | null = null;
@@ -365,7 +523,8 @@ export class SoundAndHapticsManager {
         this.ctx = new AudioCtx();
       }
     }
-    if (this.ctx && this.ctx.state === 'suspended') {
+    // iOS can also leave a context 'interrupted' (a call, Siri, another app); resume that too.
+    if (this.ctx && this.ctx.state !== 'running' && this.ctx.state !== 'closed' && typeof this.ctx.resume === 'function') {
       this.ctx.resume().catch(() => {});
     }
     return this.ctx;
