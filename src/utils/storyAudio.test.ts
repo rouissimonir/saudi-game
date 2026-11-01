@@ -42,6 +42,39 @@ test('mute preference persists and unavailable storage does not interrupt play',
   }
 });
 
+test('story completion resolves when playback ends, is stopped, or audio is missing', async () => {
+  const originalWindow = globalThis.window;
+  const originalFetch = globalThis.fetch;
+  let source: { onended: (() => void) | null; buffer: unknown; connect: () => void; start: () => void; stop: () => void };
+  class FakeAudioContext {
+    state = 'running'; currentTime = 0; destination = {};
+    decodeAudioData() { return Promise.resolve({}); }
+    createGain() { return { gain: { value: 1 }, connect() {} }; }
+    createBufferSource() { source = { buffer: null, onended: null, connect() {}, start() {}, stop() {} }; return source; }
+  }
+  Object.defineProperty(globalThis, 'window', { configurable: true, value: { AudioContext: FakeAudioContext } });
+  globalThis.fetch = (() => Promise.resolve(new Response(new Uint8Array([1])))) as typeof fetch;
+  try {
+    const sound = new SoundAndHapticsManager();
+    let done = false;
+    const first = sound.playStoryLine('first').then(() => { done = true; });
+    await new Promise(resolve => setTimeout(resolve, 0));
+    assert.equal(done, false);
+    source!.onended!();
+    await first;
+    assert.equal(done, true);
+    const stopped = sound.playStoryLine('second');
+    sound.stopStoryLine();
+    await stopped;
+    globalThis.fetch = (() => Promise.resolve(new Response('', { status: 404 }))) as typeof fetch;
+    await sound.playStoryLine('missing');
+  } finally {
+    if (originalWindow === undefined) Reflect.deleteProperty(globalThis, 'window');
+    else Object.defineProperty(globalThis, 'window', { configurable: true, value: originalWindow });
+    globalThis.fetch = originalFetch;
+  }
+});
+
 test('late story audio cannot replace a newer or stopped line', async () => {
   const originalWindow = globalThis.window;
   const originalFetch = globalThis.fetch;

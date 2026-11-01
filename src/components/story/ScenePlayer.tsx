@@ -61,7 +61,7 @@ const prefersReducedMotion = () => typeof window !== 'undefined' && !!window.mat
 
 /** Audio and haptics come from the app, so this chunk does not pull in the sound manager (and the rules it imports). */
 export interface SceneSound {
-  playLine: (id: string) => void;
+  playLine: (id: string) => Promise<void>;
   stopLine: () => void;
   preloadLine: (id: string) => void;
   haptic: (strength: 'light' | 'medium') => void;
@@ -93,6 +93,7 @@ export const ScenePlayer: React.FC<ScenePlayerProps> = ({ sceneId, scene: given,
   const [auto, setAuto] = useState(loadAuto);
   const [history, setHistory] = useState<string[]>([]);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [voiceFinished, setVoiceFinished] = useState(false);
   const finishedRef = useRef(false);
   const beat = currentBeat(scene, play);
   const text = beat ? Array.from(isAr ? beat.textAr : beat.textEn) : [];
@@ -116,10 +117,13 @@ export const ScenePlayer: React.FC<ScenePlayerProps> = ({ sceneId, scene: given,
 
   // Stop voices while backgrounded, and replay the current line on return.
   useEffect(() => {
-    if (!beat || !pageVisible) { sound.stopLine(); return; }
-    if (beat.voice) sound.playLine(beat.voice);
-    else sound.stopLine();
+    let current = true;
+    setVoiceFinished(false);
+    if (!beat || !pageVisible) { sound.stopLine(); return () => { current = false; }; }
+    if (beat.voice) void sound.playLine(beat.voice).then(() => { if (current) setVoiceFinished(true); });
+    else { sound.stopLine(); setVoiceFinished(true); }
     for (const b of upcomingBeats(scene, play)) if (b.voice) sound.preloadLine(b.voice);
+    return () => { current = false; };
   }, [beat?.id, pageVisible]);
 
   useEffect(() => {
@@ -157,12 +161,12 @@ export const ScenePlayer: React.FC<ScenePlayerProps> = ({ sceneId, scene: given,
     }
   }, [beat, finale, historyOpen, typing, text.length, scene, play, reduced, finish, sound]);
 
-  // Auto mode: once a line has finished typing, move on after a reading pause; choices still wait for the player.
+  // Allow reading time and the voice to finish. A bounded fallback prevents a blocked audio device from trapping auto mode.
   useEffect(() => {
     if (!pageVisible || !auto || historyOpen || typing || !beat || beat.choice || finale) return;
-    const t = window.setTimeout(next, autoDelayMs(text.length));
+    const t = window.setTimeout(next, voiceFinished ? autoDelayMs(text.length) : Math.max(15000, autoDelayMs(text.length)));
     return () => window.clearTimeout(t);
-  }, [auto, historyOpen, typing, beat, finale, next, text.length, pageVisible]);
+  }, [auto, historyOpen, typing, beat, finale, next, text.length, pageVisible, voiceFinished]);
 
   const toggleAuto = () => {
     setAuto((on) => {

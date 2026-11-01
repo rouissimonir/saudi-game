@@ -135,6 +135,7 @@ export class SoundAndHapticsManager {
 
   private storySource: AudioBufferSourceNode | null = null;
   private storyRequest = 0;
+  private finishStoryRequest: (() => void) | null = null;
 
   /** Fetch and decode a story line ahead of its beat, so it starts with its text even on a slow connection. */
   public preloadStoryLine(id: string) {
@@ -152,14 +153,15 @@ export class SoundAndHapticsManager {
   }
 
   /** Voiced story-scene line (public/assets/audio/story/<id>.mp3). Stops the previous line; silent if the file is missing. */
-  public playStoryLine(id: string) {
+  public playStoryLine(id: string): Promise<void> {
     this.stopStoryLine();
-    if (this.muted || typeof window === 'undefined') return;
+    if (this.muted || typeof window === 'undefined') return Promise.resolve();
     const request = this.storyRequest;
+    const finished = new Promise<void>((resolve) => { this.finishStoryRequest = resolve; });
     void this.trackStoryLoad(this.loadBuffer(assetUrl(`assets/audio/story/${id}.mp3`))).then((buf) => {
       if (request !== this.storyRequest) return;
       const ctx = this.ensureContext();
-      if (!buf || !ctx || this.muted) return;
+      if (!buf || !ctx || this.muted) { this.finishStoryRequest?.(); this.finishStoryRequest = null; return; }
       const src = ctx.createBufferSource();
       src.buffer = buf;
       src.connect(this.output(ctx));
@@ -168,15 +170,26 @@ export class SoundAndHapticsManager {
         if (this.storySource === src) {
           this.storySource = null;
           this.setDuck(false);
+          this.finishStoryRequest?.();
+          this.finishStoryRequest = null;
         }
       };
-      src.start();
       this.storySource = src;
+      src.start();
+    }).catch(() => {
+      if (request !== this.storyRequest) return;
+      this.storySource = null;
+      this.setDuck(false);
+      this.finishStoryRequest?.();
+      this.finishStoryRequest = null;
     });
+    return finished;
   }
 
   public stopStoryLine() {
     this.storyRequest += 1;
+    this.finishStoryRequest?.();
+    this.finishStoryRequest = null;
     if (!this.storySource) return;
     try {
       this.storySource.stop();
