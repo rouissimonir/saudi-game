@@ -57,13 +57,13 @@ export class SoundAndHapticsManager {
   private ambientSource: AudioBufferSourceNode | null = null;
   private ambientGain: GainNode | null = null;
   private duck = 1;
-  private fileBuffers = new Map<string, AudioBuffer | 'missing'>();
+  private fileBuffers = new Map<string, AudioBuffer>();
   private fileLoading = new Map<string, Promise<AudioBuffer | null>>();
 
   /** Fetch and decode an audio file once; resolves null if it is missing or unreadable. */
   private loadBuffer(url: string): Promise<AudioBuffer | null> {
     const cached = this.fileBuffers.get(url);
-    if (cached) return Promise.resolve(cached === 'missing' ? null : cached);
+    if (cached) return Promise.resolve(cached);
     const inflight = this.fileLoading.get(url);
     if (inflight) return inflight;
     const ctx = this.ensureContext();
@@ -79,8 +79,7 @@ export class SoundAndHapticsManager {
         return buf as AudioBuffer | null;
       })
       .catch(() => {
-        // 404, or a dev server answering with index.html: treat as "no file" and use the synth
-        this.fileBuffers.set(url, 'missing');
+        // A later attempt may succeed after a transient fetch or decode failure.
         return null;
       })
       .finally(() => this.fileLoading.delete(url));

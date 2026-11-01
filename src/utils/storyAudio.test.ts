@@ -75,6 +75,34 @@ test('story completion resolves when playback ends, is stopped, or audio is miss
   }
 });
 
+test('a temporarily unavailable story clip can be retried and successful audio is cached', async () => {
+  const originalWindow = globalThis.window;
+  const originalFetch = globalThis.fetch;
+  let requests = 0, starts = 0;
+  class FakeAudioContext {
+    state = 'running'; currentTime = 0; destination = {};
+    decodeAudioData() { return Promise.resolve({}); }
+    createGain() { return { gain: { value: 1 }, connect() {} }; }
+    createBufferSource() { return { buffer: null, onended: null as (() => void) | null, connect() {}, start() { starts++; queueMicrotask(() => this.onended?.()); }, stop() {} }; }
+  }
+  Object.defineProperty(globalThis, 'window', { configurable: true, value: { AudioContext: FakeAudioContext } });
+  globalThis.fetch = (() => { requests++; return requests === 1 ? Promise.reject(new Error('temporary failure')) : Promise.resolve(new Response(new Uint8Array([1]))); }) as typeof fetch;
+  try {
+    const sound = new SoundAndHapticsManager();
+    await sound.playStoryLine('retry');
+    assert.equal(starts, 0);
+    await sound.playStoryLine('retry');
+    assert.equal(starts, 1);
+    await sound.playStoryLine('retry');
+    assert.equal(starts, 2);
+    assert.equal(requests, 2, 'the successful retry is cached');
+  } finally {
+    if (originalWindow === undefined) Reflect.deleteProperty(globalThis, 'window');
+    else Object.defineProperty(globalThis, 'window', { configurable: true, value: originalWindow });
+    globalThis.fetch = originalFetch;
+  }
+});
+
 test('late story audio cannot replace a newer or stopped line', async () => {
   const originalWindow = globalThis.window;
   const originalFetch = globalThis.fetch;
