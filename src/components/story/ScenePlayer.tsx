@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Coins, FastForward, Gem, Pause, Play, ScrollText, X, Zap } from 'lucide-react';
+import { Coins, FastForward, Gem, Pause, Play, ScrollText, Volume2, VolumeX, X, Zap } from 'lucide-react';
 import { Language } from '../../game/rules';
 import { advance, autoDelayMs, choose, currentBeat, ScenePlay, skip, startScene, upcomingBeats } from '../../story/engine';
 import { SCENES } from '../../story/scenes';
@@ -74,6 +74,8 @@ interface ScenePlayerProps {
   scene?: Scene;
   lang: Language;
   sound: SceneSound;
+  muted: boolean;
+  onToggleMute: () => void;
   onFinish: (play: ScenePlay) => void;
 }
 
@@ -82,7 +84,7 @@ interface ScenePlayerProps {
  * enter, breathe, bob while talking and change expression, a typewriter speech bubble, two-option choices and Skip.
  * Tap anywhere: finish the line, then go to the next beat.
  */
-export const ScenePlayer: React.FC<ScenePlayerProps> = ({ sceneId, scene: given, lang, sound, onFinish }) => {
+export const ScenePlayer: React.FC<ScenePlayerProps> = ({ sceneId, scene: given, lang, sound, muted, onToggleMute, onFinish }) => {
   const scene: Scene = given ?? SCENES[sceneId];
   const isAr = lang === 'ar';
   const pageVisible = usePageVisible();
@@ -124,7 +126,7 @@ export const ScenePlayer: React.FC<ScenePlayerProps> = ({ sceneId, scene: given,
     else { sound.stopLine(); setVoiceFinished(true); }
     for (const b of upcomingBeats(scene, play)) if (b.voice) sound.preloadLine(b.voice);
     return () => { current = false; };
-  }, [beat?.id, pageVisible]);
+  }, [beat?.id, pageVisible, muted]);
 
   useEffect(() => {
     if (!typing || !pageVisible) return;
@@ -237,6 +239,15 @@ export const ScenePlayer: React.FC<ScenePlayerProps> = ({ sceneId, scene: given,
         <div className="scene-bar scene-bar-bottom" />
 
         <div className="scene-controls-start absolute z-20 flex items-center gap-2">
+        <button
+          type="button"
+          data-testid="scene-sound"
+          aria-label={muted ? (isAr ? 'تشغيل الصوت' : 'Turn sound on') : (isAr ? 'كتم الصوت' : 'Mute sound')}
+          onClick={(e) => { e.stopPropagation(); onToggleMute(); }}
+          className="inline-flex items-center justify-center w-11 h-11 rounded-full bg-black/45 border border-white/30 text-white backdrop-blur-sm"
+        >
+          {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+        </button>
         <button
           type="button"
           data-testid="scene-history"

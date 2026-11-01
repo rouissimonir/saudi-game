@@ -2,7 +2,7 @@
 
 These Playwright checks simulate a phone browser; they do not replace an Xcode build or real-iPhone testing.
 
-Run `node tools/e2e/story-autoplay.cjs http://127.0.0.1:4173/` to check that story auto-play waits for a simulated voice, recovers when a voice stalls, advances while muted, and still allows manual advancement. It does not verify audible playback or iOS audio.
+Run `node tools/e2e/story-autoplay.cjs http://127.0.0.1:4173/` to check that story auto-play waits for a simulated voice, recovers when a voice stalls, advances while muted, and still allows manual advancement. It also checks the scene sound control and small-screen placement in Arabic and English. It does not verify audible playback or iOS audio.
 
 Install project dependencies and a Playwright Chromium browser once:
 

@@ -1955,7 +1955,7 @@ export default function App() {
 
       {activeScene && (
         <Suspense fallback={<div className="fixed inset-0 z-[60] bg-black" />}>
-          <ScenePlayer sceneId={activeScene} lang={lang} sound={SCENE_SOUND} onFinish={handleSceneFinish} />
+          <ScenePlayer sceneId={activeScene} lang={lang} sound={SCENE_SOUND} muted={muted} onToggleMute={handleToggleMute} onFinish={handleSceneFinish} />
         </Suspense>
       )}
 
@@ -2026,6 +2026,8 @@ export default function App() {
             scene={endingSceneData}
             lang={lang}
             sound={SCENE_SOUND}
+            muted={muted}
+            onToggleMute={handleToggleMute}
             onFinish={(play) => {
               setEndingOpen(false);
               setGameState((prev) => applySceneResult(prev, play));
@@ -2042,6 +2044,8 @@ export default function App() {
             scene={replaySceneData}
             lang={lang}
             sound={SCENE_SOUND}
+            muted={muted}
+            onToggleMute={handleToggleMute}
             onFinish={() => setReplayChapterId(null)}
           />
         </Suspense>
@@ -2055,6 +2059,8 @@ export default function App() {
             scene={chapterSceneData}
             lang={lang}
             sound={SCENE_SOUND}
+            muted={muted}
+            onToggleMute={handleToggleMute}
             onFinish={handleChapterSceneFinish}
           />
         </Suspense>
