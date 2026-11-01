@@ -52,6 +52,7 @@ export class SoundAndHapticsManager {
     if (this.ctx && this.masterGain) this.masterGain.gain.setValueAtTime(value ? 0 : 1, this.ctx.currentTime);
     if (value) {
       this.audioGeneration++;
+      this.releaseMediaAudioSession();
       this.stopStoryLine();
       if (this.voiceSource) {
         try { this.voiceSource.stop(); } catch { /* already stopped */ }
@@ -405,6 +406,19 @@ export class SoundAndHapticsManager {
   }
 
   private mediaSessionPrimed = false;
+  private mediaSessionElement: HTMLAudioElement | null = null;
+
+  private releaseMediaAudioSession(): void {
+    if (!this.mediaSessionPrimed && !this.mediaSessionElement) return;
+    const element = this.mediaSessionElement;
+    this.mediaSessionElement = null;
+    this.mediaSessionPrimed = false;
+    element?.pause();
+    try {
+      const session = (navigator as unknown as { audioSession?: { type: string } }).audioSession;
+      if (session) session.type = 'auto';
+    } catch { /* unsupported */ }
+  }
 
   /**
    * iPhones route Web Audio through the "ambient" category, which the hardware silent switch mutes
@@ -416,7 +430,7 @@ export class SoundAndHapticsManager {
     this.mediaSessionPrimed = true;
     try {
       const session = (navigator as unknown as { audioSession?: { type: string } }).audioSession;
-      if (session) session.type = 'playback'; // iOS 16.4+
+      if (session) { session.type = 'playback'; return; }
     } catch { /* unsupported */ }
     try {
       // Older iOS: a playing (silent) media element switches the page to the playback category.
@@ -425,8 +439,13 @@ export class SoundAndHapticsManager {
       el.loop = true;
       el.src = SILENT_WAV;
       el.volume = 0.01;
-      void el.play().catch(() => { this.mediaSessionPrimed = false; });
-    } catch { this.mediaSessionPrimed = false; }
+      this.mediaSessionElement = el;
+      void el.play().catch(() => {
+        if (this.mediaSessionElement !== el) return;
+        this.mediaSessionElement = null;
+        this.mediaSessionPrimed = false;
+      });
+    } catch { this.mediaSessionElement = null; this.mediaSessionPrimed = false; }
   }
 
   /** A shared output makes the mute control silence already-playing Web Audio nodes immediately. */

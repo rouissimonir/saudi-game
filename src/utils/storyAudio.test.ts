@@ -44,6 +44,69 @@ test('an interrupted audio context is asked to resume on the next player gesture
   }
 });
 
+test('muting releases the media helper and an old rejected play cannot reset its replacement', async () => {
+  const windowDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'window');
+  const navigatorDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'navigator');
+  const documentDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'document');
+  let created = 0, paused = 0;
+  const rejections: Array<() => void> = [];
+  class FakeAudioContext { state = 'running'; }
+  Object.defineProperty(globalThis, 'window', { configurable: true, value: { AudioContext: FakeAudioContext } });
+  Object.defineProperty(globalThis, 'navigator', { configurable: true, value: {} });
+  Object.defineProperty(globalThis, 'document', { configurable: true, value: { createElement() {
+    created++;
+    return { setAttribute() {}, pause() { paused++; }, play() { return new Promise<void>((_, reject) => rejections.push(() => reject(new Error('play denied')))); } };
+  } } });
+  try {
+    const sound = new SoundAndHapticsManager();
+    sound.unlockAudio();
+    assert.equal(created, 1);
+    sound.muted = true;
+    assert.equal(paused, 1);
+    sound.muted = false;
+    sound.unlockAudio();
+    assert.equal(created, 2);
+    rejections[0]();
+    await Promise.resolve();
+    sound.unlockAudio();
+    assert.equal(created, 2, 'a stale rejection does not reset the new helper');
+    sound.muted = true;
+    assert.equal(paused, 2);
+  } finally {
+    for (const [name, descriptor] of [['window', windowDescriptor], ['navigator', navigatorDescriptor], ['document', documentDescriptor]] as const) {
+      if (descriptor) Object.defineProperty(globalThis, name, descriptor);
+      else Reflect.deleteProperty(globalThis, name);
+    }
+  }
+});
+
+test('supported audio session is reset when muting and restored on unmute', () => {
+  const windowDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'window');
+  const navigatorDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'navigator');
+  const documentDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'document');
+  const session = { type: 'auto' };
+  class FakeAudioContext { state = 'running'; }
+  Object.defineProperty(globalThis, 'window', { configurable: true, value: { AudioContext: FakeAudioContext } });
+  Object.defineProperty(globalThis, 'navigator', { configurable: true, value: { audioSession: session } });
+  Object.defineProperty(globalThis, 'document', { configurable: true, value: { createElement() { throw new Error('unneeded helper'); } } });
+  try {
+    const sound = new SoundAndHapticsManager();
+    sound.unlockAudio();
+    assert.equal(session.type, 'playback');
+    sound.muted = true;
+    assert.equal(session.type, 'auto');
+    sound.muted = false;
+    sound.unlockAudio();
+    assert.equal(session.type, 'playback');
+    sound.muted = true;
+  } finally {
+    for (const [name, descriptor] of [['window', windowDescriptor], ['navigator', navigatorDescriptor], ['document', documentDescriptor]] as const) {
+      if (descriptor) Object.defineProperty(globalThis, name, descriptor);
+      else Reflect.deleteProperty(globalThis, name);
+    }
+  }
+});
+
 test('mute preference persists and unavailable storage does not interrupt play', () => {
   const original = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
   const values = new Map<string, string>();
