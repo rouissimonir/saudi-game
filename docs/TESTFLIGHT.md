@@ -17,7 +17,9 @@ The Codemagic file has not been run: expect to read the build log and adjust on 
 
 Builds, signs and uploads the same way with GitHub's cloud Mac.
 
-**Status:** [GitHub Actions run 41108311497](https://github.com/rouissimonir/saudi-game/actions/runs/41108311497) successfully signed and uploaded build 3 to App Store Connect. App Store Connect now shows build 3 as Ready to Submit; no internal testing group or iPhone installation has yet been verified. This build did not include a RevenueCat key and cannot test purchases.
+**Status:** [GitHub Actions run 41134375763](https://github.com/rouissimonir/saudi-game/actions/runs/41134375763) successfully signed and uploaded build 5 from commit `a6a0f75`. The owner reports testing on an iPhone and an audio issue remains; its exact symptoms are not yet clear. The workflow log says no RevenueCat key was configured, so this build cannot test purchases. Apple processing and distribution to any particular tester have not been independently checked.
+
+To replay the opening without erasing progress, open the in-game **Menu → Story episodes → Prologue** (القائمة ← حلقات القصة ← المقدمة), provided the opening has been completed or skipped. For audio diagnosis, check that the menu offers **Mute** (meaning in-game sound is on), turn the iPhone's Ring/Silent switch off, raise the media volume while the game is open, and note separately whether music, merge effects, and opening voices are audible.
 
 ## One-time setup for Option B (about 15 minutes)
 
