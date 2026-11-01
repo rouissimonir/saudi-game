@@ -77,23 +77,23 @@ jobs:
           done
           echo "result=$RESULT" >> "$GITHUB_OUTPUT"
           echo "Test Store probe result: $RESULT. No transaction was attempted." | tee -a "$GITHUB_STEP_SUMMARY"
+          # Capture while the launched app is still attached, including on timeout or probe failure.
+          xcrun simctl io "$SIMULATOR_ID" screenshot "$RUNNER_TEMP/qahwa-test-store.png" || echo 'Simulator screenshot unavailable.'
           if [ "$RESULT" != success ]; then exit 0; fi
           echo 'Test Store returned all three expected packages.' | tee -a "$GITHUB_STEP_SUMMARY"
-      - name: Fail when offerings probe reports an error
-        if: steps.probe.outputs.result == 'probe_failed'
-        run: exit 1
-      - name: Fail when app exits before offerings are checked
-        if: steps.probe.outputs.result == 'launch_ended'
-        run: exit 1
-      - name: Fail when offerings probe times out
-        if: steps.probe.outputs.result == 'timeout'
-        run: exit 1
-      - name: Capture test app screenshot
-        timeout-minutes: 2
-        run: xcrun simctl io "$SIMULATOR_ID" screenshot "$RUNNER_TEMP/qahwa-test-store.png"
       - name: Save launch screenshot
+        if: always() && steps.probe.outputs.result != ''
         uses: actions/upload-artifact@v4
         with:
           name: revenuecat-test-store-launch
           path: ${{ runner.temp }}/qahwa-test-store.png
-          if-no-files-found: error
+          if-no-files-found: warn
+      - name: Fail when offerings probe reports an error
+        if: always() && steps.probe.outputs.result == 'probe_failed'
+        run: exit 1
+      - name: Fail when app exits before offerings are checked
+        if: always() && steps.probe.outputs.result == 'launch_ended'
+        run: exit 1
+      - name: Fail when offerings probe times out
+        if: always() && steps.probe.outputs.result == 'timeout'
+        run: exit 1
