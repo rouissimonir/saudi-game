@@ -15,6 +15,20 @@ const AMBIENT_URL = assetUrl('assets/audio/ambient.mp3');
 const ORDER_COMPLETE_URL = assetUrl('assets/audio/order_complete.mp3');
 const LEVEL_UP_URL = assetUrl('assets/audio/level_up.mp3');
 const MUTE_KEY = 'qahwa_sound_muted';
+/** One second of 8 kHz 8-bit silence, used to put iOS into the media audio session. */
+const SILENT_WAV = (() => {
+  const n = 8000;
+  const bytes = new Uint8Array(44 + n);
+  const v = new DataView(bytes.buffer);
+  const str = (o: number, s: string) => { for (let i = 0; i < s.length; i++) bytes[o + i] = s.charCodeAt(i); };
+  str(0, 'RIFF'); v.setUint32(4, 36 + n, true); str(8, 'WAVEfmt ');
+  v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, 8000, true); v.setUint32(28, 8000, true); v.setUint16(32, 1, true); v.setUint16(34, 8, true);
+  str(36, 'data'); v.setUint32(40, n, true); bytes.fill(128, 44);
+  let bin = '';
+  for (const b of bytes) bin += String.fromCharCode(b);
+  return `data:audio/wav;base64,${typeof btoa === 'function' ? btoa(bin) : ''}`;
+})();
 
 export function loadMuted(): boolean {
   try { return localStorage.getItem(MUTE_KEY) === 'true'; } catch { return false; }
@@ -387,6 +401,32 @@ export class SoundAndHapticsManager {
   /** Call synchronously from a player gesture so iOS can activate Web Audio. */
   public unlockAudio(): void {
     this.ensureContext();
+    this.useMediaAudioSession();
+  }
+
+  private mediaSessionPrimed = false;
+
+  /**
+   * iPhones route Web Audio through the "ambient" category, which the hardware silent switch mutes
+   * (a TestFlight/App Store build sounds dead while the same page works on desktop). Ask WebKit for the
+   * "playback" category so music and voices play regardless of the switch. Must run from a user gesture.
+   */
+  private useMediaAudioSession(): void {
+    if (this.mediaSessionPrimed || this.muted || typeof window === 'undefined') return;
+    this.mediaSessionPrimed = true;
+    try {
+      const session = (navigator as unknown as { audioSession?: { type: string } }).audioSession;
+      if (session) session.type = 'playback'; // iOS 16.4+
+    } catch { /* unsupported */ }
+    try {
+      // Older iOS: a playing (silent) media element switches the page to the playback category.
+      const el = document.createElement('audio');
+      el.setAttribute('playsinline', '');
+      el.loop = true;
+      el.src = SILENT_WAV;
+      el.volume = 0.01;
+      void el.play().catch(() => { this.mediaSessionPrimed = false; });
+    } catch { this.mediaSessionPrimed = false; }
   }
 
   /** A shared output makes the mute control silence already-playing Web Audio nodes immediately. */
