@@ -6,7 +6,7 @@ const { chromium } = require('playwright');
   const browser = await chromium.launch(executablePath ? { executablePath } : {});
   try {
     const page = await browser.newPage({ viewport: { width: 390, height: 844 }, reducedMotion: 'reduce' });
-    await page.addInitScript(() => {
+    const installFakeAudio = () => {
       localStorage.setItem('qahwa_lang', 'en');
       window.storyTestSources = [];
       class FakeAudioContext {
@@ -19,7 +19,8 @@ const { chromium } = require('playwright');
         }
       }
       window.AudioContext = FakeAudioContext;
-    });
+    };
+    await page.addInitScript(installFakeAudio);
     await page.goto(new URL('?autostart=1', process.argv[2] || 'http://localhost:4173/').href);
     await page.getByTestId('scene-auto').click();
     await page.waitForFunction(() => window.storyTestSources.length > 0);
@@ -28,6 +29,23 @@ const { chromium } = require('playwright');
     await page.evaluate(() => window.storyTestSources[0].onended());
     await page.getByTestId('actor-layla').waitFor({ timeout: 6000 });
     await page.getByTestId('actor-noura').waitFor({ timeout: 18000 });
-    console.log('Auto-play waited for the opening voice and advanced after a stalled subsequent voice timed out.');
+    await page.close();
+
+    const muted = await browser.newPage({ viewport: { width: 390, height: 844 }, reducedMotion: 'reduce' });
+    await muted.addInitScript(installFakeAudio);
+    await muted.addInitScript(() => localStorage.setItem('qahwa_sound_muted', 'true'));
+    await muted.goto(new URL('?autostart=1', process.argv[2] || 'http://localhost:4173/').href);
+    await muted.getByTestId('scene-auto').click();
+    await muted.getByTestId('actor-layla').waitFor({ timeout: 6000 });
+    await muted.close();
+
+    const manual = await browser.newPage({ viewport: { width: 390, height: 844 }, reducedMotion: 'reduce' });
+    await manual.addInitScript(installFakeAudio);
+    await manual.goto(new URL('?autostart=1', process.argv[2] || 'http://localhost:4173/').href);
+    await manual.waitForFunction(() => window.storyTestSources.length > 0);
+    await manual.getByTestId('scene-text').click();
+    await manual.getByTestId('actor-layla').waitFor({ timeout: 3000 });
+    await manual.close();
+    console.log('Auto-play waited for speech, recovered from a stalled voice, and advanced when muted; manual advance remained available.');
   } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });
