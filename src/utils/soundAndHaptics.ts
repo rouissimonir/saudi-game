@@ -377,7 +377,8 @@ export class SoundAndHapticsManager {
         this.ctx = new AudioCtx();
       }
     }
-    if (this.ctx && this.ctx.state === 'suspended') {
+    // WebKit can expose an extra "interrupted" state after a phone call or backgrounding.
+    if (this.ctx && (this.ctx.state === 'suspended' || (this.ctx.state as string) === 'interrupted')) {
       this.ctx.resume().catch(() => {});
     }
     return this.ctx;

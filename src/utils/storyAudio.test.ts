@@ -23,6 +23,27 @@ test('player gesture resumes a suspended audio context immediately and respects 
   }
 });
 
+test('an interrupted audio context is asked to resume on the next player gesture', () => {
+  const originalWindow = globalThis.window;
+  let resumes = 0;
+  class FakeAudioContext {
+    state = 'interrupted';
+    resume() { resumes++; return Promise.resolve(); }
+  }
+  Object.defineProperty(globalThis, 'window', { configurable: true, value: { AudioContext: FakeAudioContext } });
+  try {
+    const sound = new SoundAndHapticsManager();
+    sound.unlockAudio();
+    assert.equal(resumes, 1);
+    sound.muted = true;
+    sound.unlockAudio();
+    assert.equal(resumes, 1, 'muted audio is not resumed');
+  } finally {
+    if (originalWindow === undefined) Reflect.deleteProperty(globalThis, 'window');
+    else Object.defineProperty(globalThis, 'window', { configurable: true, value: originalWindow });
+  }
+});
+
 test('mute preference persists and unavailable storage does not interrupt play', () => {
   const original = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
   const values = new Map<string, string>();
