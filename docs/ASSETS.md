@@ -123,7 +123,7 @@ The story cast moves to semi-realistic painted 2D portraits, closer to Hollywood
 
 **Status: recorded.** All 32 lines (about 1,070 Arabic characters, written in Saudi dialect: Najdi for Noura, Tariq and Sultan, Hijazi for Faisal, Riyadh youth for Lama, formal Arabic for the jury) are generated with ElevenLabs and stored in `public/assets/audio/voice/<id>.mp3` (ids like `noura_served_2`, 2.4 to 4.5 s, mono mp3, about 1.4 MB in total). The text is in `src/game/voiceLines.ts`. A character speaks when you serve one of their orders (normal or VIP line) and when their story chapter opens. Music ducks while they talk, and Mute silences voices too.
 
-**Casting** (all Saudi-accent voices from the ElevenLabs library, model `eleven_v4`, no inline emotion tags, one take per line):
+**Casting** (ElevenLabs library voices, model `eleven_v4`, no inline emotion tags, one take per line; the jury voice is labelled Modern Standard Arabic, and the other labels do not establish accent quality):
 
 | Character | Voice |
 | --- | --- |
