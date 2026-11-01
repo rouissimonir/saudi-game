@@ -1264,7 +1264,7 @@ export default function App() {
         <div className="absolute inset-0 lg:hidden pointer-events-none" style={{ background: 'linear-gradient(to bottom, rgba(30,19,13,0.25) 0%, rgba(30,19,13,0) 18%, rgba(30,19,13,0) 52%, rgba(30,19,13,0.82) 68%, #1E130D 88%)' }} />
         <div className="relative z-10 h-3 w-full sadu-trim" />
 
-        <div className="relative z-10 flex-1 max-w-5xl w-full mx-auto px-6 py-6 lg:py-10 flex flex-col lg:flex-row items-center justify-between gap-4 lg:gap-10">
+        <div className="relative z-10 flex-1 max-w-5xl w-full mx-auto px-6 py-6 pt-[max(1.5rem,var(--game-safe-top))] pb-[max(1.5rem,var(--game-safe-bottom))] lg:py-10 flex flex-col lg:flex-row items-center justify-between gap-4 lg:gap-10">
           {/* Column 1: the emblem. On phones it holds the middle (where Layla appears) until the key art has loaded. */}
           <div className={`order-2 lg:order-none flex-1 lg:flex-none flex items-center justify-center transition-opacity duration-700 ${keyArtReady ? 'max-lg:opacity-0' : ''}`}>
           <div className="w-44 h-44 sm:w-72 sm:h-72 rounded-full bg-[#FFFDF9] border-4 border-[#F59E0B] shadow-[0_12px_50px_rgba(245,158,11,0.35)] flex items-center justify-center p-6 shrink-0">
@@ -1308,7 +1308,7 @@ export default function App() {
 
           {/* Column 2: Custom SVG Title Lockup & <= 3 Menu Actions (on phones the lockup leads, the rest sits at the bottom) */}
           <div className="contents lg:flex flex-col items-center lg:items-start text-center lg:text-start max-w-xl">
-            <svg viewBox="0 0 420 56" className="order-1 lg:order-none w-64 sm:w-80 h-auto mb-3 drop-shadow-lg">
+            <svg viewBox="0 0 420 56" data-testid="title-lockup" className="order-1 lg:order-none w-64 sm:w-80 h-auto mb-3 drop-shadow-lg">
               <rect x="2" y="6" width="416" height="44" rx="12" fill="#FFFDF9" stroke="#F59E0B" strokeWidth="3" />
               <text
                 x="210"
