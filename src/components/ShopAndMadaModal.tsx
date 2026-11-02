@@ -15,6 +15,7 @@ interface ShopAndMadaModalProps {
   liveOpsPoints: number;
   milestones: LiveOpsMilestone[];
   vipPassActive: boolean;
+  maxEnergy: number;
   onClose: () => void;
   onClaimGift: () => void;
   onClaimMilestone: (milestoneId: string) => void;
@@ -37,6 +38,7 @@ export const ShopAndMadaModal: React.FC<ShopAndMadaModalProps> = ({
   liveOpsPoints,
   milestones,
   vipPassActive,
+  maxEnergy,
   onClose,
   onClaimGift,
   onClaimMilestone,
@@ -112,7 +114,7 @@ export const ShopAndMadaModal: React.FC<ShopAndMadaModalProps> = ({
                 </span>
             </div>
             <ul className="text-xs text-[#78350F] space-y-0.5 ps-1">
-              <li>• {isAr ? 'سقف الطاقة يصير 150 بدل 100' : 'Energy holds up to 150 instead of 100'}</li>
+              <li>• {isAr ? `تتجدد الطاقة حتى ${maxEnergy}` : `Energy regenerates up to ${maxEnergy}`}</li>
               <li>• {isAr ? 'فرصة أعلى لعناصر أقوى من المولّدات' : 'Generators drop stronger items more often'}</li>
             </ul>
           </div>}

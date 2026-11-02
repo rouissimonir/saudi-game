@@ -2111,6 +2111,7 @@ export default function App() {
             liveOpsPoints={gameState.liveOpsPoints}
             milestones={gameState.liveOpsMilestones}
             vipPassActive={gameState.vipPassActive}
+            maxEnergy={gameState.maxEnergy}
             onClose={() => setShopModalOpen(false)}
             onClaimGift={handleClaimShopGift}
             onClaimMilestone={handleClaimMilestone}
