@@ -1,7 +1,11 @@
 name: TestFlight build
 
 # Builds a signed release of the iOS app on a cloud Mac and uploads it to App Store Connect (TestFlight).
-# Run it by hand: Actions > TestFlight build > Run workflow. It needs these repository secrets
+# Runs automatically on every push to main that changes the app (source, assets, iOS project, dependencies or
+# this workflow), and by hand: Actions > TestFlight build > Run workflow. Docs, tests-only and tooling changes
+# do not trigger a build; add [skip ci] to a commit message to skip one that would. The lint and tests run first,
+# so a failing main never uploads. Each run's number is the build number, so they are always unique and rising.
+# It needs these repository secrets
 # (Settings > Environments > dev > Environment secrets), see docs/TESTFLIGHT.md for how to get each one:
 #   ASC_KEY_ID       App Store Connect API key ID
 #   ASC_ISSUER_ID    App Store Connect API issuer ID
@@ -12,6 +16,26 @@ name: TestFlight build
 
 'on':
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/testflight.yml'
+      - 'ios/**'
+      - 'src/**'
+      - 'public/**'
+      - 'tools/check-ios-assets.mjs'
+      - 'capacitor.config.json'
+      - 'index.html'
+      - 'fasih.html'
+      - 'vite.config.ts'
+      - 'tsconfig.json'
+      - 'package.json'
+      - 'package-lock.json'
+
+# One upload at a time, in order. A build that has started is never cancelled halfway through signing or upload.
+concurrency:
+  group: testflight
+  cancel-in-progress: false
 
 permissions:
   contents: read

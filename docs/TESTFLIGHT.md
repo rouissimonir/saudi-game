@@ -35,7 +35,7 @@ To replay the opening without erasing progress, open the in-game **Menu → Stor
 
 ## Each build
 
-1. (Option B) GitHub > Actions > **TestFlight build** > Run workflow. It runs the lint and tests, builds, signs and uploads. It takes roughly 15 to 30 minutes.
+1. (Option B) GitHub > Actions > **TestFlight build**. It now runs by itself on every push to `main` that changes the app (`src/`, `public/`, `ios/`, dependencies or the workflow); docs-only commits and commits containing `[skip ci]` do not trigger it. You can still start it by hand with Run workflow, for example to rebuild after changing a secret. It runs the lint and tests, builds, signs and uploads; a failing check stops it before anything is uploaded. It takes roughly 15 to 30 minutes, and each build appears in TestFlight after Apple finishes processing it.
 2. In App Store Connect > your app > TestFlight, the build appears after Apple finishes processing it (usually 5 to 30 minutes). If it asks about export compliance, answer that the app uses only standard encryption (see `docs/APP_STORE_SUBMISSION.md`, section 12).
 3. Add yourself under **Internal Testing** (internal testers need no Apple review), then open the **TestFlight** app on your iPhone and install.
 
