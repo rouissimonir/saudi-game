@@ -6,10 +6,15 @@ export function classifyProbeFetchError(error: unknown): ProbeStage {
   if (['10', '33', '35'].includes(code)) return 'FETCH_NETWORK';
   if (code === '11') return 'FETCH_CREDENTIALS';
   if (code === '23') {
-    const details = error as { message?: unknown; underlyingErrorMessage?: unknown };
-    const messages = [details.message, details.underlyingErrorMessage].filter((value): value is string => typeof value === 'string');
-    if (messages.some(message => /none of the products registered.*could be fetched/i.test(message))) return 'FETCH_PRODUCTS_UNAVAILABLE';
-    if (messages.some(message => /no products registered.*offerings/i.test(message))) return 'FETCH_NO_PRODUCTS';
+    // Capacitor nests native rejection details in `data`; inspect known string fields only.
+    const details = error as { message?: unknown; underlyingErrorMessage?: unknown; data?: unknown };
+    const data = typeof details.data === 'object' && details.data !== null
+      ? details.data as { message?: unknown; underlyingErrorMessage?: unknown }
+      : {};
+    const messages = [details.message, details.underlyingErrorMessage, data.message, data.underlyingErrorMessage]
+      .filter((value): value is string => typeof value === 'string');
+    if (messages.some(message => /none of the products registered[\s\S]*could be fetched/i.test(message))) return 'FETCH_PRODUCTS_UNAVAILABLE';
+    if (messages.some(message => /no products registered[\s\S]*offerings/i.test(message))) return 'FETCH_NO_PRODUCTS';
     return 'FETCH_CONFIGURATION';
   }
   if (['12', '16'].includes(code)) return 'FETCH_BACKEND';

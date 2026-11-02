@@ -9,7 +9,9 @@ test('test probe maps known fetch errors to fixed non-sensitive categories', () 
   assert.equal(classifyProbeFetchError({ code: '11' }), 'FETCH_CREDENTIALS');
   assert.equal(classifyProbeFetchError({ code: '23' }), 'FETCH_CONFIGURATION');
   assert.equal(classifyProbeFetchError({ code: '23', underlyingErrorMessage: 'None of the products registered in the RevenueCat dashboard could be fetched from App Store Connect. private details' }), 'FETCH_PRODUCTS_UNAVAILABLE');
+  assert.equal(classifyProbeFetchError({ code: '23', data: { underlyingErrorMessage: 'None of the products registered\nin the dashboard could be fetched. private details' } }), 'FETCH_PRODUCTS_UNAVAILABLE');
   assert.equal(classifyProbeFetchError({ code: '23', message: 'There are no products registered in the RevenueCat dashboard for your offerings. private details' }), 'FETCH_NO_PRODUCTS');
+  assert.equal(classifyProbeFetchError({ code: '23', data: { message: 'There are no products registered\nin the dashboard for your offerings.' } }), 'FETCH_NO_PRODUCTS');
   assert.equal(classifyProbeFetchError({ code: '23', underlyingErrorMessage: { private: 'secret' } }), 'FETCH_CONFIGURATION');
   assert.equal(classifyProbeFetchError({ code: '12' }), 'FETCH_BACKEND');
   assert.equal(classifyProbeFetchError({ code: '32' }), 'FETCH_STORE');
