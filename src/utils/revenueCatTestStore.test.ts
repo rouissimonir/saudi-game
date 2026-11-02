@@ -2,7 +2,18 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { canInitializeTestStore, retryableInitialization } from './revenueCatTestStore';
 import { canInitializeAppStore } from './revenueCatAppStore';
-import { inspectTestOffering, type ProbeStage } from './revenueCatProbeStages';
+import { classifyProbeFetchError, inspectTestOffering, type ProbeStage } from './revenueCatProbeStages';
+
+test('test probe maps known fetch errors to fixed non-sensitive categories', () => {
+  assert.equal(classifyProbeFetchError({ code: '10', message: 'private' }), 'FETCH_NETWORK');
+  assert.equal(classifyProbeFetchError({ code: '11' }), 'FETCH_CREDENTIALS');
+  assert.equal(classifyProbeFetchError({ code: '23' }), 'FETCH_CONFIGURATION');
+  assert.equal(classifyProbeFetchError({ code: '12' }), 'FETCH_BACKEND');
+  assert.equal(classifyProbeFetchError({ code: '32' }), 'FETCH_STORE');
+  assert.equal(classifyProbeFetchError({ code: 'UNIMPLEMENTED' }), 'FETCH_PLUGIN');
+  assert.equal(classifyProbeFetchError({ code: 'untrusted text', message: 'private' }), 'FETCH_OTHER');
+  assert.equal(classifyProbeFetchError(null), 'FETCH_OTHER');
+});
 
 test('test offering diagnostics distinguish setup, fetch, missing offering and missing packages', async () => {
   const all = ['$rc_monthly', 'starter_pack', 'decor_pack'];
@@ -14,7 +25,7 @@ test('test offering diagnostics distinguish setup, fetch, missing offering and m
   const ok = async () => {};
   const fail = async (): Promise<never> => { throw Error('private details should not be reported'); };
   assert.deepEqual(await stages(fail, async () => all), ['CONFIG_FAILED']);
-  assert.deepEqual(await stages(ok, fail), ['INITIALIZED', 'FETCH_FAILED']);
+  assert.deepEqual(await stages(ok, fail), ['INITIALIZED', 'FETCH_OTHER']);
   assert.deepEqual(await stages(ok, async () => null), ['INITIALIZED', 'NO_CURRENT']);
   assert.deepEqual(await stages(ok, async () => ['$rc_monthly']), ['INITIALIZED', 'MISSING_PACKAGES']);
   assert.deepEqual(await stages(ok, async () => all), ['INITIALIZED', 'OFFERINGS_OK']);

@@ -4,7 +4,7 @@ import { inspectTestOffering, type ProbeStage } from './revenueCatProbeStages';
 
 /** A fixed, non-sensitive stage label remains visible if simulator console forwarding fails. */
 function reportProbeStage(stage: ProbeStage): void {
-  const failed = ['CONFIG_FAILED', 'FETCH_FAILED', 'NO_CURRENT', 'MISSING_PACKAGES'].includes(stage);
+  const failed = stage === 'CONFIG_FAILED' || stage.startsWith('FETCH_') || stage === 'NO_CURRENT' || stage === 'MISSING_PACKAGES';
   const marker = `QAHWA_TEST_STORE_${failed ? 'OFFERINGS_FAILED' : stage === 'STARTED' || stage === 'INELIGIBLE' ? `PROBE_${stage}` : stage}`;
   console.log(marker);
   const badge = document.getElementById('revenuecat-ci-probe') ?? document.createElement('div');
