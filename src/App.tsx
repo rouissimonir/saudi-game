@@ -1602,6 +1602,27 @@ export default function App() {
                           </span>
                         )}
                       </button>
+                      {isReady ? (
+                        /* Ready: the name + reward block turns into the Serve pill, so the card never grows taller. */
+                        <button
+                          type="button"
+                          onClick={() => handleFulfillOrder(order.id)}
+                          data-testid={`order-action-${order.id}`}
+                          aria-label={isAr ? `تقديم طلب ${order.customerNameAr}` : `Serve order for ${order.customerNameEn}`}
+                          className="serve-pill btn-3d-green relative min-w-0 flex-1 min-h-11 rounded-xl px-1 text-white flex flex-col items-center justify-center cursor-pointer"
+                        >
+                          <span className="inline-flex items-center gap-0.5 text-[12px] leading-none font-black">
+                            <Check className="w-3.5 h-3.5 stroke-[4]" aria-hidden="true" />
+                            {isAr ? 'تقديم' : 'Serve'}
+                          </span>
+                          <span dir="ltr" className="mt-[3px] inline-flex items-center gap-0.5 whitespace-nowrap text-[9px] leading-none font-black tabular-nums text-[#FEF9C3]">
+                            <span data-testid={`order-coins-${order.id}`}>+{reward.total}</span>
+                            <Star className="w-2.5 h-2.5 fill-current" aria-hidden="true" />
+                            <span>{order.rewardStars}</span>
+                          </span>
+                          {order.isVip && <span dir="ltr" data-testid={`vip-rewards-${order.id}`} className="absolute -top-1.5 -end-1 whitespace-nowrap rounded-full bg-[#0369A1] border border-white px-1 text-[8px] leading-[13px] font-black text-white shadow">+{VIP_ORDER_GEMS}💎</span>}
+                        </button>
+                      ) : (
                       <div className="min-w-0 flex-1">
                         <div className="text-[10px] sm:text-[11px] leading-tight font-extrabold text-[#2C1E14] line-clamp-2 break-words">
                           {isAr ? order.customerNameAr : order.customerNameEn}
@@ -1617,6 +1638,7 @@ export default function App() {
                         {order.isVip && <div data-testid={`vip-rewards-${order.id}`} className="text-[9px] leading-tight font-black text-[#0369A1]" aria-label={isAr ? `مكافأة إضافية ${VIP_ORDER_GEMS} جواهر${order.requiredItemIds.length > 0 ? ' وصندوق ضيافة' : ''}` : `Bonus ${VIP_ORDER_GEMS} gems${order.requiredItemIds.length > 0 ? ' and a hospitality chest' : ''}`}>+{VIP_ORDER_GEMS} 💎 {order.requiredItemIds.length > 0 && '🎁'}</div>}
                         {focusedOrder?.id === order.id && <button type="button" onClick={() => setFocusedOrderId(null)} aria-label={isAr ? 'إلغاء التركيز على الطلب' : 'Stop focusing on this order'} className="min-h-6 text-[10px] font-black text-[#92400E] underline">{isAr ? 'إلغاء التركيز ×' : 'Unfocus ×'}</button>}
                       </div>
+                      )}
                     </div>
 
                     {/* Speech-Bubble Recipe Tray + Serve CTA */}
@@ -1653,15 +1675,6 @@ export default function App() {
                         })}
                       </div>
 
-                      {isReady && <button
-                        type="button"
-                        onClick={() => handleFulfillOrder(order.id)}
-                        data-testid={`order-action-${order.id}`}
-                        aria-label={isAr ? `تقديم طلب ${order.customerNameAr}` : `Serve order for ${order.customerNameEn}`}
-                        className="min-h-11 min-w-11 px-1.5 py-1 rounded-lg text-[10px] font-black transition-all cursor-pointer whitespace-nowrap text-center shrink-0 btn-3d-green text-white"
-                      >
-                        {isAr ? 'تقديم!' : 'Serve!'}
-                      </button>}
                     </div>
                   </div>
                 );

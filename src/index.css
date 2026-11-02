@@ -213,6 +213,16 @@
   box-shadow: 0 1px 0 0 #065F46;
 }
 
+.serve-pill {
+  animation: serve-pop 0.38s cubic-bezier(0.2, 1.4, 0.4, 1) both, serve-glow 1.8s ease-in-out 0.4s infinite;
+}
+@keyframes serve-pop { 0% { transform: scale(0.6); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+@keyframes serve-glow {
+  0%, 100% { box-shadow: 0 3px 0 0 #065F46, inset 0 1.5px 1px rgba(255, 255, 255, 0.55), 0 0 0 0 rgba(16, 185, 129, 0.55); }
+  50% { box-shadow: 0 3px 0 0 #065F46, inset 0 1.5px 1px rgba(255, 255, 255, 0.55), 0 0 0 5px rgba(16, 185, 129, 0); }
+}
+@media (prefers-reduced-motion: reduce) { .serve-pill { animation: none; } }
+
 .btn-3d-amber {
   background: linear-gradient(180deg, #FBBF24 0%, #F59E0B 55%, #D97706 100%);
   border: 1.5px solid #B45309;
