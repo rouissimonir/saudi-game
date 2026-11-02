@@ -203,6 +203,16 @@ export const MajlisRenovationView: React.FC<MajlisRenovationViewProps> = ({
   const firstWing = showFirstRestoration ? zones.find(zone => zone.unlockedLevel === 0 && stars >= zone.starCostLevel1) : undefined;
   const firstWingRef = React.useRef<HTMLDivElement>(null);
   const detailsRef = React.useRef<HTMLDivElement>(null);
+  const journeyRef = React.useRef<HTMLDivElement>(null);
+  // Keep the current area's chip centred in the trail (it scrolls sideways; later areas start off-screen).
+  React.useEffect(() => {
+    const box = journeyRef.current;
+    const chip = box?.querySelector<HTMLElement>('[aria-current="step"]');
+    if (!box || !chip) return;
+    const b = box.getBoundingClientRect();
+    const c = chip.getBoundingClientRect();
+    box.scrollLeft += c.left + c.width / 2 - (b.left + b.width / 2);
+  }, [areaIndex]);
   const [selectedDetail, setSelectedDetail] = React.useState<string | null>(null);
   const [savedPlace, setSavedPlace] = React.useState<number | null>(null);
   const [savedWing, setSavedWing] = React.useState<number | null>(null);
@@ -241,19 +251,19 @@ export const MajlisRenovationView: React.FC<MajlisRenovationViewProps> = ({
       id: 'afternoon',
       labelAr: 'عصاري نجد',
       labelEn: 'Golden Afternoon',
-      icon: <Sun className="w-3.5 h-3.5 text-[#FBBF24]" />,
+      icon: <Sun className="w-5 h-5 text-[#FBBF24]" />,
     },
     {
       id: 'ramadan_night',
       labelAr: 'ليالي الفوانيس',
       labelEn: 'Lantern Night',
-      icon: <Moon className="w-3.5 h-3.5 text-[#38BDF8]" />,
+      icon: <Moon className="w-5 h-5 text-[#38BDF8]" />,
     },
     {
       id: 'courtyard_rain',
       labelAr: 'مطر الحوش',
       labelEn: 'Courtyard Rain',
-      icon: <CloudRain className="w-3.5 h-3.5 text-[#60A5FA]" />,
+      icon: <CloudRain className="w-5 h-5 text-[#60A5FA]" />,
     },
   ];
 
@@ -268,14 +278,11 @@ export const MajlisRenovationView: React.FC<MajlisRenovationViewProps> = ({
     <div className="flex flex-col gap-4">
       {firstWing && <div data-testid="first-restoration-guide" className="rounded-2xl border-2 border-[#D99B26] bg-[#3B281A] p-3 text-sm text-[#FFF4DA]"><p className="font-bold">{isAr ? 'استخدم نجوم ضيافتك لترميم جناح، واختر طرازه قبل البدء.' : 'Use your hospitality stars to restore a wing, and choose its style before you begin.'}</p><button type="button" onClick={() => { firstWingRef.current?.scrollIntoView({ block: 'center' }); firstWingRef.current?.focus({ preventScroll: true }); }} className="mt-2 min-h-11 rounded-xl bg-[#D99B26] px-3 py-2 text-start text-xs font-black text-[#241812]">{isAr ? `شاهد «${firstWing.nameAr}» · ${firstWing.starCostLevel1} نجوم` : `See ${firstWing.nameEn} · ${firstWing.starCostLevel1} stars`}</button><p className="mt-1 text-xs text-[#EBD8BA]">{isAr ? 'يمكنك اختيار جناح آخر بدلاً منه.' : 'You can choose another wing instead.'}</p></div>}
       {(pourTokens > 0 || pourUnlocked) && <section data-testid="majlis-pour-invitation" className="rounded-2xl border border-[#D99B26]/60 bg-[#3B281A] p-3 text-[#FFF4DA]"><p className="text-sm font-black">☕ {isAr ? 'فرصة لصب القهوة لضيوفك' : 'Pour coffee for your guests'}</p><p className="mt-1 text-xs leading-relaxed text-[#EBD8BA]">{pourTokens > 0 ? (isAr ? `تكسب فرصة مع كل ترميم. لديك ${pourTokens}؛ استخدمها الآن أو لاحقاً.` : `Each restoration earns a chance. You have ${pourTokens}; use it now or later.`) : (isAr ? 'تدرّب مجاناً، واكسب فرصة مكافأة عند ترميم جناح آخر.' : 'Practice for free, and earn another reward chance by restoring a wing.')}</p><button type="button" onClick={onOpenPour} className="mt-2 min-h-11 rounded-xl bg-[#D99B26] px-3 py-2 text-xs font-black text-[#241812]">{isAr ? 'ابدأ تحدي ربع الفنجال' : 'Start the quarter-cup challenge'}</button></section>}
-      {/* Multi-Location Kingdom Map & Weather Ambiance Bar */}
-      <div className="rounded-2xl border border-[#D99B26]/35 bg-[#241812] p-3 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+      {/* Kingdom trail and mood switch share one compact row (the trail scrolls, the three mood icons stay put). */}
+      <div className="rounded-2xl border border-[#D99B26]/35 bg-[#241812] p-2 flex items-center gap-2">
         {/* Restoration journey across the Kingdom: finished, current and locked areas */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5" data-testid="area-journey" tabIndex={0} role="group" aria-label={isAr ? 'رحلة المملكة' : 'Kingdom trail'}>
-          <span className="text-xs font-bold text-[#E9C46A] inline-flex items-center gap-1 shrink-0 px-1">
-            <MapPin className="w-3.5 h-3.5 text-[#FBBF24]" />
-            {isAr ? 'رحلة المملكة:' : 'Kingdom trail:'}
-          </span>
+        <div ref={journeyRef} className="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto pb-0.5" data-testid="area-journey" tabIndex={0} role="group" aria-label={isAr ? 'رحلة المملكة' : 'Kingdom trail'}>
+          <MapPin aria-hidden="true" className="w-4 h-4 shrink-0 text-[#FBBF24]" />
           {journey.map((stop) => {
             const done = stop.index < areaIndex;
             const current = stop.index === areaIndex;
@@ -283,7 +290,7 @@ export const MajlisRenovationView: React.FC<MajlisRenovationViewProps> = ({
               <span
                 key={stop.index}
                 aria-current={current ? 'step' : undefined}
-                className={`px-2.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap border inline-flex items-center gap-1 ${
+                className={`px-2.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap border inline-flex items-center gap-1 shrink-0 ${
                   current
                     ? 'bg-[#B45309] text-white border-[#FBBF24] shadow'
                     : done
@@ -298,27 +305,26 @@ export const MajlisRenovationView: React.FC<MajlisRenovationViewProps> = ({
           })}
         </div>
 
-        {/* Dynamic Weather & Ambiance Toggle */}
-        <div className="flex flex-wrap items-center gap-1.5 self-stretch lg:self-auto">
-          <span className="text-[11px] text-[#D4A373] me-1 basis-full lg:basis-auto">
-            {isAr ? 'أجواء الحوش:' : 'Ambiance:'}
-          </span>
+        {/* Mood of the courtyard: icons only, the full name is the accessible name and the tooltip */}
+        <div role="group" aria-label={isAr ? 'أجواء الحوش' : 'Ambiance'} className="flex shrink-0 items-center gap-0.5 rounded-xl border border-white/10 bg-[#1C1410] p-0.5">
           {ambiances.map((a) => {
             const active = ambiance === a.id;
+            const label = isAr ? a.labelAr : a.labelEn;
             return (
               <button
                 key={a.id}
                 type="button"
                 onClick={() => onChangeAmbiance(a.id)}
                 aria-pressed={active}
-                className={`px-2.5 py-1.5 rounded-xl text-xs font-semibold inline-flex items-center gap-1.5 border transition-all cursor-pointer whitespace-nowrap ${
+                aria-label={label}
+                title={label}
+                className={`h-10 w-10 rounded-[10px] inline-flex items-center justify-center border transition-all cursor-pointer ${
                   active
-                    ? 'bg-[#2E1E16] border-[#FBBF24] text-[#FBF7F0]'
-                    : 'bg-[#1C1410] border-white/10 text-[#D4A373] hover:text-white'
+                    ? 'bg-[#3A281D] border-[#FBBF24] shadow-inner'
+                    : 'border-transparent opacity-70 hover:opacity-100'
                 }`}
               >
                 {a.icon}
-                <span>{isAr ? a.labelAr : a.labelEn}</span>
               </button>
             );
           })}

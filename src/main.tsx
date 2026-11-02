@@ -6,6 +6,12 @@ import { initializeRevenueCatAppStore } from './utils/revenueCatAppStore';
 import { probeRevenueCatTestStore } from './utils/revenueCatTestProbe';
 import './index.css';
 
+// The installed iPhone app is a game, not a web page: an accidental pinch (or an auto-zoom) used to leave it magnified a few
+// percent, which pushed the right edge off screen and scrolled the top bar away. Lock the scale there; the website keeps zoom.
+if (Capacitor.isNativePlatform()) {
+  document.querySelector('meta[name="viewport"]')?.setAttribute('content', 'width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover');
+}
+
 void initializeRevenueCatTestStore().catch(() => console.warn('RevenueCat Test Store initialization failed.'));
 void initializeRevenueCatAppStore().catch(() => console.warn('RevenueCat App Store initialization failed.'));
 void probeRevenueCatTestStore();
