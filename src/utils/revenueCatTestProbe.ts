@@ -1,11 +1,11 @@
 import { Capacitor } from '@capacitor/core';
 import { canInitializeTestStore, initializeRevenueCatTestStore } from './revenueCatTestStore';
-
-type ProbeStage = 'STARTED' | 'INELIGIBLE' | 'INITIALIZED' | 'OFFERINGS_OK' | 'OFFERINGS_FAILED';
+import { inspectTestOffering, type ProbeStage } from './revenueCatProbeStages';
 
 /** A fixed, non-sensitive stage label remains visible if simulator console forwarding fails. */
 function reportProbeStage(stage: ProbeStage): void {
-  const marker = `QAHWA_TEST_STORE_${stage === 'STARTED' || stage === 'INELIGIBLE' ? `PROBE_${stage}` : stage}`;
+  const failed = ['CONFIG_FAILED', 'FETCH_FAILED', 'NO_CURRENT', 'MISSING_PACKAGES'].includes(stage);
+  const marker = `QAHWA_TEST_STORE_${failed ? 'OFFERINGS_FAILED' : stage === 'STARTED' || stage === 'INELIGIBLE' ? `PROBE_${stage}` : stage}`;
   console.log(marker);
   const badge = document.getElementById('revenuecat-ci-probe') ?? document.createElement('div');
   badge.id = 'revenuecat-ci-probe';
@@ -22,15 +22,9 @@ export async function probeRevenueCatTestStore(): Promise<void> {
     reportProbeStage('INELIGIBLE');
     return;
   }
-  try {
-    await initializeRevenueCatTestStore();
-    reportProbeStage('INITIALIZED');
+  await inspectTestOffering(initializeRevenueCatTestStore, async () => {
     const { Purchases } = await import('@revenuecat/purchases-capacitor');
     const offerings = await Purchases.getOfferings();
-    const ids = new Set(offerings.current?.availablePackages.map(pkg => pkg.identifier) ?? []);
-    if (!['$rc_monthly', 'starter_pack', 'decor_pack'].every(id => ids.has(id))) throw new Error('Expected test packages missing');
-    reportProbeStage('OFFERINGS_OK');
-  } catch {
-    reportProbeStage('OFFERINGS_FAILED');
-  }
+    return offerings.current ? offerings.current.availablePackages.map(pkg => pkg.identifier) : null;
+  }, reportProbeStage);
 }

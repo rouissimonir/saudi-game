@@ -9,6 +9,7 @@ name: RevenueCat Test Store simulator
       - 'tools/build-revenuecat-test.mjs'
       - 'src/utils/revenueCatTestStore.ts'
       - 'src/utils/revenueCatTestProbe.ts'
+      - 'src/utils/revenueCatProbeStages.ts'
       - 'src/main.tsx'
       - 'src/components/RevenueCatTestPanel.tsx'
       - 'src/components/ShopAndMadaModal.tsx'
