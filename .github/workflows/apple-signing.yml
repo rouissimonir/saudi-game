@@ -1,6 +1,7 @@
 name: Apple signing certificates
 
 # Run by hand: Actions > Apple signing certificates > Run workflow.
+# "builds" shows the latest TestFlight builds, their processing state and whether they wait on export compliance.
 # "list" shows every certificate in the Apple account (no secrets are printed).
 # "clean" shows, and with delete=true removes, the "Created via API" development certificates that cloud signing
 # creates on each CI run, which is what fills Apple's certificate limit. Distribution certificates are never removed.
@@ -10,9 +11,9 @@ name: Apple signing certificates
   workflow_dispatch:
     inputs:
       action:
-        description: 'list or clean'
+        description: 'list, clean or builds'
         type: choice
-        options: [list, clean]
+        options: [list, clean, builds]
         default: list
       delete:
         description: 'With clean: really remove the stale development certificates'

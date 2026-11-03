@@ -9,6 +9,7 @@
 //   node tools/apple-certs.mjs list
 //   node tools/apple-certs.mjs clean            # shows what it would remove
 //   node tools/apple-certs.mjs clean --delete   # removes API-created development certificates
+//   node tools/apple-certs.mjs builds           # latest TestFlight builds and whether each is ready or waiting on compliance
 import { createPrivateKey, sign } from 'node:crypto';
 
 const API = 'https://api.appstoreconnect.apple.com';
@@ -54,6 +55,23 @@ function show(rows) {
   }
   const byType = rows.reduce((m, c) => ({ ...m, [c.type]: (m[c.type] ?? 0) + 1 }), {});
   console.log(`\nTotals by type: ${JSON.stringify(byType)}`);
+}
+
+async function builds() {
+  const appId = process.env.ASC_APP_ID || '6827965054';
+  const page = await call(`/v1/builds?filter[app]=${appId}&sort=-uploadedDate&limit=8&include=buildBetaDetail`);
+  const beta = new Map((page.included ?? []).filter((i) => i.type === 'buildBetaDetails').map((i) => [i.id, i.attributes]));
+  if (page.data.length === 0) { console.log('No builds found for this app.'); return; }
+  for (const b of page.data) {
+    const detail = beta.get(b.relationships?.buildBetaDetail?.data?.id) ?? {};
+    const a = b.attributes;
+    console.log(`build ${String(a.version).padEnd(4)} uploaded ${String(a.uploadedDate ?? '').slice(0, 16)}  processing=${a.processingState}  internal=${detail.internalBuildState ?? '?'}  external=${detail.externalBuildState ?? '?'}  encryption=${a.usesNonExemptEncryption ?? 'unanswered'}${a.expired ? '  EXPIRED' : ''}`);
+  }
+}
+
+if (command === 'builds') {
+  await builds();
+  process.exit(0);
 }
 
 const rows = await certificates();
