@@ -48,7 +48,7 @@ jobs:
       - name: Run the phone checks
         run: |
           failed=0
-          for check in smoke board-layout restored-places guest-majlis gathering restoration pour transfer idle-hint; do
+          for check in smoke board-layout restored-places guest-majlis gathering restoration pour transfer idle-hint welcome-back; do
             echo "::group::test:phone:$check"
             npm run "test:phone:$check" || failed=1
             echo "::endgroup::"

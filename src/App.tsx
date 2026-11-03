@@ -94,6 +94,7 @@ import { canUndoSale, sellWithReceipt, undoSale, type SaleReceipt } from './game
 import { focusCells, ingredientNeeds, orderNeeds, tutorialMergePair } from './game/orderGuide';
 import { OrderGuide } from './components/OrderGuide';
 import { saveHapticsEnabled } from './utils/haptics';
+import { readPresence, welcomeBackSummary, writePresence, type WelcomeBack } from './game/welcomeBack';
 import { tastingGuestMemory, type TastingGuest } from './game/guestMemories';
 import { GuestMemoryModal } from './components/GuestMemoryModal';
 import { TaifWelcome } from './components/TaifWelcome';
@@ -278,6 +279,10 @@ export default function App() {
 
   const bannerTimeoutRef = useRef<number | null>(null);
   const [activeScene, setActiveScene] = useState<string | null>(null);
+  const latestState = useRef(gameState);
+  latestState.current = gameState;
+  /** Shown once after a long break: energy regained and guests waiting. Dismissible, never a modal. */
+  const [welcomeBack, setWelcomeBack] = useState<WelcomeBack | null>(null);
   /** Two tiles to nudge after a few idle seconds, for newer players only. */
   const [idleHint, setIdleHint] = useState<number[] | null>(null);
   const [storyLogOpen, setStoryLogOpen] = useState(false);
@@ -739,6 +744,38 @@ export default function App() {
   };
 
   // Auto-Merge / Smart Hint Action
+  // Remember when the player leaves, so the next visit can say what changed while they were away.
+  useEffect(() => {
+    const save = () => writePresence({ at: Date.now(), energy: latestState.current.energy });
+    const onVisibility = () => { if (document.visibilityState === 'hidden') save(); };
+    document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('pagehide', save);
+    const heartbeat = window.setInterval(() => { if (document.visibilityState === 'visible') save(); }, 30_000);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('pagehide', save);
+      window.clearInterval(heartbeat);
+    };
+  }, []);
+  useEffect(() => {
+    if (shellState !== 'playing') return;
+    const check = () => {
+      const now = Date.now();
+      const summary = welcomeBackSummary(readPresence(), now, latestState.current);
+      writePresence({ at: now, energy: latestState.current.energy });
+      if (summary) setWelcomeBack(summary);
+    };
+    let timer = window.setTimeout(check, 700);
+    const onVisible = () => { if (document.visibilityState === 'visible') { window.clearTimeout(timer); timer = window.setTimeout(check, 700); } };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => { window.clearTimeout(timer); document.removeEventListener('visibilitychange', onVisible); };
+  }, [shellState]);
+  useEffect(() => {
+    if (!welcomeBack) return;
+    const timer = window.setTimeout(() => setWelcomeBack(null), 14_000);
+    return () => window.clearTimeout(timer);
+  }, [welcomeBack]);
+
   // After 8 idle seconds on the board, softly pulse one mergeable pair (only for players still learning, never over a dialog).
   const inTutorial = getTutorialStep(gameState) !== null;
   useEffect(() => {
@@ -1488,6 +1525,20 @@ export default function App() {
         {/* Persistent prompts sit just above the bottom navigation */}
         <div className="fixed bottom-[calc(64px+env(safe-area-inset-bottom))] inset-x-0 z-30 flex flex-col items-center gap-1.5 px-3 pointer-events-none">
           {/* Longer messages sit above the bottom bar so they never cover the guest orders */}
+          {welcomeBack && dailyLoginDay === null && !activeScene && !guideOrderId && (
+            <div role="status" data-testid="welcome-back" className="pointer-events-auto max-w-[440px] w-full flex items-center gap-3 rounded-2xl bg-[#241812] border-2 border-[#D99B26] shadow-xl px-3 py-2 text-[#FFF8E8]">
+              <span aria-hidden="true" className="text-2xl">☕</span>
+              <div className="min-w-0 flex-1 text-xs leading-snug">
+                <div className="font-black text-[#FBBF24]">{isAr ? 'أهلاً بعودتك!' : 'Welcome back!'}</div>
+                <div className="font-bold">
+                  {welcomeBack.energyGained > 0 && <span>{isAr ? `طاقة جاهزة: +${welcomeBack.energyGained} ⚡` : `Energy ready: +${welcomeBack.energyGained} ⚡`}</span>}
+                  {welcomeBack.energyGained > 0 && welcomeBack.readyOrders > 0 && <span> · </span>}
+                  {welcomeBack.readyOrders > 0 && <span>{isAr ? `ضيوف بانتظار التقديم: ${welcomeBack.readyOrders}` : `${welcomeBack.readyOrders} ${welcomeBack.readyOrders === 1 ? 'guest' : 'guests'} waiting to be served`}</span>}
+                </div>
+              </div>
+              <button type="button" onClick={() => setWelcomeBack(null)} className="min-h-11 shrink-0 rounded-xl bg-[#FBBF24] px-3 text-xs font-black text-[#3B2410]">{isAr ? 'حسناً' : 'OK'}</button>
+            </div>
+          )}
         {welcomeReceipt && !activeScene && !gameState.activeStoryId && !rememberedGuest && dailyLoginDay === null && !guideOrderId && (
           <div role="status" data-testid="guest-welcome-feedback" className="max-w-[440px] flex items-center gap-2 rounded-2xl bg-[#3E2723]/95 border border-[#FBBF24] px-3 py-2 text-xs leading-snug font-bold text-[#FEF3C7] shadow">
             <CustomerPortrait avatarKey={welcomeReceipt.guestId} size="sm" /><span>{welcomeReceipt.message}</span>
