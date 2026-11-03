@@ -294,6 +294,7 @@ export default function App() {
   const [idleHint, setIdleHint] = useState<number[] | null>(null);
   const [storyLogOpen, setStoryLogOpen] = useState(false);
   const [achievementsOpen, setAchievementsOpen] = useState(false);
+  const [confirmingReset, setConfirmingReset] = useState(false);
   const [keyArtReady, setKeyArtReady] = useState(false);
   const [replayChapterId, setReplayChapterId] = useState<string | null>(null);
   const [endingOpen, setEndingOpen] = useState(false);
@@ -1474,7 +1475,7 @@ export default function App() {
                 onClick={handleStartGame}
                 className="px-8 py-4 rounded-2xl btn-3d-green text-white font-extrabold text-base shadow-xl cursor-pointer whitespace-nowrap"
               >
-                {isAr ? 'ابدأ اللعب الآن · Play Now' : 'Start Playing · ابدأ اللعب'}
+                {isAr ? 'ابدأ اللعب الآن' : 'Start Playing'}
               </button>
 
               <button
@@ -2357,7 +2358,7 @@ export default function App() {
               <button
                 type="button"
                 data-start="true"
-                onClick={() => setShellState('playing')}
+                onClick={() => { setConfirmingReset(false); setShellState('playing'); }}
                 className="w-full py-3 rounded-2xl btn-3d-green text-white font-extrabold text-sm cursor-pointer"
               >
                 {shellState === 'gameover'
@@ -2365,17 +2366,28 @@ export default function App() {
                     ? 'مواصلة اللعب في القصر الملكي'
                     : 'Continue Playing in Royal Mode'
                   : isAr
-                  ? 'استئناف اللعب (Resume)'
+                  ? 'استئناف اللعب'
                   : 'Resume Game'}
               </button>
 
-              <button
-                type="button"
-                onClick={handleResetGame}
-                className="w-full py-2.5 rounded-2xl bg-[#EDE0C7] hover:bg-[#E2CFAF] text-[#5C3A21] font-extrabold text-xs cursor-pointer"
-              >
-                {isAr ? 'بدء جولة جديدة (Restart)' : 'Restart Fresh Board'}
-              </button>
+              {confirmingReset ? (
+                <div role="alertdialog" aria-label={isAr ? 'تأكيد بدء لعبة جديدة' : 'Confirm a new game'} data-testid="reset-confirm" className="rounded-2xl border-2 border-[#B91C1C] bg-[#FEF2F2] p-3 text-[#7F1D1D]">
+                  <p className="text-xs font-bold leading-snug">{isAr ? 'سيُمسح كل تقدمك في المجلس ولا يمكن التراجع عن ذلك. هل تريد البدء من جديد؟' : 'This erases all your Majlis progress and cannot be undone. Start over?'}</p>
+                  <div className="mt-2 flex gap-2">
+                    <button type="button" data-testid="reset-confirm-yes" onClick={(e) => { setConfirmingReset(false); handleResetGame(e); }} className="min-h-11 flex-1 rounded-xl bg-[#B91C1C] px-2 text-xs font-extrabold text-white">{isAr ? 'نعم، ابدأ من جديد' : 'Yes, start over'}</button>
+                    <button type="button" onClick={() => setConfirmingReset(false)} className="min-h-11 flex-1 rounded-xl bg-white border border-[#B91C1C]/40 px-2 text-xs font-extrabold text-[#7F1D1D]">{isAr ? 'إلغاء' : 'Cancel'}</button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  data-testid="reset-game"
+                  onClick={() => setConfirmingReset(true)}
+                  className="w-full min-h-11 py-2.5 rounded-2xl bg-[#EDE0C7] hover:bg-[#E2CFAF] text-[#5C3A21] font-extrabold text-xs cursor-pointer"
+                >
+                  {isAr ? 'بدء لعبة جديدة (يمسح تقدمك)' : 'Start a new game (erases progress)'}
+                </button>
+              )}
 
               <button
                 type="button"
