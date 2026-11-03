@@ -1,6 +1,31 @@
 import UIKit
 import Capacitor
 
+// The diagnostic purchase screen is available only when Apple's receipt identifies
+// a sandbox environment. Missing receipts fail closed.
+@objc(SandboxCheckPlugin)
+public class SandboxCheckPlugin: CAPPlugin, CAPBridgedPlugin {
+    public let identifier = "SandboxCheckPlugin"
+    public let jsName = "SandboxCheck"
+    public let pluginMethods: [CAPPluginMethod] = [
+        CAPPluginMethod(name: "check", returnType: CAPPluginReturnPromise)
+    ]
+
+    @objc func check(_ call: CAPPluginCall) {
+        let receipt = Bundle.main.appStoreReceiptURL
+        let isSandbox = receipt?.lastPathComponent == "sandboxReceipt" &&
+            receipt.map { FileManager.default.fileExists(atPath: $0.path) } == true
+        call.resolve(["isSandbox": isSandbox])
+    }
+}
+
+@objc(GameBridgeViewController)
+class GameBridgeViewController: CAPBridgeViewController {
+    override func capacitorDidLoad() {
+        bridge?.registerPluginInstance(SandboxCheckPlugin())
+    }
+}
+
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
 

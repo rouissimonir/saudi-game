@@ -16,6 +16,11 @@ name: TestFlight build
 
 'on':
   workflow_dispatch:
+    inputs:
+      sandbox_purchase_test:
+        description: 'Include the sandbox-only purchase diagnostic (never submit this build for release)'
+        type: boolean
+        default: false
   push:
     branches: [main]
     paths:
@@ -51,6 +56,7 @@ jobs:
       ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
       VITE_REVENUECAT_IOS_KEY: ${{ secrets.REVENUECAT_IOS_KEY }}
+      VITE_APPLE_SANDBOX_PURCHASE_TEST: ${{ inputs.sandbox_purchase_test && '1' || '0' }}
     steps:
       - name: Check the signing secrets exist
         run: |
@@ -63,8 +69,9 @@ jobs:
             if [[ ! "$VITE_REVENUECAT_IOS_KEY" =~ ^appl_[A-Za-z0-9]+$ ]]; then
               echo "REVENUECAT_IOS_KEY must be a valid RevenueCat public App Store key"; exit 1
             fi
-            echo "RevenueCat initialization is enabled; purchases are not implemented."
+            echo "RevenueCat initialization is enabled. Paid game benefits are not implemented."
           else
+            if [ "$VITE_APPLE_SANDBOX_PURCHASE_TEST" = 1 ]; then echo "Sandbox purchase test requires REVENUECAT_IOS_KEY."; exit 1; fi
             echo "No RevenueCat key: initialization and purchases are unavailable."
           fi
       - uses: actions/checkout@v4
@@ -82,12 +89,6 @@ jobs:
           npm run build
           npx cap sync ios
           npm run check:ios-assets
-      - name: Clear stale development certificates left by earlier runs
-        # Cloud signing makes a new "Apple Development: Created via API" certificate on every fresh runner and Apple caps
-        # how many an account may hold; at the cap signing fails. Removing the old ones keeps the count at one.
-        # Distribution certificates are never touched (tools/apple-certs.mjs). A failure here must not stop the build.
-        continue-on-error: true
-        run: node tools/apple-certs.mjs clean --delete
       - name: Archive and sign (cloud signing with the App Store Connect key)
         run: |
           mkdir -p "$HOME/private_keys"
