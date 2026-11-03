@@ -34,6 +34,7 @@
     "test:phone:reminders-ask": "node tools/e2e/reminders-ask.cjs",
     "test:phone:invite": "node tools/e2e/invite.cjs",
     "test:phone:how-to-play": "node tools/e2e/how-to-play.cjs",
+    "test:phone:order-scroll": "node tools/e2e/order-scroll.cjs",
     "test:phone:monkey": "node tools/e2e/monkey.cjs 1 ar 350"
   },
   "dependencies": {

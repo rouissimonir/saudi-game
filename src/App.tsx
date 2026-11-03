@@ -1846,7 +1846,7 @@ export default function App() {
             <section
               aria-label={isAr ? 'شريط طلبات الضيوف العلوي' : 'Top Customer Order Dock'}
               data-testid="guest-order-dock"
-              className="guest-order-dock w-full grid grid-cols-3 gap-1.5"
+              className="guest-order-dock w-full flex gap-1.5 overflow-x-auto snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             >
               {gameState.activeOrders.map((order) => {
                 const readyIndices = findCellsForOrder(
@@ -1861,7 +1861,7 @@ export default function App() {
                   <div
                     key={order.id}
                     data-testid={`guest-card-${order.id}`}
-                    className={`relative rounded-2xl p-1.5 sm:p-2 border-2 flex flex-col justify-between transition-all shadow-md overflow-hidden ${justReady.includes(order.id) ? 'order-ready-bump' : ''} ${focusedOrder?.id === order.id ? 'ring-2 ring-[#F59E0B]' : ''} ${
+                    className={`relative grow shrink-0 basis-[calc((100%-0.75rem)/3)] min-w-0 snap-start rounded-2xl p-1.5 sm:p-2 border-2 flex flex-col justify-between transition-all shadow-md overflow-hidden ${justReady.includes(order.id) ? 'order-ready-bump' : ''} ${focusedOrder?.id === order.id ? 'ring-2 ring-[#F59E0B]' : ''} ${
                       isReady
                         ? 'bg-gradient-to-b from-[#ECFDF5] to-[#D1FAE5] border-[#059669] ring-2 ring-[#10B981]/40'
                         : order.isVip
