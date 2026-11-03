@@ -3,8 +3,12 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 import {defineConfig} from 'vite';
 
+// On GitHub the run number is also the TestFlight build number, so the menu can say which build a tester is on.
+const buildLabel = process.env.GITHUB_RUN_NUMBER ? `build ${process.env.GITHUB_RUN_NUMBER} · ${(process.env.GITHUB_SHA ?? '').slice(0, 7)}` : 'dev build';
+
 export default defineConfig(() => {
   return {
+    define: { 'import.meta.env.VITE_BUILD_LABEL': JSON.stringify(buildLabel) },
     // Relative base: the same build runs from a domain root, a subpath (GitHub Pages) or a Capacitor shell.
     base: './',
     plugins: [react(), tailwindcss()],

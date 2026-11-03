@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ArrowRightLeft, AudioLines, BookOpen, Award, Bell, BellOff, Music, Share2, Castle, Coins, Gem, Gift, Grid3x3, Hammer, Languages, Menu, Pause, ScrollText, ShoppingBag, Smartphone, Star, Trophy, Volume2, VolumeX, X, Zap } from 'lucide-react';
+import { ArrowRightLeft, AudioLines, BookOpen, Award, Bell, BellOff, CircleHelp, Music, Share2, Castle, Coins, Gem, Gift, Grid3x3, Hammer, Languages, Menu, Pause, ScrollText, ShoppingBag, Smartphone, Star, Trophy, Volume2, VolumeX, X, Zap } from 'lucide-react';
 import { Language } from '../game/rules';
 import { formatCountdown } from './ProgressionModals';
 import { useNow } from '../utils/useNow';
@@ -83,6 +83,7 @@ export const GameHud: React.FC<{
   /** Finished achievements waiting to be collected (badge on the menu entry). */
   achievementsReady: number;
   onAchievements: () => void;
+  onHowToPlay: () => void;
   onInvite: () => void;
   /** Optional strip under the resource row (the live festival bar). */
   below?: React.ReactNode;
@@ -170,6 +171,7 @@ export const GameHud: React.FC<{
             { icon: <Music className="w-4 h-4" />, label: p.musicEnabled ? (isAr ? 'إيقاف الموسيقى' : 'Music off') : (isAr ? 'تشغيل الموسيقى' : 'Music on'), on: p.onToggleMusic },
             { icon: <Smartphone className="w-4 h-4" />, label: p.hapticsEnabled ? (isAr ? 'إيقاف الاهتزاز' : 'Turn haptics off') : (isAr ? 'تشغيل الاهتزاز' : 'Turn haptics on'), on: p.onToggleHaptics },
             { icon: <Award className="w-4 h-4 text-[#D97706]" />, label: isAr ? 'الإنجازات' : 'Achievements', badge: p.achievementsReady > 0, on: p.onAchievements },
+            { icon: <CircleHelp className="w-4 h-4 text-[#0369A1]" />, label: isAr ? 'كيف ألعب؟' : 'How to play', on: p.onHowToPlay },
             { icon: <Share2 className="w-4 h-4 text-[#0369A1]" />, label: isAr ? 'ادعُ صديقاً' : 'Invite a friend', on: p.onInvite },
             { icon: <BookOpen className="w-4 h-4" />, label: isAr ? 'حلقات القصة' : 'Story episodes', on: p.onReplayStory },
             { icon: <ArrowRightLeft className="w-4 h-4" />, label: isAr ? 'نقل التقدم لجهاز آخر' : 'Transfer progress', on: p.onTransfer },
@@ -190,6 +192,7 @@ export const GameHud: React.FC<{
               {row.badge && <span className="w-2.5 h-2.5 rounded-full bg-[#10B981]" />}
             </button>
           ))}
+          <div data-testid="build-label" dir="ltr" className="pt-1 text-center text-[10px] font-semibold text-[#5C4630] select-text">{import.meta.env.VITE_BUILD_LABEL}</div>
         </div>
       )}
     </header>

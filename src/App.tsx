@@ -96,6 +96,7 @@ import { focusCells, ingredientNeeds, orderNeeds, tutorialMergePair } from './ga
 import { OrderGuide } from './components/OrderGuide';
 import { saveHapticsEnabled } from './utils/haptics';
 import { AchievementsModal } from './components/AchievementsModal';
+import { HowToPlayModal } from './components/HowToPlayModal';
 import { claimAchievement, claimableAchievements } from './game/achievements';
 import { tidyBoard } from './game/tidyBoard';
 import { planReminders } from './game/reminders';
@@ -302,6 +303,7 @@ export default function App() {
   const [idleHint, setIdleHint] = useState<number[] | null>(null);
   const [storyLogOpen, setStoryLogOpen] = useState(false);
   const [achievementsOpen, setAchievementsOpen] = useState(false);
+  const [howToPlayOpen, setHowToPlayOpen] = useState(false);
   const [confirmingReset, setConfirmingReset] = useState(false);
   /** Energy/daily-gift reminders (installed app only): null until the player has chosen. */
   const [reminderPref, setReminderPref] = useState(loadReminderPref);
@@ -483,11 +485,11 @@ export default function App() {
       if (activeScene !== pending) setActiveScene(pending);
       return;
     }
-    if (activeScene || gameState.activeStoryId || replayChapterId || endingOpen || storyLogOpen || achievementsOpen || rememberedGuest ||
+    if (activeScene || gameState.activeStoryId || replayChapterId || endingOpen || storyLogOpen || achievementsOpen || howToPlayOpen || rememberedGuest ||
         tastingOpen || taifWelcomeOpen || guideOrderId || shopModalOpen || chainModalOpen || leaderboardOpen ||
         transferOpen || eventOpen || energyOpen || questsOpen || workshopOpen || pourOpen || dragGhost) return;
     setDailyLoginDay(dailyLoginAfterTutorial(gameState, localDay));
-  }, [shellState, saveBlocked, pageVisible, activeScene, gameState.activeStoryId, gameState.seenScenes, gameState.tutorialDismissed, gameState.totalMerges, gameState.ordersCompleted, gameState.lastLoginDay, gameState.loginStreak, localDay, replayChapterId, endingOpen, storyLogOpen, achievementsOpen, rememberedGuest, tastingOpen, taifWelcomeOpen, guideOrderId, shopModalOpen, chainModalOpen, leaderboardOpen, transferOpen, eventOpen, energyOpen, questsOpen, workshopOpen, pourOpen, dragGhost]);
+  }, [shellState, saveBlocked, pageVisible, activeScene, gameState.activeStoryId, gameState.seenScenes, gameState.tutorialDismissed, gameState.totalMerges, gameState.ordersCompleted, gameState.lastLoginDay, gameState.loginStreak, localDay, replayChapterId, endingOpen, storyLogOpen, achievementsOpen, howToPlayOpen, rememberedGuest, tastingOpen, taifWelcomeOpen, guideOrderId, shopModalOpen, chainModalOpen, leaderboardOpen, transferOpen, eventOpen, energyOpen, questsOpen, workshopOpen, pourOpen, dragGhost]);
 
   // Warm the prologue's art while a new player is still on the title screen.
   useEffect(() => {
@@ -1624,6 +1626,7 @@ export default function App() {
         onReplayStory={() => setStoryLogOpen(true)}
         achievementsReady={claimableAchievements(gameState)}
         onInvite={() => void handleInvite()}
+        onHowToPlay={() => setHowToPlayOpen(true)}
         onAchievements={() => setAchievementsOpen(true)}
         overlay={
           <>
@@ -2269,6 +2272,7 @@ export default function App() {
         <LiveEventModal lang={lang} state={gameState} onClose={() => setEventOpen(false)} onClaim={handleClaimEventMilestone} onAcknowledge={() => setGameState(prev => ({ ...prev, festivalDelivery: null }))} />
       )}
 
+      {howToPlayOpen && <HowToPlayModal lang={lang} onClose={() => setHowToPlayOpen(false)} />}
       {achievementsOpen && <AchievementsModal lang={lang} state={gameState} onClose={() => setAchievementsOpen(false)} onClaim={handleClaimAchievement} />}
       {energyOpen && (
         <EnergyModal
