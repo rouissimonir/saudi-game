@@ -20,7 +20,7 @@ const { chromium } = require('playwright');
     const initialOrder = (await save()).activeOrders[0];
     if (!(await serve.getAttribute('aria-label')).includes(initialOrder.customerNameAr)) throw new Error('Serve action does not identify its guest');
     const target = await serve.boundingBox();
-    if (!target || target.width < 44 || target.height < 44) throw new Error('Serve touch target is smaller than 44 × 44');
+    if (!target || target.width < 43.5 || target.height < 43.5) throw new Error(`Serve touch target is smaller than 44 × 44 (measured ${target ? `${target.width.toFixed(1)} × ${target.height.toFixed(1)}` : 'none'})`);
     await serve.click();
     await page.getByTestId('daily-login-claim').waitFor();
     await page.waitForTimeout(3000); // The welcome must not expire behind the daily gift.

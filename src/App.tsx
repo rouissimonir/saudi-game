@@ -1611,7 +1611,7 @@ export default function App() {
                   >
                     {/* Character Bust (VIP ribbon on its lower edge, clear of the name) + Name + Coin/Star Reward */}
                     <div className="flex items-center gap-1">
-                      <button type="button" onClick={() => setGuideOrderId(order.id)} aria-label={isAr ? `دليل طلب ${order.customerNameAr}${order.isVip ? ' VIP' : ''}` : `Order guide for ${order.customerNameEn}${order.isVip ? ' VIP' : ''}`} className="relative flex min-h-11 min-w-11 items-center justify-center shrink-0 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#92400E]">
+                      <button type="button" onClick={() => setGuideOrderId(order.id)} aria-label={isAr ? `دليل طلب ${order.customerNameAr}${order.isVip ? ' VIP' : ''}` : `Order guide for ${order.customerNameEn}${order.isVip ? ' VIP' : ''}`} className={`relative flex min-h-11 min-w-11 ${isReady ? 'max-[359px]:min-w-9' : ''} items-center justify-center shrink-0 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#92400E]`}>
                         <CustomerPortrait avatarKey={order.customerId} size="sm" />
                         <span aria-hidden="true" className="absolute top-0 right-0 rounded-full bg-[#78350F] text-white w-3.5 h-3.5 flex items-center justify-center"><Info className="w-2.5 h-2.5" strokeWidth={3} /></span>
                         {order.isVip && (
@@ -1627,16 +1627,16 @@ export default function App() {
                           onClick={() => handleFulfillOrder(order.id)}
                           data-testid={`order-action-${order.id}`}
                           aria-label={isAr ? `تقديم طلب ${order.customerNameAr}` : `Serve order for ${order.customerNameEn}`}
-                          className="serve-pill btn-3d-green relative min-w-0 flex-1 min-h-11 rounded-xl px-1 text-white flex flex-col items-center justify-center cursor-pointer"
+                          className="serve-pill btn-3d-green relative min-w-0 flex-1 min-h-11 rounded-xl px-0.5 text-white flex flex-col items-center justify-center cursor-pointer"
                         >
                           <span className="inline-flex items-center gap-0.5 text-[12px] leading-none font-black">
-                            <Check className="w-3.5 h-3.5 stroke-[4]" aria-hidden="true" />
+                            <Check className="hidden min-[375px]:block w-3.5 h-3.5 stroke-[4]" aria-hidden="true" />
                             {isAr ? 'تقديم' : 'Serve'}
                           </span>
                           <span dir="ltr" className="mt-[3px] inline-flex items-center gap-0.5 whitespace-nowrap text-[9px] leading-none font-black tabular-nums text-[#FEF9C3]">
                             <span data-testid={`order-coins-${order.id}`}>+{reward.total}</span>
-                            <Star className="w-2.5 h-2.5 fill-current" aria-hidden="true" />
-                            <span>{order.rewardStars}</span>
+                            <Star className="max-[359px]:hidden w-2.5 h-2.5 fill-current" aria-hidden="true" />
+                            <span className="max-[359px]:hidden">{order.rewardStars}</span>
                           </span>
                           {order.isVip && <span dir="ltr" data-testid={`vip-rewards-${order.id}`} className="absolute -top-1.5 -end-1 whitespace-nowrap rounded-full bg-[#0369A1] border border-white px-1 text-[8px] leading-[13px] font-black text-white shadow">+{VIP_ORDER_GEMS}💎</span>}
                         </button>
