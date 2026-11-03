@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ArrowRightLeft, AudioLines, BookOpen, Award, Music, Castle, Coins, Gem, Gift, Grid3x3, Hammer, Languages, Menu, Pause, ScrollText, ShoppingBag, Smartphone, Star, Trophy, Volume2, VolumeX, X, Zap } from 'lucide-react';
+import { ArrowRightLeft, AudioLines, BookOpen, Award, Bell, BellOff, Music, Castle, Coins, Gem, Gift, Grid3x3, Hammer, Languages, Menu, Pause, ScrollText, ShoppingBag, Smartphone, Star, Trophy, Volume2, VolumeX, X, Zap } from 'lucide-react';
 import { Language } from '../game/rules';
 import { formatCountdown } from './ProgressionModals';
 import { useNow } from '../utils/useNow';
@@ -73,6 +73,10 @@ export const GameHud: React.FC<{
   onToggleHaptics: () => void;
   musicEnabled: boolean;
   onToggleMusic: () => void;
+  /** Local reminders exist only in the installed app. */
+  remindersAvailable: boolean;
+  remindersOn: boolean;
+  onToggleReminders: () => void;
   onPause: () => void;
   onTransfer: () => void;
   onReplayStory: () => void;
@@ -161,6 +165,7 @@ export const GameHud: React.FC<{
             { icon: <Trophy className="w-4 h-4 text-[#D97706]" />, label: isAr ? 'معرض المجالس' : 'Majlis showcase', on: p.onRank },
             { icon: <Languages className="w-4 h-4" />, label: isAr ? 'English' : 'العربية', on: p.onToggleLanguage },
             { icon: p.muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />, label: p.muted ? (isAr ? 'تشغيل الصوت' : 'Sound on') : isAr ? 'كتم الصوت' : 'Mute', on: p.onToggleMute },
+            ...(p.remindersAvailable ? [{ icon: p.remindersOn ? <BellOff className="w-4 h-4" /> : <Bell className="w-4 h-4" />, label: p.remindersOn ? (isAr ? 'إيقاف التذكيرات' : 'Reminders off') : (isAr ? 'تشغيل التذكيرات' : 'Reminders on'), on: p.onToggleReminders }] : []),
             { icon: <Music className="w-4 h-4" />, label: p.musicEnabled ? (isAr ? 'إيقاف الموسيقى' : 'Music off') : (isAr ? 'تشغيل الموسيقى' : 'Music on'), on: p.onToggleMusic },
             { icon: <Smartphone className="w-4 h-4" />, label: p.hapticsEnabled ? (isAr ? 'إيقاف الاهتزاز' : 'Turn haptics off') : (isAr ? 'تشغيل الاهتزاز' : 'Turn haptics on'), on: p.onToggleHaptics },
             { icon: <Award className="w-4 h-4 text-[#D97706]" />, label: isAr ? 'الإنجازات' : 'Achievements', badge: p.achievementsReady > 0, on: p.onAchievements },

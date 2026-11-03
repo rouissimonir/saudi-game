@@ -98,6 +98,8 @@ import { saveHapticsEnabled } from './utils/haptics';
 import { AchievementsModal } from './components/AchievementsModal';
 import { claimAchievement, claimableAchievements } from './game/achievements';
 import { tidyBoard } from './game/tidyBoard';
+import { planReminders } from './game/reminders';
+import { loadReminderPref, remindersAvailable, requestReminderPermission, saveReminderPref, scheduleReminders } from './utils/notifications';
 import { readPresence, welcomeBackSummary, writePresence, type WelcomeBack } from './game/welcomeBack';
 import { tastingGuestMemory, type TastingGuest } from './game/guestMemories';
 import { GuestMemoryModal } from './components/GuestMemoryModal';
@@ -192,6 +194,7 @@ import {
   ensureDailyQuests,
   findStoryChapter,
   isAreaComplete,
+  msUntilEnergyFull,
   msUntilNextEnergy,
   questProgress,
   sandClearCost,
@@ -298,6 +301,9 @@ export default function App() {
   const [storyLogOpen, setStoryLogOpen] = useState(false);
   const [achievementsOpen, setAchievementsOpen] = useState(false);
   const [confirmingReset, setConfirmingReset] = useState(false);
+  /** Energy/daily-gift reminders (installed app only): null until the player has chosen. */
+  const [reminderPref, setReminderPref] = useState(loadReminderPref);
+  const canRemind = remindersAvailable();
   const [keyArtReady, setKeyArtReady] = useState(false);
   const [replayChapterId, setReplayChapterId] = useState<string | null>(null);
   const [endingOpen, setEndingOpen] = useState(false);
@@ -810,6 +816,20 @@ export default function App() {
     return () => window.clearTimeout(timer);
   }, [gameState.board, gameState.activeOrders, shellState]);
 
+  // Keep the reminders in step with the game while the app is open (iOS only shows them when the app is closed).
+  const energyFullBucket = (() => {
+    const until = msUntilEnergyFull(gameState, Date.now());
+    return until === null ? -1 : Math.round((Date.now() + until) / 300_000);
+  })();
+  useEffect(() => {
+    if (!canRemind || reminderPref !== 'on') return;
+    const sync = () => { void scheduleReminders(planReminders(latestState.current, Date.now(), lang)); };
+    const timer = window.setTimeout(sync, 1500);
+    const onHide = () => { if (document.visibilityState === 'hidden') sync(); };
+    document.addEventListener('visibilitychange', onHide);
+    return () => { window.clearTimeout(timer); document.removeEventListener('visibilitychange', onHide); };
+  }, [canRemind, reminderPref, lang, energyFullBucket, localDay]);
+
   // After 8 idle seconds on the board, softly pulse one mergeable pair (only for players still learning, never over a dialog).
   const inTutorial = getTutorialStep(gameState) !== null;
   useEffect(() => {
@@ -840,6 +860,15 @@ export default function App() {
       document.removeEventListener('keydown', arm, true);
     };
   }, [shellState, workspace, activeScene, inTutorial, gameState.totalMerges, gameState.board, gameState.activeOrders, gameState.inventory, gameState.energy >= 1, tastingFocus]);
+
+  const handleReminderChoice = async (wanted: boolean) => {
+    if (!wanted) { saveReminderPref('off'); setReminderPref('off'); if (remindersAvailable()) void scheduleReminders([]); return; }
+    const allowed = await requestReminderPermission();
+    const pref = allowed ? 'on' : 'off';
+    saveReminderPref(pref);
+    setReminderPref(pref);
+    if (!allowed) showFeedback(isAr ? 'لم يُسمح بالإشعارات. يمكنك تفعيلها من إعدادات الآيفون.' : 'Notifications are not allowed. You can turn them on in iPhone Settings.');
+  };
 
   const handleTidyBoard = () => {
     const r = tidyBoard(gameState);
@@ -1552,6 +1581,9 @@ export default function App() {
         onToggleLanguage={handleToggleLanguage}
         onToggleMute={() => handleToggleMute()}
         onToggleHaptics={handleToggleHaptics}
+        remindersAvailable={canRemind}
+        remindersOn={reminderPref === 'on'}
+        onToggleReminders={() => void handleReminderChoice(reminderPref !== 'on')}
         musicEnabled={musicOn}
         onToggleMusic={handleToggleMusic}
         onPause={() => handleTogglePause()}
@@ -1598,6 +1630,16 @@ export default function App() {
         {/* Persistent prompts sit just above the bottom navigation */}
         <div className="fixed bottom-[calc(64px+env(safe-area-inset-bottom))] inset-x-0 z-30 flex flex-col items-center gap-1.5 px-3 pointer-events-none">
           {/* Longer messages sit above the bottom bar so they never cover the guest orders */}
+          {canRemind && reminderPref === null && gameState.ordersCompleted >= 1 && !welcomeBack && dailyLoginDay === null && !activeScene && !guideOrderId && (
+            <div role="dialog" aria-label={isAr ? 'تذكيرات' : 'Reminders'} data-testid="reminder-ask" className="pointer-events-auto max-w-[440px] w-full rounded-2xl bg-[#241812] border-2 border-[#D99B26] shadow-xl px-3 py-2 text-[#FFF8E8]">
+              <div className="text-xs font-black text-[#FBBF24]">{isAr ? 'هل تريد تذكيراً؟' : 'Want a reminder?'}</div>
+              <div className="mt-0.5 text-xs font-bold leading-snug">{isAr ? 'نخبرك عندما تمتلئ طاقتك وعند وصول هديتك اليومية. لا إزعاج في الليل.' : "We'll tell you when your energy is full and your daily gift is ready. Never at night."}</div>
+              <div className="mt-2 flex gap-2">
+                <button type="button" data-testid="reminder-yes" onClick={() => void handleReminderChoice(true)} className="min-h-11 flex-1 rounded-xl bg-[#FBBF24] px-3 text-xs font-black text-[#3B2410]">{isAr ? 'نعم، ذكّرني' : 'Yes, remind me'}</button>
+                <button type="button" onClick={() => void handleReminderChoice(false)} className="min-h-11 flex-1 rounded-xl border border-[#D99B26] px-3 text-xs font-bold text-[#FBBF24]">{isAr ? 'ليس الآن' : 'Not now'}</button>
+              </div>
+            </div>
+          )}
           {discoveryCard && newDiscoveries.includes(discoveryCard) && ITEM_CATALOG[discoveryCard] && (() => {
             const def = ITEM_CATALOG[discoveryCard];
             const reward = discoveryReward(discoveryCard);
