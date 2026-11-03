@@ -96,6 +96,7 @@ import { OrderGuide } from './components/OrderGuide';
 import { saveHapticsEnabled } from './utils/haptics';
 import { AchievementsModal } from './components/AchievementsModal';
 import { claimAchievement, claimableAchievements } from './game/achievements';
+import { tidyBoard } from './game/tidyBoard';
 import { readPresence, welcomeBackSummary, writePresence, type WelcomeBack } from './game/welcomeBack';
 import { tastingGuestMemory, type TastingGuest } from './game/guestMemories';
 import { GuestMemoryModal } from './components/GuestMemoryModal';
@@ -811,6 +812,17 @@ export default function App() {
       document.removeEventListener('keydown', arm, true);
     };
   }, [shellState, workspace, activeScene, inTutorial, gameState.totalMerges, gameState.board, gameState.activeOrders, gameState.inventory, gameState.energy >= 1, tastingFocus]);
+
+  const handleTidyBoard = () => {
+    const r = tidyBoard(gameState);
+    soundFX.triggerHaptic('light');
+    if (!r.moved) {
+      showFeedback(isAr ? 'اللوحة مرتبة بالفعل.' : 'The board is already tidy.');
+      return;
+    }
+    setGameState(r.state);
+    showFeedback(isAr ? 'رتّبنا اللوحة: القطع المتشابهة بجانب بعضها.' : 'Board tidied: matching pieces are now side by side.');
+  };
 
   const handleClaimAchievement = (id: string) => {
     const res = claimAchievement(gameState, id);
@@ -1911,7 +1923,7 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="mb-1 px-1 text-[#FFF4DA]"><div className="flex items-center justify-between gap-2"><button type="button" data-testid="show-board" onClick={() => { const board = boardGridRef.current; if (!board) return; board.scrollIntoView({ block: 'center' }); const header = document.querySelector('[data-testid=game-hud]')?.closest('header'); if (header) { const overlap = header.getBoundingClientRect().bottom + 4 - board.getBoundingClientRect().top; if (overlap > 0) window.scrollBy({ top: -overlap, behavior: 'instant' }); } board.focus({ preventScroll: true }); }} className="min-h-8 text-[11px] font-bold underline">{isAr ? 'إظهار اللوحة كاملة' : 'Show the whole board'}</button>{!tutorialStep && <button type="button" onClick={() => setShowBoostHelp(value => !value)} aria-expanded={showBoostHelp} aria-controls="boost-explanation" className="min-h-8 text-[11px] font-bold underline">{isAr ? 'كيف يعمل المضاعف؟' : 'How does the boost work?'}</button>}</div>{!tutorialStep && showBoostHelp && <p id="boost-explanation" data-testid="boost-explanation" className="text-[10px] leading-snug font-bold">{generatorBoost === 0 ? (isAr ? 'لا توجد طاقة للمولّد الآن.' : 'No energy available for a generator yet.') : (isAr ? `كل نقرة: ${generatorBoost} طاقة · المستوى الأساسي ${generatorTier}، وقد ينتج مستوى أعلى${generatorBoost < gameState.powerMultiplier ? ' · خُفّض المضاعف مؤقتاً لقلة الطاقة' : ''}.` : `Per tap: ${generatorBoost} energy · base level ${generatorTier}; a lucky drop can be higher${generatorBoost < gameState.powerMultiplier ? ' · boost reduced while energy is low' : ''}.`)}</p>}</div>
+              <div className="mb-1 px-1 text-[#FFF4DA]"><div className="flex items-center justify-between gap-2"><button type="button" data-testid="show-board" onClick={() => { const board = boardGridRef.current; if (!board) return; board.scrollIntoView({ block: 'center' }); const header = document.querySelector('[data-testid=game-hud]')?.closest('header'); if (header) { const overlap = header.getBoundingClientRect().bottom + 4 - board.getBoundingClientRect().top; if (overlap > 0) window.scrollBy({ top: -overlap, behavior: 'instant' }); } board.focus({ preventScroll: true }); }} className="min-h-8 text-[11px] font-bold underline">{isAr ? 'إظهار اللوحة كاملة' : 'Show the whole board'}</button>{!tutorialStep && <button type="button" data-testid="tidy-board" onClick={handleTidyBoard} className="min-h-8 text-[11px] font-bold underline">{isAr ? 'ترتيب اللوحة' : 'Tidy board'}</button>}{!tutorialStep && <button type="button" onClick={() => setShowBoostHelp(value => !value)} aria-expanded={showBoostHelp} aria-controls="boost-explanation" className="min-h-8 text-[11px] font-bold underline">{isAr ? 'كيف يعمل المضاعف؟' : 'How does the boost work?'}</button>}</div>{!tutorialStep && showBoostHelp && <p id="boost-explanation" data-testid="boost-explanation" className="text-[10px] leading-snug font-bold">{generatorBoost === 0 ? (isAr ? 'لا توجد طاقة للمولّد الآن.' : 'No energy available for a generator yet.') : (isAr ? `كل نقرة: ${generatorBoost} طاقة · المستوى الأساسي ${generatorTier}، وقد ينتج مستوى أعلى${generatorBoost < gameState.powerMultiplier ? ' · خُفّض المضاعف مؤقتاً لقلة الطاقة' : ''}.` : `Per tap: ${generatorBoost} energy · base level ${generatorTier}; a lucky drop can be higher${generatorBoost < gameState.powerMultiplier ? ' · boost reduced while energy is low' : ''}.`)}</p>}</div>
 
               {boardFull && <div data-testid="board-full-help" role="status" className="mb-1 rounded-xl border border-[#D99B26] bg-[#FFF3D4] px-2 py-2 text-xs font-bold leading-snug text-[#78350F]">
                 <p>{isAr ? 'اللوحة ممتلئة — أفسح مساحة لمواصلة الضيافة.' : 'The board is full — make room to keep welcoming guests.'}</p>
