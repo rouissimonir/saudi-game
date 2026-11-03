@@ -291,7 +291,7 @@ export class SoundAndHapticsManager {
     const id = 'noura_served_1';
     const url = voiceFileUrl(id);
     const ctx = this.ensureContext();
-    const lines: string[] = [];
+    const lines: string[] = [`App: ${import.meta.env.VITE_BUILD_LABEL ?? 'dev build'}`];
     if (!ctx) lines.push('Web Audio could not be created (muted or unsupported).');
     else {
       lines.push(`Audio context: ${ctx.state}`);

@@ -6,7 +6,7 @@ const { chromium, devices } = require('playwright');
   const base = process.argv[5] || 'http://localhost:4173/';
   const seed = Number(process.argv[2] || 1), lang = process.argv[3] || 'ar', steps = Number(process.argv[4] || 900);
   let x = seed; const rnd = () => ((x = (x * 1103515245 + 12345) % 2147483648) / 2147483648);
-  const b = await chromium.launch();
+  const b = await chromium.launch(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {});
   const ctx = await b.newContext({ ...devices['iPhone 13'] });
   await ctx.addInitScript((l) => localStorage.setItem('qahwa_lang', l), lang);
   const pg = await ctx.newPage();

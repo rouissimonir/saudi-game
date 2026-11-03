@@ -32,7 +32,9 @@
     "test:phone:reset-confirm": "node tools/e2e/reset-confirm.cjs",
     "test:phone:order-ready": "node tools/e2e/order-ready.cjs",
     "test:phone:reminders-ask": "node tools/e2e/reminders-ask.cjs",
-    "test:phone:invite": "node tools/e2e/invite.cjs"
+    "test:phone:invite": "node tools/e2e/invite.cjs",
+    "test:phone:how-to-play": "node tools/e2e/how-to-play.cjs",
+    "test:phone:monkey": "node tools/e2e/monkey.cjs 1 ar 350"
   },
   "dependencies": {
     "@capacitor/core": "^8.5.2",

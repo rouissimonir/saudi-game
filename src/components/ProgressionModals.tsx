@@ -47,7 +47,7 @@ export function Sheet({ title, icon, onClose, children, testId, closeLabel }: { 
             <X className="w-4 h-4" />
           </button>
         </div>
-        <div className="px-4 pb-4 space-y-3 max-h-[70vh] overflow-y-auto">{children}</div>
+        <div role="region" aria-label={title} tabIndex={0} className="px-4 pb-4 space-y-3 max-h-[70vh] overflow-y-auto focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#B45309]">{children}</div>
       </div>
     </div>
   );

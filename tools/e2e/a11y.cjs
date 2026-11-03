@@ -40,6 +40,10 @@ const langs = (process.argv[2] || 'en,ar').split(',');
     await run('board');
     const ev = pg.locator('[data-testid=event-bar]:visible').first(); if (await ev.count()) { await ev.tap(); await pg.getByTestId('event-modal').waitFor(); await run('event'); await closeDialogs(); }
     await pg.getByTestId('hud-energy').tap(); await pg.getByTestId('energy-modal').waitFor(); await run('energy'); await closeDialogs();
+    // New sheets and the expanded menu
+    await pg.getByRole('button', { name: /^(menu|القائمة)$/i }).first().tap(); await pg.getByTestId('hud-menu').waitFor(); await run('menu');
+    await pg.getByText(/^(Achievements|الإنجازات)$/).first().tap(); await pg.getByTestId('achievements-modal').waitFor(); await run('achievements'); await closeDialogs();
+    await pg.getByRole('button', { name: /^(menu|القائمة)$/i }).first().tap(); await pg.getByText(/^(How to play|كيف ألعب؟)$/).first().tap(); await pg.getByTestId('how-to-play').waitFor(); await run('how-to-play'); await closeDialogs();
     await pg.getByTestId('nav-shop').tap(); await pg.getByTestId('shop-tab-milestones').tap(); if (await pg.getByTestId('shop-tab-milestones').getAttribute('aria-selected') !== 'true') throw new Error('Shop milestones tab did not open'); await run('shop-milestones'); await closeDialogs();
     await pg.getByTestId('nav-majlis').tap(); await pg.getByTestId('wing-pic-0').scrollIntoViewIfNeeded(); await run('majlis-wings');
     await pg.keyboard.press('Escape'); await pg.waitForTimeout(500);
