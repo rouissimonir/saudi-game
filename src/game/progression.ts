@@ -75,6 +75,14 @@ export function msUntilNextEnergy(state: GameState, now: number): number | null 
   return Math.max(0, ENERGY_REGEN_MS - (Math.max(0, now - last) % ENERGY_REGEN_MS));
 }
 
+/** Milliseconds until energy is completely full again, or null when it already is. */
+export function msUntilEnergyFull(state: GameState, now: number): number | null {
+  const next = msUntilNextEnergy(state, now);
+  if (next === null) return null;
+  const missing = Math.max(1, Math.ceil(state.maxEnergy - state.energy));
+  return next + (missing - 1) * ENERGY_REGEN_MS;
+}
+
 export const ENERGY_GEM_PACK = { gems: 20, energy: 50 };
 export function buyEnergyWithGems(state: GameState): { state: GameState; bought: boolean } {
   if (state.diamonds < ENERGY_GEM_PACK.gems) return { state, bought: false };

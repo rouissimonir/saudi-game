@@ -10,6 +10,7 @@ import {
   coinEnergyPrice,
   generatorLuckyChance,
   generatorUpgradeCost,
+  msUntilEnergyFull,
   msUntilNextEnergy,
   msUntilNextLocalDay,
   questProgress,
@@ -64,6 +65,7 @@ export const EnergyModal: React.FC<{
   const now = useNow();
   const dayKey = dayKeyFromDate(new Date(now));
   const next = msUntilNextEnergy(state, now);
+  const untilFull = msUntilEnergyFull(state, now);
   const coinPrice = coinEnergyPrice(state, dayKey);
   const maxCoinPrice = ENERGY_COIN_PACK.coins + ENERGY_COIN_PACK.stepPerPurchase * ENERGY_COIN_PACK.maxPriceSteps;
   const full = state.energy >= state.maxEnergy;
@@ -79,6 +81,7 @@ export const EnergyModal: React.FC<{
           {full ? (isAr ? 'ممتلئة' : 'Full') : next !== null ? `${isAr ? '+1 خلال' : '+1 in'} ${formatCountdown(next)}` : ''}
         </span>
       </div>
+      {untilFull !== null && <p data-testid="energy-full-eta" className="text-sm font-bold text-[#78350F]">{isAr ? `تمتلئ الطاقة بعد ${formatHoursMinutes(untilFull, true)}` : `Fully recharged in ${formatHoursMinutes(untilFull, false)}`}</p>}
       <p className="text-xs text-[#78350F]/80">
         {isAr ? 'تتجدد الطاقة نقطة كل دقيقة حتى وأنت خارج اللعبة.' : 'Energy refills one point every minute, even while the game is closed.'}
       </p>

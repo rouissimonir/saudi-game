@@ -308,3 +308,14 @@ test('time until new quests is the time to the next local midnight', () => {
   const lateNight = new Date(2026, 9, 25, 23, 59, 30).getTime();
   assert.equal(P.msUntilNextLocalDay(lateNight), 30_000);
 });
+
+test('time until energy is full counts the current minute plus every missing point', () => {
+  const now = 1_000_000;
+  const full = { ...fresh(), energy: 100, maxEnergy: 100 };
+  assert.equal(P.msUntilEnergyFull(full, now), null);
+  const s = { ...fresh(), energy: 97, maxEnergy: 100, lastEnergyTick: now - 20_000 };
+  assert.equal(P.msUntilNextEnergy(s, now), 40_000);
+  assert.equal(P.msUntilEnergyFull(s, now), 40_000 + 2 * 60_000);
+  const one = { ...s, energy: 99 };
+  assert.equal(P.msUntilEnergyFull(one, now), 40_000);
+});
