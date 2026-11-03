@@ -1830,7 +1830,7 @@ export default function App() {
                                 }
                               }}
                               title={isAr ? reqDef?.nameAr : reqDef?.nameEn}
-                              className={`relative w-6 h-6 rounded-lg border-2 flex items-center justify-center cursor-pointer shrink-0 ${
+                              className={`relative hit-44 w-6 h-6 rounded-lg border-2 flex items-center justify-center cursor-pointer shrink-0 ${
                                 hasItem
                                   ? 'bg-[#DCFCE7] border-[#10B981] shadow-sm'
                                   : 'bg-[#F8EFE0] border-[#D4B483]'
@@ -1864,7 +1864,7 @@ export default function App() {
                     aria-label={isAr ? 'دمج تلقائي' : 'Auto-Merge'}
                     type="button"
                     onClick={handleAutoMergeOrHint}
-                    className="px-2.5 py-1 rounded-xl btn-3d-green text-white text-[11px] font-extrabold inline-flex items-center gap-1 cursor-pointer whitespace-nowrap"
+                    className="relative hit-44 px-2.5 py-1 rounded-xl btn-3d-green text-white text-[11px] font-extrabold inline-flex items-center gap-1 cursor-pointer whitespace-nowrap"
                   >
                     <Sparkles className="w-3 h-3" />
                     <span className="tutorial-toolbar-label hidden min-[360px]:inline">{isAr ? 'دمج تلقائي' : 'Auto-Merge'}</span>
@@ -1884,7 +1884,7 @@ export default function App() {
                       );
                       setChainModalOpen(true);
                     }}
-                    className="px-2.5 py-1 rounded-xl bg-[#FFFDF9] hover:bg-[#FEF3C7] border border-[#D4B483] text-[#5C3A21] text-[11px] font-extrabold inline-flex items-center gap-1 cursor-pointer whitespace-nowrap shadow-sm"
+                    className="relative hit-44 px-2.5 py-1 rounded-xl bg-[#FFFDF9] hover:bg-[#FEF3C7] border border-[#D4B483] text-[#5C3A21] text-[11px] font-extrabold inline-flex items-center gap-1 cursor-pointer whitespace-nowrap shadow-sm"
                   >
                     <Info className="w-3 h-3 text-[#D97706]" />
                     <span className="tutorial-toolbar-label hidden min-[360px]:inline">{isAr ? 'السلاسل' : 'Chains'}</span>
@@ -1902,7 +1902,7 @@ export default function App() {
                     type="button"
                     onClick={handleUseScissors}
                     title={isAr ? 'المقص الذهبي: يقسم أي عنصر (L2+) إلى قطعتين' : 'Golden Scissors: Split any Lv.2+ item'}
-                    className="px-2 py-1 rounded-xl bg-[#FFFDF9] hover:bg-[#FCE7F3] border border-[#DB2777] text-[#9D174D] text-[11px] font-black tabular-nums inline-flex items-center gap-1 cursor-pointer shadow-sm"
+                    className="relative hit-44 px-2 py-1 rounded-xl bg-[#FFFDF9] hover:bg-[#FCE7F3] border border-[#DB2777] text-[#9D174D] text-[11px] font-black tabular-nums inline-flex items-center gap-1 cursor-pointer shadow-sm"
                   >
                     <Scissors className="w-3 h-3" />
                     <span>{gameState.scissorsCount}</span>
@@ -1912,7 +1912,7 @@ export default function App() {
                     type="button"
                     onClick={handleUseJoker}
                     title={isAr ? 'فنجال الجوكر: يرقّي أي عنصر للمستوى التالي فوراً' : 'Royal Joker: Upgrade any item +1 Level'}
-                    className="px-2 py-1 rounded-xl bg-[#FFFDF9] hover:bg-[#F3E8FF] border border-[#7C3AED] text-[#5B21B6] text-[11px] font-black tabular-nums inline-flex items-center gap-1 cursor-pointer shadow-sm"
+                    className="relative hit-44 px-2 py-1 rounded-xl bg-[#FFFDF9] hover:bg-[#F3E8FF] border border-[#7C3AED] text-[#5B21B6] text-[11px] font-black tabular-nums inline-flex items-center gap-1 cursor-pointer shadow-sm"
                   >
                     <Wand2 className="w-3 h-3" />
                     <span>{gameState.jokerCount}</span>
@@ -1922,7 +1922,7 @@ export default function App() {
                     type="button"
                     onClick={handleCyclePowerBoost}
                     aria-label={`${isAr ? 'تغيير مضاعف الطاقة' : 'Toggle Power Boost Multiplier'} ×${gameState.powerMultiplier}`}
-                    className={`px-2.5 py-1 rounded-xl text-xs font-black tabular-nums inline-flex items-center gap-1 transition-all cursor-pointer shadow-sm ${
+                    className={`relative hit-44 px-2.5 py-1 rounded-xl text-xs font-black tabular-nums inline-flex items-center gap-1 transition-all cursor-pointer shadow-sm ${
                       gameState.powerMultiplier === 4
                         ? 'bg-[#DC2626] text-white border border-[#991B1B]'
                         : gameState.powerMultiplier === 2
@@ -1936,7 +1936,7 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="mb-1 px-1 text-[#FFF4DA]"><div className="flex items-center justify-between gap-2"><button type="button" data-testid="show-board" onClick={() => { const board = boardGridRef.current; if (!board) return; board.scrollIntoView({ block: 'center' }); const header = document.querySelector('[data-testid=game-hud]')?.closest('header'); if (header) { const overlap = header.getBoundingClientRect().bottom + 4 - board.getBoundingClientRect().top; if (overlap > 0) window.scrollBy({ top: -overlap, behavior: 'instant' }); } board.focus({ preventScroll: true }); }} className="min-h-8 text-[11px] font-bold underline">{isAr ? 'إظهار اللوحة كاملة' : 'Show the whole board'}</button>{!tutorialStep && <button type="button" data-testid="tidy-board" onClick={handleTidyBoard} className="min-h-8 text-[11px] font-bold underline">{isAr ? 'ترتيب اللوحة' : 'Tidy board'}</button>}{!tutorialStep && <button type="button" onClick={() => setShowBoostHelp(value => !value)} aria-expanded={showBoostHelp} aria-controls="boost-explanation" className="min-h-8 text-[11px] font-bold underline">{isAr ? 'كيف يعمل المضاعف؟' : 'How does the boost work?'}</button>}</div>{!tutorialStep && showBoostHelp && <p id="boost-explanation" data-testid="boost-explanation" className="text-[10px] leading-snug font-bold">{generatorBoost === 0 ? (isAr ? 'لا توجد طاقة للمولّد الآن.' : 'No energy available for a generator yet.') : (isAr ? `كل نقرة: ${generatorBoost} طاقة · المستوى الأساسي ${generatorTier}، وقد ينتج مستوى أعلى${generatorBoost < gameState.powerMultiplier ? ' · خُفّض المضاعف مؤقتاً لقلة الطاقة' : ''}.` : `Per tap: ${generatorBoost} energy · base level ${generatorTier}; a lucky drop can be higher${generatorBoost < gameState.powerMultiplier ? ' · boost reduced while energy is low' : ''}.`)}</p>}</div>
+              <div className="mb-1 px-1 text-[#FFF4DA]"><div className="flex items-center justify-between gap-2"><button type="button" data-testid="show-board" onClick={() => { const board = boardGridRef.current; if (!board) return; board.scrollIntoView({ block: 'center' }); const header = document.querySelector('[data-testid=game-hud]')?.closest('header'); if (header) { const overlap = header.getBoundingClientRect().bottom + 4 - board.getBoundingClientRect().top; if (overlap > 0) window.scrollBy({ top: -overlap, behavior: 'instant' }); } board.focus({ preventScroll: true }); }} className="relative hit-44 min-h-8 text-[11px] font-bold underline">{isAr ? 'إظهار اللوحة كاملة' : 'Show the whole board'}</button>{!tutorialStep && <button type="button" data-testid="tidy-board" onClick={handleTidyBoard} className="relative hit-44 min-h-8 text-[11px] font-bold underline">{isAr ? 'ترتيب اللوحة' : 'Tidy board'}</button>}{!tutorialStep && <button type="button" onClick={() => setShowBoostHelp(value => !value)} aria-expanded={showBoostHelp} aria-controls="boost-explanation" className="relative hit-44 min-h-8 text-[11px] font-bold underline">{isAr ? 'كيف يعمل المضاعف؟' : 'How does the boost work?'}</button>}</div>{!tutorialStep && showBoostHelp && <p id="boost-explanation" data-testid="boost-explanation" className="text-[10px] leading-snug font-bold">{generatorBoost === 0 ? (isAr ? 'لا توجد طاقة للمولّد الآن.' : 'No energy available for a generator yet.') : (isAr ? `كل نقرة: ${generatorBoost} طاقة · المستوى الأساسي ${generatorTier}، وقد ينتج مستوى أعلى${generatorBoost < gameState.powerMultiplier ? ' · خُفّض المضاعف مؤقتاً لقلة الطاقة' : ''}.` : `Per tap: ${generatorBoost} energy · base level ${generatorTier}; a lucky drop can be higher${generatorBoost < gameState.powerMultiplier ? ' · boost reduced while energy is low' : ''}.`)}</p>}</div>
 
               {boardFull && <div data-testid="board-full-help" role="status" className="mb-1 rounded-xl border border-[#D99B26] bg-[#FFF3D4] px-2 py-2 text-xs font-bold leading-snug text-[#78350F]">
                 <p>{isAr ? 'اللوحة ممتلئة — أفسح مساحة لمواصلة الضيافة.' : 'The board is full — make room to keep welcoming guests.'}</p>

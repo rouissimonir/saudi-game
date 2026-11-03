@@ -42,7 +42,7 @@ export function Sheet({ title, icon, onClose, children, testId, closeLabel }: { 
             {icon}
             {title}
           </h2>
-          <button type="button" onClick={onClose} aria-label={closeLabel} className="w-9 h-9 rounded-full hud-pill flex items-center justify-center">
+          <button type="button" onClick={onClose} aria-label={closeLabel} className="relative hit-44 w-9 h-9 rounded-full hud-pill flex items-center justify-center">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -144,7 +144,7 @@ export const QuestsModal: React.FC<{
             {claimed ? (
               <span className="w-20 text-center text-xs font-bold text-[#059669] flex items-center justify-center gap-1"><Check className="w-4 h-4" />{isAr ? 'تم' : 'Done'}</span>
             ) : (
-              <button type="button" disabled={!done} onClick={() => onClaim(quest.id)} className="w-20 rounded-xl btn-3d-green text-white text-xs font-extrabold py-1.5 disabled:opacity-35">
+              <button type="button" disabled={!done} onClick={() => onClaim(quest.id)} className="min-h-11 w-20 rounded-xl btn-3d-green text-white text-xs font-extrabold py-1.5 disabled:opacity-35">
                 {isAr ? 'استلام' : 'Claim'}
               </button>
             )}
@@ -209,7 +209,7 @@ export const WorkshopModal: React.FC<{
             {cost === null ? (
               <span className="text-xs font-extrabold text-[#059669]">{isAr ? 'أقصى' : 'Max'}</span>
             ) : (
-              <button type="button" disabled={state.coins < cost} onClick={() => onUpgrade(chain)} className="rounded-xl btn-3d-amber text-[#3B2410] text-xs font-extrabold px-3 py-2 flex items-center gap-1 disabled:opacity-35">
+              <button type="button" disabled={state.coins < cost} onClick={() => onUpgrade(chain)} className="min-h-11 rounded-xl btn-3d-amber text-[#3B2410] text-xs font-extrabold px-3 py-2 flex items-center gap-1 disabled:opacity-35">
                 {cost} <Coins className="w-3.5 h-3.5" />
               </button>
             )}

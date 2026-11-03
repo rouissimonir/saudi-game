@@ -611,7 +611,7 @@ export const MajlisRenovationView: React.FC<MajlisRenovationViewProps> = ({
                     <button
                       type="button"
                       onClick={() => onOpenStory(chapter.id)}
-                      className="px-2.5 py-1 rounded-lg bg-[#D99B26]/15 hover:bg-[#D99B26]/30 text-[#FBBF24] text-xs font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+                      className="relative hit-44 px-2.5 py-1 rounded-lg bg-[#D99B26]/15 hover:bg-[#D99B26]/30 text-[#FBBF24] text-xs font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer"
                     >
                       {isAr ? `قصة الفصل ${chapter.chapterNumber}` : `Story Ch.${chapter.chapterNumber}`}
                     </button>
