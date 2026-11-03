@@ -1,0 +1,56 @@
+name: Phone browser checks
+
+# Runs the same phone-sized browser checks as tools/e2e (smoke through every screen, board and guest layout at four
+# viewports, first sessions, restoration, pour and transfer) against the production build. It does not upload anything.
+
+'on':
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/phone-checks.yml'
+      - 'src/**'
+      - 'public/**'
+      - 'tools/e2e/**'
+      - 'index.html'
+      - 'fasih.html'
+      - 'vite.config.ts'
+      - 'package.json'
+      - 'package-lock.json'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: phone-checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  phone-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - name: Install the browser the checks use
+        run: npx playwright install --with-deps chromium
+      - name: Build and serve the production bundle
+        run: |
+          npm run build
+          npx vite preview --port 4173 --strictPort > "$RUNNER_TEMP/preview.log" 2>&1 &
+          for i in $(seq 1 30); do curl -sf http://localhost:4173/ > /dev/null && break; sleep 1; done
+          curl -sf http://localhost:4173/ > /dev/null
+      - name: Run the phone checks
+        run: |
+          failed=0
+          for check in smoke board-layout restored-places guest-majlis gathering restoration pour transfer; do
+            echo "::group::test:phone:$check"
+            npm run "test:phone:$check" || failed=1
+            echo "::endgroup::"
+          done
+          exit $failed

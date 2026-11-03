@@ -318,7 +318,7 @@ export const MajlisRenovationView: React.FC<MajlisRenovationViewProps> = ({
                 aria-pressed={active}
                 aria-label={label}
                 title={label}
-                className={`h-10 w-10 rounded-[10px] inline-flex items-center justify-center border transition-all cursor-pointer ${
+                className={`h-11 w-11 rounded-[10px] inline-flex items-center justify-center border transition-all cursor-pointer ${
                   active
                     ? 'bg-[#3A281D] border-[#FBBF24] shadow-inner'
                     : 'border-transparent opacity-70 hover:opacity-100'
@@ -340,24 +340,21 @@ export const MajlisRenovationView: React.FC<MajlisRenovationViewProps> = ({
 
       {/* Interactive Architectural Diorama of the Selected Saudi Region & Ambiance */}
       <div className="relative rounded-2xl border border-[#D99B26]/35 bg-[#19110D] overflow-hidden shadow-xl">
-        {/* Top Prestige Bar */}
-        <div className="flex items-center justify-between px-4 py-2.5 bg-[#241812]/95 border-b border-[#D99B26]/20">
-          <div>
+        {/* Top Prestige Bar: the title, then short stat chips that wrap at chip edges, and the stars on the side */}
+        <div className="flex items-start justify-between gap-2 px-3 py-2.5 bg-[#241812]/95 border-b border-[#D99B26]/20">
+          <div className="min-w-0 flex-1">
             <h2 className="text-sm sm:text-base font-bold text-[#FBF7F0]" data-testid="area-name">
               {isAr ? `${area.nameAr} · المنطقة ${areaIndex + 1}` : `${area.nameEn} · Area ${areaIndex + 1}`}
             </h2>
-            <p className="text-xs text-[#D4A373]">
-              {isAr
-                ? `نسبة الإعمار الملكي: ${prestigePercent}% · مكافأة الطلبات +${zones.reduce((s, z) => s + z.unlockedLevel * z.coinBonusPerOrder, 0)} ريال`
-                : `Estate Restoration: ${prestigePercent}% · Order Bonus +${zones.reduce((s, z) => s + z.unlockedLevel * z.coinBonusPerOrder, 0)} SAR`}
-            </p>
+            <div className="mt-1 flex flex-wrap gap-1 text-[11px] text-[#E9C9A0]">
+              <span className="rounded-full bg-white/5 px-2 py-0.5 whitespace-nowrap">{isAr ? `نسبة الإعمار الملكي: ${prestigePercent}%` : `Estate Restoration: ${prestigePercent}%`}</span>
+              <span className="rounded-full bg-white/5 px-2 py-0.5 whitespace-nowrap">{isAr ? `مكافأة الطلبات +${zones.reduce((s, z) => s + z.unlockedLevel * z.coinBonusPerOrder, 0)} ريال` : `Order Bonus +${zones.reduce((s, z) => s + z.unlockedLevel * z.coinBonusPerOrder, 0)} SAR`}</span>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 text-xs tabular-nums font-bold px-2.5 py-1 rounded-lg bg-[#D99B26]/20 text-[#FBBF24] border border-[#D99B26]/40">
-              <Star className="w-3.5 h-3.5 fill-[#FBBF24] text-[#FBBF24]" />
-              <span>{stars} {isAr ? 'نجمة متاحة' : 'Stars Ready'}</span>
-            </span>
-          </div>
+          <span className="shrink-0 inline-flex flex-col items-center rounded-lg border border-[#D99B26]/40 bg-[#D99B26]/20 px-2.5 py-1 text-[#FBBF24]" aria-label={`${stars} ${isAr ? 'نجمة متاحة' : 'Stars Ready'}`}>
+            <span className="inline-flex items-center gap-1 text-sm font-black tabular-nums"><Star className="w-3.5 h-3.5 fill-[#FBBF24] text-[#FBBF24]" aria-hidden="true" />{stars}</span>
+            <span className="text-[10px] font-bold leading-tight">{isAr ? 'نجمة متاحة' : 'Stars Ready'}</span>
+          </span>
         </div>
 
         {/* Live SVG Isometric/Diorama Scene that visually transforms by Region, Ambiance & Upgrades */}

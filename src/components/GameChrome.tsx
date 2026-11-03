@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { ArrowRightLeft, AudioLines, BookOpen, Castle, Coins, Gem, Gift, Grid3x3, Hammer, Languages, Menu, Pause, ScrollText, ShoppingBag, Smartphone, Star, Trophy, Volume2, VolumeX, X, Zap } from 'lucide-react';
 import { Language } from '../game/rules';
 import { formatCountdown } from './ProgressionModals';
@@ -46,6 +46,10 @@ export const GameHud: React.FC<{
   const isAr = p.lang === 'ar';
   const [menuOpen, setMenuOpen] = useState(false);
   const [audioReport, setAudioReport] = useState<string | null>(null);
+  // Support tools (Audio check) stay out of the normal menu; hold the menu button for a second to reveal them.
+  const [debugTools, setDebugTools] = useState(false);
+  const pressTimer = useRef<number | undefined>(undefined);
+  const longPressed = useRef(false);
   const energyCountdownMs = p.energyCountdownAt(useNow());
   const ring = 2 * Math.PI * 17;
   return (
@@ -89,7 +93,7 @@ export const GameHud: React.FC<{
           <span className="text-sm font-black tabular-nums text-[#3E2723] truncate">{compact(p.gems)}</span>
         </button>
 
-        <button type="button" onClick={() => setMenuOpen((v) => !v)} aria-label={isAr ? 'القائمة' : 'Menu'} aria-expanded={menuOpen} className="relative w-9 h-9 min-[360px]:w-10 min-[360px]:h-10 rounded-full hud-pill flex items-center justify-center shrink-0">
+        <button type="button" onClick={() => { if (longPressed.current) { longPressed.current = false; return; } setMenuOpen((v) => !v); }} onPointerDown={() => { longPressed.current = false; pressTimer.current = window.setTimeout(() => { longPressed.current = true; setDebugTools(true); setMenuOpen(true); }, 900); }} onPointerUp={() => window.clearTimeout(pressTimer.current)} onPointerLeave={() => window.clearTimeout(pressTimer.current)} onPointerCancel={() => window.clearTimeout(pressTimer.current)} aria-label={isAr ? 'القائمة' : 'Menu'} aria-expanded={menuOpen} className="relative w-9 h-9 min-[360px]:w-10 min-[360px]:h-10 rounded-full hud-pill flex items-center justify-center shrink-0">
           {menuOpen ? <X className="w-5 h-5 text-[#5C3A21]" /> : <Menu className="w-5 h-5 text-[#5C3A21]" />}
           {p.freeSpins > 0 && !menuOpen && <span className="absolute top-0 right-0 w-3 h-3 rounded-full bg-[#10B981] border-2 border-white" />}
         </button>
@@ -119,7 +123,7 @@ export const GameHud: React.FC<{
             { icon: <Smartphone className="w-4 h-4" />, label: p.hapticsEnabled ? (isAr ? 'إيقاف الاهتزاز' : 'Turn haptics off') : (isAr ? 'تشغيل الاهتزاز' : 'Turn haptics on'), on: p.onToggleHaptics },
             { icon: <BookOpen className="w-4 h-4" />, label: isAr ? 'حلقات القصة' : 'Story episodes', on: p.onReplayStory },
             { icon: <ArrowRightLeft className="w-4 h-4" />, label: isAr ? 'نقل التقدم لجهاز آخر' : 'Transfer progress', on: p.onTransfer },
-            { icon: <AudioLines className="w-4 h-4" />, label: isAr ? 'فحص الصوت' : 'Audio check', on: () => { setAudioReport('…'); void soundFX.runAudioSelfTest().then(setAudioReport, (e: unknown) => setAudioReport(`Audio check failed: ${e instanceof Error ? e.message : String(e)}`)); } },
+            ...(debugTools ? [{ icon: <AudioLines className="w-4 h-4" />, label: isAr ? 'فحص الصوت' : 'Audio check', on: () => { setAudioReport('…'); void soundFX.runAudioSelfTest().then(setAudioReport, (e: unknown) => setAudioReport(`Audio check failed: ${e instanceof Error ? e.message : String(e)}`)); } }] : []),
             { icon: <Pause className="w-4 h-4" />, label: isAr ? 'إيقاف مؤقت' : 'Pause', on: p.onPause },
           ].map((row) => (
             <button

@@ -263,6 +263,8 @@ export default function App() {
   const activeDragCleanupRef = useRef<(() => void) | null>(null);
   useEffect(() => () => activeDragCleanupRef.current?.(), []);
   const [feedbackBanner, setFeedbackBanner] = useState<string | null>(null);
+  /** Coin and star chips that rise from a card when its order is served. Purely visual, gone after about a second. */
+  const [rewardFloats, setRewardFloats] = useState<{ id: number; x: number; y: number; coins: number; stars: number }[]>([]);
   const [welcomeReceipt, setWelcomeReceipt] = useState<{ guestId: string; message: string } | null>(null);
 
   const [shopModalOpen, setShopModalOpen] = useState<boolean>(false);
@@ -921,6 +923,7 @@ export default function App() {
   const handleFulfillOrder = (orderId: string) => {
     const servedOrder = gameState.activeOrders.find((o) => o.id === orderId);
     const res = fulfillCustomerOrder(gameState, orderId, getActiveSeason(new Date()));
+    const cardRect = typeof document !== 'undefined' ? document.querySelector(`[data-testid="guest-card-${orderId}"]`)?.getBoundingClientRect() : undefined;
     if (res.fulfilled) {
       soundFX.playOrderComplete();
       if (!res.rememberedGuest && servedOrder && isVoiceCharacter(servedOrder.customerId)) {
@@ -931,6 +934,11 @@ export default function App() {
       const guest = servedOrder ? (isAr ? servedOrder.customerNameAr : servedOrder.customerNameEn) : (isAr ? 'الضيف' : 'your guest');
       const coins = res.state.coins - gameState.coins;
       const stars = res.state.stars - gameState.stars;
+      if (cardRect && coins + stars > 0) {
+        const id = Date.now() + Math.random();
+        setRewardFloats((list) => [...list, { id, x: cardRect.left + cardRect.width / 2, y: cardRect.top + cardRect.height / 2, coins, stars }]);
+        window.setTimeout(() => setRewardFloats((list) => list.filter((f) => f.id !== id)), 1200);
+      }
       if (res.rememberedGuest) setRememberedGuest({ guest: res.rememberedGuest, coins, stars, gems: servedOrder?.isVip ? VIP_ORDER_GEMS : 0, chest: Boolean(res.spawnedChest) });
       const vipReward = servedOrder?.isVip ? ` · +${VIP_ORDER_GEMS} 💎` : '';
       const welcomeMessage = isAr
@@ -1423,16 +1431,6 @@ export default function App() {
                 <span className="combo-bar" style={{ animationDuration: `${COMBO_WINDOW_MS}ms` }} key={gameState.lastMergeAt} />
               </div>
             )}
-            {welcomeReceipt && !activeScene && !gameState.activeStoryId && !rememberedGuest && dailyLoginDay === null && !guideOrderId && (
-              <div role="status" data-testid="guest-welcome-feedback" className="max-w-[440px] flex items-center gap-2 rounded-2xl bg-[#3E2723]/95 border border-[#FBBF24] px-3 py-2 text-xs leading-snug font-bold text-[#FEF3C7] shadow">
-                <CustomerPortrait avatarKey={welcomeReceipt.guestId} size="sm" /><span>{welcomeReceipt.message}</span>
-              </div>
-            )}
-            {feedbackBanner && (
-              <div role="status" className="max-w-[440px] text-center px-3 py-1 rounded-2xl bg-[#3E2723]/95 border border-[#FBBF24] text-[11px] leading-snug font-bold text-[#FEF3C7] shadow break-words">
-                {feedbackBanner}
-              </div>
-            )}
           </>
         }
         below={!tutorialStep && <div className={workspace === 'merge' ? 'header-event-merge' : undefined}><LiveEventBar lang={lang} state={gameState} onOpen={() => setEventOpen(true)} /></div>}
@@ -1446,8 +1444,28 @@ export default function App() {
         {rememberedGuest && tastingGuestMemory(gameState.storyFlags, rememberedGuest.guest) && <GuestMemoryModal lang={lang} memory={tastingGuestMemory(gameState.storyFlags, rememberedGuest.guest)!} reward={rememberedGuest} onClose={() => setRememberedGuest(null)} />}
         {guideOrder && <OrderGuide order={guideOrder} state={gameState} season={activeSeason} lang={lang} focused={focusedOrderId === guideOrder.id} onClose={() => setGuideOrderId(null)} onRetrieve={handleRetrieveFromPantry} onServe={() => { handleFulfillOrder(guideOrder.id); setGuideOrderId(null); }} onFocus={() => { setFocusedOrderId(current => current === guideOrder.id ? null : guideOrder.id); setTastingFocus(null); setGuideOrderId(null); }} />}
 
+        {rewardFloats.length > 0 && <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-[45]">
+          {rewardFloats.map((f) => (
+            <div key={f.id} dir="ltr" className="reward-float absolute flex flex-col items-center gap-0.5 text-sm font-black tabular-nums" style={{ left: f.x, top: f.y }}>
+              {f.coins > 0 && <span className="rounded-full bg-[#78350F] px-2 py-0.5 text-[#FDE68A] shadow">+{f.coins} 🪙</span>}
+              {f.stars > 0 && <span className="rounded-full bg-[#78350F] px-2 py-0.5 text-[#FDE68A] shadow">+{f.stars} ⭐</span>}
+            </div>
+          ))}
+        </div>}
+
         {/* Persistent prompts sit just above the bottom navigation */}
         <div className="fixed bottom-[calc(64px+env(safe-area-inset-bottom))] inset-x-0 z-30 flex flex-col items-center gap-1.5 px-3 pointer-events-none">
+          {/* Longer messages sit above the bottom bar so they never cover the guest orders */}
+        {welcomeReceipt && !activeScene && !gameState.activeStoryId && !rememberedGuest && dailyLoginDay === null && !guideOrderId && (
+          <div role="status" data-testid="guest-welcome-feedback" className="max-w-[440px] flex items-center gap-2 rounded-2xl bg-[#3E2723]/95 border border-[#FBBF24] px-3 py-2 text-xs leading-snug font-bold text-[#FEF3C7] shadow">
+            <CustomerPortrait avatarKey={welcomeReceipt.guestId} size="sm" /><span>{welcomeReceipt.message}</span>
+          </div>
+        )}
+        {feedbackBanner && (
+          <div role="status" className="max-w-[440px] text-center px-3 py-1 rounded-2xl bg-[#3E2723]/95 border border-[#FBBF24] text-[11px] leading-snug font-bold text-[#FEF3C7] shadow break-words">
+            {feedbackBanner}
+          </div>
+        )}
           {workspace === 'merge' && saleReceipt && canUndoSale(gameState, saleReceipt) && (
             <div role="status" data-testid="sale-undo" className="pointer-events-auto max-w-[440px] w-full flex items-center gap-2 rounded-2xl bg-[#241812] border-2 border-[#D99B26] shadow-xl px-3 py-2 text-[#FFF8E8]">
               <span className="flex-1 text-xs font-bold">{isAr ? `تم بيع ${ITEM_CATALOG[saleReceipt.itemId].nameAr}` : `Sold ${ITEM_CATALOG[saleReceipt.itemId].nameEn}`} · +{saleReceipt.value} 🪙</span>
