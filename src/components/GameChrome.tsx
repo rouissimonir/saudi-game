@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ArrowRightLeft, AudioLines, BookOpen, Award, Castle, Coins, Gem, Gift, Grid3x3, Hammer, Languages, Menu, Pause, ScrollText, ShoppingBag, Smartphone, Star, Trophy, Volume2, VolumeX, X, Zap } from 'lucide-react';
 import { Language } from '../game/rules';
 import { formatCountdown } from './ProgressionModals';
@@ -12,6 +12,42 @@ export function compact(n: number): string {
   if (v < 1_000_000) return `${Math.floor(v / 100) / 10}k`;
   return `${Math.floor(v / 100_000) / 10}M`;
 }
+
+
+const prefersReducedMotion = () => typeof window !== 'undefined' && typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/**
+ * A resource number that counts up to a larger value and bumps once, so gains are felt. Spending (a smaller value)
+ * and reduced-motion settings update at once.
+ */
+export const CountUp: React.FC<{ value: number; format?: (n: number) => string; className?: string }> = ({ value, format = String, className }) => {
+  const [shown, setShown] = useState(value);
+  const [bump, setBump] = useState(false);
+  const shownRef = useRef(value);
+  useEffect(() => {
+    const from = shownRef.current;
+    if (value <= from || prefersReducedMotion()) {
+      shownRef.current = value;
+      setShown(value);
+      return;
+    }
+    setBump(true);
+    const bumpTimer = window.setTimeout(() => setBump(false), 380);
+    const start = performance.now();
+    const duration = Math.min(800, 280 + (value - from) * 2);
+    let raf = 0;
+    const step = (now: number) => {
+      const k = Math.min(1, (now - start) / duration);
+      const next = Math.round(from + (value - from) * (1 - (1 - k) * (1 - k)));
+      shownRef.current = next;
+      setShown(next);
+      if (k < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => { cancelAnimationFrame(raf); window.clearTimeout(bumpTimer); shownRef.current = value; setShown(value); };
+  }, [value]);
+  return <span className={`${className ?? ''} ${bump ? 'hud-bump' : ''}`}>{format(shown)}</span>;
+};
 
 /** Compact single-row resource bar: keeps the board above the fold on phones. */
 export const GameHud: React.FC<{
@@ -85,7 +121,7 @@ export const GameHud: React.FC<{
             <Coins className="w-4 h-4 text-[#FFFBEB]" />
           </span>
           <span className="sr-only">{isAr ? 'الريالات' : 'Coins'}</span>
-          <span className="text-sm font-black tabular-nums text-[#3E2723] truncate">{compact(p.coins)}</span>
+          <CountUp value={p.coins} format={compact} className="text-sm font-black tabular-nums text-[#3E2723] truncate" />
         </button>
 
         <button type="button" onClick={p.onGems} className="hud-pill rounded-full flex-1 min-w-0 h-10 pl-1 pr-2 flex items-center gap-1">
@@ -93,7 +129,7 @@ export const GameHud: React.FC<{
             <Gem className="w-4 h-4 text-white" />
           </span>
           <span className="sr-only">{isAr ? 'الجواهر' : 'Gems'}</span>
-          <span className="text-sm font-black tabular-nums text-[#3E2723] truncate">{compact(p.gems)}</span>
+          <CountUp value={p.gems} format={compact} className="text-sm font-black tabular-nums text-[#3E2723] truncate" />
         </button>
 
         <button type="button" onClick={() => { if (longPressed.current) { longPressed.current = false; return; } setMenuOpen((v) => !v); }} onPointerDown={() => { longPressed.current = false; pressTimer.current = window.setTimeout(() => { longPressed.current = true; setDebugTools(true); setMenuOpen(true); }, 900); }} onPointerUp={() => window.clearTimeout(pressTimer.current)} onPointerLeave={() => window.clearTimeout(pressTimer.current)} onPointerCancel={() => window.clearTimeout(pressTimer.current)} aria-label={isAr ? 'القائمة' : 'Menu'} aria-expanded={menuOpen} className="relative w-9 h-9 min-[360px]:w-10 min-[360px]:h-10 rounded-full hud-pill flex items-center justify-center shrink-0">

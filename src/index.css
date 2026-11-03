@@ -217,6 +217,10 @@
 @keyframes hint-pulse { 0%, 100% { opacity: 0.55; transform: scale(1); } 50% { opacity: 1; transform: scale(1.06); } }
 @media (prefers-reduced-motion: reduce) { [data-board-highlight][data-hint] { animation: none; } }
 
+.hud-bump { display: inline-block; animation: hud-bump 0.38s ease-out; }
+@keyframes hud-bump { 0% { transform: scale(1); } 40% { transform: scale(1.22); color: #B45309; } 100% { transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) { .hud-bump { animation: none; } }
+
 .serve-pill {
   /* a light sweep crosses the pill once when it appears, then the soft glow pulses */
   background-image:

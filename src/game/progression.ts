@@ -738,6 +738,24 @@ export function claimQuest(state: GameState, questId: string): { state: GameStat
   };
 }
 
+/** Collect every finished quest in one go. */
+export function claimAllQuests(state: GameState): { state: GameState; count: number } {
+  let next = state;
+  let count = 0;
+  for (const row of questProgress(state)) {
+    if (!row.done || row.claimed) continue;
+    const r = claimQuest(next, row.quest.id);
+    if (r.claimed) { next = r.state; count++; }
+  }
+  return { state: next, count };
+}
+
+/** Milliseconds until the next local midnight, when new daily quests arrive. */
+export function msUntilNextLocalDay(now: number): number {
+  const d = new Date(now);
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1).getTime() - now;
+}
+
 export function claimQuestBonus(state: GameState): { state: GameState; claimed: boolean } {
   const rows = questProgress(state);
   if (!state.dailyQuests || state.dailyQuests.bonusClaimed || rows.length === 0 || !rows.every((r) => r.claimed)) {

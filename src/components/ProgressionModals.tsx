@@ -11,6 +11,7 @@ import {
   generatorLuckyChance,
   generatorUpgradeCost,
   msUntilNextEnergy,
+  msUntilNextLocalDay,
   questProgress,
 } from '../game/progression';
 import { ItemArtwork } from './ItemArtwork';
@@ -20,6 +21,15 @@ export function formatCountdown(ms: number): string {
   const m = Math.floor(total / 60);
   const s = total % 60;
   return `${m}:${String(s).padStart(2, '0')}`;
+}
+
+/** 5h 12m / 12m, for waits longer than a few minutes. */
+export function formatHoursMinutes(ms: number, isAr: boolean): string {
+  const minutes = Math.max(1, Math.ceil(ms / 60_000));
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  if (h === 0) return isAr ? `${m} د` : `${m}m`;
+  return isAr ? `${h} س ${m} د` : `${h}h ${m}m`;
 }
 
 export function Sheet({ title, icon, onClose, children, testId, closeLabel }: { title: string; icon: React.ReactNode; onClose: () => void; children: React.ReactNode; testId: string; closeLabel: string }) {
@@ -94,10 +104,13 @@ export const QuestsModal: React.FC<{
   onClose: () => void;
   onClaim: (questId: string) => void;
   onClaimBonus: () => void;
+  onClaimAll?: () => void;
   onAcknowledge: () => void;
-}> = ({ lang, state, onClose, onClaim, onClaimBonus, onAcknowledge }) => {
+}> = ({ lang, state, onClose, onClaim, onClaimBonus, onClaimAll, onAcknowledge }) => {
   const isAr = lang === 'ar';
+  const now = useNow(30_000);
   const rows = questProgress(state);
+  const readyCount = rows.filter((r) => r.done && !r.claimed).length;
   const allClaimed = rows.length > 0 && rows.every((r) => r.claimed);
   const bonusDone = state.dailyQuests?.bonusClaimed;
   return (
@@ -112,6 +125,7 @@ export const QuestsModal: React.FC<{
         {state.questDelivery.openedChests > 0 && <p className="mt-1 text-xs">{isAr ? 'فُتحت الصناديق التي لم تجد مساحة، وأُضيفت محتوياتها.' : 'Chests without board space were opened and their contents added.'}</p>}
         <button type="button" onClick={onAcknowledge} className="mt-2 min-h-11 rounded-xl bg-[#92400E] px-3 py-1 text-xs font-bold text-white">{isAr ? 'حسناً' : 'Got it'}</button>
       </div>}
+      {onClaimAll && readyCount >= 2 && <button type="button" data-testid="quest-claim-all" onClick={onClaimAll} className="min-h-11 w-full rounded-xl btn-3d-green text-white text-sm font-extrabold px-3 py-2">{isAr ? `استلام الكل (${readyCount})` : `Claim all (${readyCount})`}</button>}
       {rows.map(({ quest, progress, done, claimed }) => (
         <div key={quest.id} className="rounded-2xl border-2 border-[#E7D3AE] bg-white p-3" data-testid={`quest-${quest.id}`}>
           <div className="flex items-center justify-between gap-2">
@@ -148,7 +162,7 @@ export const QuestsModal: React.FC<{
         </button>
       </div>
       {allClaimed && !bonusDone && findNearestEmptyCell(state.board, 24) === null && <p className="text-xs text-[#78350F]">{isAr ? 'اللوحة ممتلئة؛ سيُفتح الصندوق فوراً وتُضاف كل محتوياته.' : 'The board is full; the chest will open immediately and all its contents will be added.'}</p>}
-      <p className="text-[11px] text-center text-[#78350F]/85">{isAr ? 'مهام جديدة كل يوم، ومكافآتك المكتسبة محفوظة.' : 'New quests every day; earned rewards are kept.'}</p>
+      <p data-testid="quest-refresh" className="text-[11px] text-center text-[#78350F]/85">{isAr ? `مهام جديدة بعد ${formatHoursMinutes(msUntilNextLocalDay(now), true)} · مكافآتك المكتسبة محفوظة.` : `New quests in ${formatHoursMinutes(msUntilNextLocalDay(now), false)} · earned rewards are kept.`}</p>
     </Sheet>
   );
 };

@@ -287,3 +287,24 @@ test('collection book pays once per new discovery and never for starting items o
   assert.equal(P.claimDiscovery(r.state, 'qahwa_4').claimed, false, 'no double claim');
   assert.equal(P.claimDiscovery(r.state, 'qahwa_7').claimed, false, 'undiscovered items cannot be claimed');
 });
+
+test('claim all collects every finished quest once and pays the same as claiming one by one', () => {
+  let s = P.ensureDailyQuests({ ...fresh(), totalMerges: 50, totalSpawns: 50 }, '2026-10-25');
+  assert.equal(P.claimAllQuests(s).count, 0, 'nothing finished yet');
+  s = { ...s, totalMerges: 500, totalSpawns: 500, ordersCompleted: 50, wingUpgrades: 10 };
+  const all = P.claimAllQuests(s);
+  assert.equal(all.count, 3);
+  let manual = s;
+  for (const r of P.questProgress(s)) manual = P.claimQuest(manual, r.quest.id).state;
+  assert.equal(all.state.coins, manual.coins);
+  assert.equal(all.state.diamonds, manual.diamonds);
+  assert.equal(all.state.energy, manual.energy);
+  assert.equal(P.claimAllQuests(all.state).count, 0, 'a second tap pays nothing');
+});
+
+test('time until new quests is the time to the next local midnight', () => {
+  const noon = new Date(2026, 9, 25, 12, 0, 0).getTime();
+  assert.equal(P.msUntilNextLocalDay(noon), 12 * 60 * 60_000);
+  const lateNight = new Date(2026, 9, 25, 23, 59, 30).getTime();
+  assert.equal(P.msUntilNextLocalDay(lateNight), 30_000);
+});

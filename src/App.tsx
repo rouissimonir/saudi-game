@@ -186,6 +186,7 @@ import {
   claimShopGift,
   claimQuest,
   claimQuestBonus,
+  claimAllQuests,
   ensureDailyQuests,
   findStoryChapter,
   isAreaComplete,
@@ -791,7 +792,10 @@ export default function App() {
     const show = () => {
       if (document.querySelector('[role="dialog"]')) { timer = window.setTimeout(show, IDLE_HINT_MS); return; }
       const pair = findBestMergePair(gameState.board, autoMergeReservations(gameState.activeOrders, tastingFocus?.items, gameState.inventory));
-      setIdleHint(pair ? [pair[0], pair[1]] : null);
+      if (pair) { setIdleHint([pair[0], pair[1]]); return; }
+      // No pair to merge: point at a generator the player can tap, if they have energy for it.
+      const generator = gameState.energy >= 1 ? gameState.board.find((cell) => !cell.sandLocked && cell.itemId !== null && ITEM_CATALOG[cell.itemId]?.isGenerator) : undefined;
+      setIdleHint(generator ? [generator.index] : null);
     };
     const arm = () => {
       window.clearTimeout(timer);
@@ -806,7 +810,7 @@ export default function App() {
       document.removeEventListener('pointerdown', arm, true);
       document.removeEventListener('keydown', arm, true);
     };
-  }, [shellState, workspace, activeScene, inTutorial, gameState.totalMerges, gameState.board, gameState.activeOrders, gameState.inventory, tastingFocus]);
+  }, [shellState, workspace, activeScene, inTutorial, gameState.totalMerges, gameState.board, gameState.activeOrders, gameState.inventory, gameState.energy >= 1, tastingFocus]);
 
   const handleClaimAchievement = (id: string) => {
     const res = claimAchievement(gameState, id);
@@ -1146,6 +1150,13 @@ export default function App() {
       soundFX.playOrderComplete();
       setGameState(r.state);
     }
+  };
+  const handleClaimAllQuests = () => {
+    const r = claimAllQuests(gameState);
+    if (r.count === 0) return;
+    soundFX.playOrderComplete();
+    soundFX.triggerHaptic('medium');
+    setGameState(r.state);
   };
   const handleClaimQuestBonus = () => {
     const r = claimQuestBonus(gameState);
@@ -2145,7 +2156,7 @@ export default function App() {
         />
       )}
       {questsOpen && (
-        <QuestsModal lang={lang} state={gameState} onClose={() => setQuestsOpen(false)} onClaim={handleClaimQuest} onClaimBonus={handleClaimQuestBonus} onAcknowledge={() => setGameState(prev => ({ ...prev, questDelivery: null }))} />
+        <QuestsModal lang={lang} state={gameState} onClose={() => setQuestsOpen(false)} onClaim={handleClaimQuest} onClaimBonus={handleClaimQuestBonus} onClaimAll={handleClaimAllQuests} onAcknowledge={() => setGameState(prev => ({ ...prev, questDelivery: null }))} />
       )}
       {workshopOpen && (
         <WorkshopModal lang={lang} state={gameState} onClose={() => setWorkshopOpen(false)} onUpgrade={handleUpgradeGenerator} />
