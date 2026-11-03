@@ -1,5 +1,6 @@
 import { Capacitor } from '@capacitor/core';
 import { retryableInitialization } from './revenueCatTestStore';
+import { updatePaidAccess } from './paidAccess';
 
 /** The public App Store key is only used by production bundles on native iOS. */
 export function canInitializeAppStore(isProduction: boolean, platform: string, key: string | undefined): boolean {
@@ -9,6 +10,15 @@ export function canInitializeAppStore(isProduction: boolean, platform: string, k
 const initialize = retryableInitialization(async () => {
   const { Purchases } = await import('@revenuecat/purchases-capacitor');
   await Purchases.configure({ apiKey: import.meta.env.VITE_REVENUECAT_IOS_KEY });
+  await Purchases.addCustomerInfoUpdateListener(info => updatePaidAccess(info.entitlements.active));
+  const refresh = async () => {
+    const { customerInfo } = await Purchases.getCustomerInfo();
+    updatePaidAccess(customerInfo.entitlements.active);
+  };
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') void refresh().catch(() => {});
+  });
+  await refresh().catch(() => {});
 });
 
 export function initializeRevenueCatAppStore(): Promise<void> {

@@ -3,6 +3,15 @@ import assert from 'node:assert/strict';
 import { canInitializeTestStore, retryableInitialization } from './revenueCatTestStore';
 import { canInitializeAppStore } from './revenueCatAppStore';
 import { classifyProbeFetchError, inspectTestOffering, type ProbeStage } from './revenueCatProbeStages';
+import { accessFromEntitlements } from './paidAccess';
+
+test('paid access uses active unexpired entitlements, never a legacy save flag', () => {
+  const now = Date.parse('2026-11-03T12:00:00Z');
+  assert.deepEqual(accessFromEntitlements({ vipPassActive: true }, now), { membership: false, decor: false });
+  assert.deepEqual(accessFromEntitlements({ majlis_membership: { isActive: true, expirationDate: '2026-11-04T12:00:00Z' }, majlis_decor_pack: { isActive: true, expirationDate: null } }, now), { membership: true, decor: true });
+  assert.equal(accessFromEntitlements({ majlis_membership: { isActive: true, expirationDate: '2026-11-02T12:00:00Z' } }, now).membership, false);
+  assert.equal(accessFromEntitlements({ majlis_decor_pack: { isActive: false, expirationDate: null } }, now).decor, false);
+});
 
 test('test probe maps known fetch errors to fixed non-sensitive categories', () => {
   assert.equal(classifyProbeFetchError({ code: '10', message: 'private' }), 'FETCH_NETWORK');

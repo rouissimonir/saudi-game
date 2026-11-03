@@ -14,6 +14,7 @@ import { MOOD_SUFFIXES, PAINTED_STAGES, moodSuffix, restorationStage } from '../
 import { assetUrl } from '../utils/assetUrl';
 import { TASTING_STYLES } from '../game/tasting';
 import { TastingCorner } from './TastingCorner';
+import { PaidMajlisDecor } from './PaidMajlisDecor';
 import { CustomerPortrait } from './CustomerPortrait';
 import { majlisReaction, restoredDetailReaction } from '../game/majlisReactions';
 import { TAIF_WELCOMES } from '../game/taifWelcome';
@@ -529,6 +530,7 @@ export const MajlisRenovationView: React.FC<MajlisRenovationViewProps> = ({
         )}
       </div>
 
+      <PaidMajlisDecor lang={lang} />
       {tastingFlags?.tasting_style && (() => {
         const style = TASTING_STYLES.find(s => s.id === tastingFlags.tasting_style);
         if (!style) return null;
