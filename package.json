@@ -26,7 +26,8 @@
     "test:phone:board-layout": "node tools/e2e/phone-board-layout.cjs",
     "test:phone:idle-hint": "node tools/e2e/idle-hint.cjs",
     "test:phone:welcome-back": "node tools/e2e/welcome-back.cjs",
-    "test:phone:achievements": "node tools/e2e/achievements.cjs"
+    "test:phone:achievements": "node tools/e2e/achievements.cjs",
+    "test:phone:discovery-card": "node tools/e2e/discovery-card.cjs"
   },
   "dependencies": {
     "@capacitor/core": "^8.5.2",

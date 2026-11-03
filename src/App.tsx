@@ -182,6 +182,7 @@ import {
   buyEnergyWithGems,
   buySandTile,
   claimDiscovery,
+  discoveryReward,
   claimShopGift,
   claimQuest,
   claimQuestBonus,
@@ -1212,12 +1213,17 @@ export default function App() {
   const claimableQuests = questProgress(gameState).filter((r) => r.done && !r.claimed).length + (gameState.questDelivery ? 1 : 0);
   const newDiscoveries = unclaimedDiscoveries(gameState);
   const discoveryCountRef = useRef(newDiscoveries.length);
+  /** The item just found for the first time, shown as a small card with a one-tap claim. */
+  const [discoveryCard, setDiscoveryCard] = useState<string | null>(null);
   useEffect(() => {
-    if (newDiscoveries.length > discoveryCountRef.current) {
-      showFeedback(isAr ? '🎁 اكتشاف جديد! استلم مكافأته من «دليل السلاسل».' : '🎁 New discovery! Claim its reward in Chains.');
-    }
+    if (newDiscoveries.length > discoveryCountRef.current) setDiscoveryCard(newDiscoveries[newDiscoveries.length - 1]);
     discoveryCountRef.current = newDiscoveries.length;
-  }, [newDiscoveries.length, isAr, showFeedback]);
+  }, [newDiscoveries.length]);
+  useEffect(() => {
+    if (!discoveryCard) return;
+    const timer = window.setTimeout(() => setDiscoveryCard(null), 7000);
+    return () => window.clearTimeout(timer);
+  }, [discoveryCard]);
   const levelFloor = xpToReachLevel(gameState.level);
   const levelProgress = Math.min(1, Math.max(0, (gameState.xp - levelFloor) / (xpToReachLevel(gameState.level + 1) - levelFloor)));
   const canRenovate =
@@ -1539,6 +1545,21 @@ export default function App() {
         {/* Persistent prompts sit just above the bottom navigation */}
         <div className="fixed bottom-[calc(64px+env(safe-area-inset-bottom))] inset-x-0 z-30 flex flex-col items-center gap-1.5 px-3 pointer-events-none">
           {/* Longer messages sit above the bottom bar so they never cover the guest orders */}
+          {discoveryCard && newDiscoveries.includes(discoveryCard) && ITEM_CATALOG[discoveryCard] && (() => {
+            const def = ITEM_CATALOG[discoveryCard];
+            const reward = discoveryReward(discoveryCard);
+            return (
+              <div role="status" data-testid="discovery-card" className="level-up-toast pointer-events-auto max-w-[440px] w-full flex items-center gap-3 rounded-2xl bg-gradient-to-r from-[#FEF3C7] via-[#FDE68A] to-[#FEF3C7] border-2 border-[#D97706] px-3 py-2 shadow-xl text-[#2C1E14]">
+                <div className="w-12 h-12 shrink-0 rounded-xl bg-white border-2 border-[#D97706] flex items-center justify-center"><ItemArtwork itemId={discoveryCard} size="sm" /></div>
+                <div className="min-w-0 flex-1 text-xs leading-snug">
+                  <div className="font-black text-[#B45309]">{isAr ? 'اكتشاف جديد!' : 'New discovery!'}</div>
+                  <div className="font-extrabold truncate">{isAr ? def.nameAr : def.nameEn} · {isAr ? 'المستوى' : 'Lv.'} {def.level}</div>
+                  {reward && <div dir="ltr" className="font-bold text-[#92400E]">+{reward.coins} 🪙{reward.gems > 0 && <> +{reward.gems} 💎</>}</div>}
+                </div>
+                <button type="button" data-testid="discovery-claim" onClick={() => { handleClaimDiscovery(discoveryCard); setDiscoveryCard(null); }} className="min-h-11 shrink-0 rounded-xl btn-3d-green px-3 text-xs font-black text-white">{isAr ? 'استلام' : 'Claim'}</button>
+              </div>
+            );
+          })()}
           {welcomeBack && dailyLoginDay === null && !activeScene && !guideOrderId && (
             <div role="status" data-testid="welcome-back" className="pointer-events-auto max-w-[440px] w-full flex items-center gap-3 rounded-2xl bg-[#241812] border-2 border-[#D99B26] shadow-xl px-3 py-2 text-[#FFF8E8]">
               <span aria-hidden="true" className="text-2xl">☕</span>
