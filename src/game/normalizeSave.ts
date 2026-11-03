@@ -38,6 +38,7 @@ export function normalizeSave(raw: unknown): GameState | null {
   if (event != null && (!record(event) || typeof event.instanceId !== 'string' || !/^[a-zA-Z0-9_-]+@-?\d+$/.test(event.instanceId) || !nonnegative(event.points) || !Array.isArray(event.claimed) || !event.claimed.every(index => Number.isSafeInteger(index) && index >= 0))) return null;
   if (parsed.questDelivery != null && !numericFields(parsed.questDelivery, ['quests', 'bonuses', 'chests', 'openedChests', 'coins', 'gems', 'energy', 'scissors', 'joker', 'prestige'])) return null;
   if (parsed.festivalDelivery != null && !numericFields(parsed.festivalDelivery, ['milestones', 'coins', 'gems', 'energy', 'scissors', 'joker'])) return null;
+  if (parsed.sharedCount !== undefined && !nonnegative(parsed.sharedCount)) return null;
   const defaults = createInitialGameState();
   const discovered = parsed.discoveredItemIds ?? defaults.discoveredItemIds;
   const prize = parsed.lastWheelPrize;

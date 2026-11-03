@@ -217,6 +217,8 @@ export interface GameState {
   claimedDiscoveryIds: string[];
   /** Lifetime achievements whose reward has been collected (see achievements.ts). */
   claimedAchievements: string[];
+  /** Times the player shared an invite from the menu. */
+  sharedCount: number;
   completedStoryIds: string[];
   activeStoryId: string | null;
   liveOpsPoints: number;
@@ -1125,6 +1127,7 @@ export function createInitialGameState(): GameState {
     ],
     claimedDiscoveryIds: [],
     claimedAchievements: [],
+    sharedCount: 0,
     liveEvent: null,
     festivalDelivery: null,
     seenScenes: [],

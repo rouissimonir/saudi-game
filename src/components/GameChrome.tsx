@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ArrowRightLeft, AudioLines, BookOpen, Award, Bell, BellOff, Music, Castle, Coins, Gem, Gift, Grid3x3, Hammer, Languages, Menu, Pause, ScrollText, ShoppingBag, Smartphone, Star, Trophy, Volume2, VolumeX, X, Zap } from 'lucide-react';
+import { ArrowRightLeft, AudioLines, BookOpen, Award, Bell, BellOff, Music, Share2, Castle, Coins, Gem, Gift, Grid3x3, Hammer, Languages, Menu, Pause, ScrollText, ShoppingBag, Smartphone, Star, Trophy, Volume2, VolumeX, X, Zap } from 'lucide-react';
 import { Language } from '../game/rules';
 import { formatCountdown } from './ProgressionModals';
 import { useNow } from '../utils/useNow';
@@ -83,6 +83,7 @@ export const GameHud: React.FC<{
   /** Finished achievements waiting to be collected (badge on the menu entry). */
   achievementsReady: number;
   onAchievements: () => void;
+  onInvite: () => void;
   /** Optional strip under the resource row (the live festival bar). */
   below?: React.ReactNode;
   /** Transient toasts that float just under the header, whatever its height. */
@@ -159,7 +160,7 @@ export const GameHud: React.FC<{
       )}
 
       {menuOpen && (
-        <div className="absolute end-2 top-full mt-1 w-56 rounded-2xl bg-[#FFFDF9] border-2 border-[#D97706] shadow-2xl p-2 grid gap-1 text-[#3E2723]" data-testid="hud-menu">
+        <div className="absolute end-2 top-full mt-1 w-56 max-h-[calc(100dvh-5rem)] overflow-y-auto rounded-2xl bg-[#FFFDF9] border-2 border-[#D97706] shadow-2xl p-2 grid gap-1 text-[#3E2723]" data-testid="hud-menu">
           {[
             { icon: <Gift className="w-4 h-4 text-[#D97706]" />, label: isAr ? 'عجلة فنجال الصباح' : 'Morning wheel', badge: p.freeSpins > 0, on: p.onSpin },
             { icon: <Trophy className="w-4 h-4 text-[#D97706]" />, label: isAr ? 'معرض المجالس' : 'Majlis showcase', on: p.onRank },
@@ -169,6 +170,7 @@ export const GameHud: React.FC<{
             { icon: <Music className="w-4 h-4" />, label: p.musicEnabled ? (isAr ? 'إيقاف الموسيقى' : 'Music off') : (isAr ? 'تشغيل الموسيقى' : 'Music on'), on: p.onToggleMusic },
             { icon: <Smartphone className="w-4 h-4" />, label: p.hapticsEnabled ? (isAr ? 'إيقاف الاهتزاز' : 'Turn haptics off') : (isAr ? 'تشغيل الاهتزاز' : 'Turn haptics on'), on: p.onToggleHaptics },
             { icon: <Award className="w-4 h-4 text-[#D97706]" />, label: isAr ? 'الإنجازات' : 'Achievements', badge: p.achievementsReady > 0, on: p.onAchievements },
+            { icon: <Share2 className="w-4 h-4 text-[#0369A1]" />, label: isAr ? 'ادعُ صديقاً' : 'Invite a friend', on: p.onInvite },
             { icon: <BookOpen className="w-4 h-4" />, label: isAr ? 'حلقات القصة' : 'Story episodes', on: p.onReplayStory },
             { icon: <ArrowRightLeft className="w-4 h-4" />, label: isAr ? 'نقل التقدم لجهاز آخر' : 'Transfer progress', on: p.onTransfer },
             ...(debugTools ? [{ icon: <AudioLines className="w-4 h-4" />, label: isAr ? 'فحص الصوت' : 'Audio check', on: () => { setAudioReport('…'); void soundFX.runAudioSelfTest().then(setAudioReport, (e: unknown) => setAudioReport(`Audio check failed: ${e instanceof Error ? e.message : String(e)}`)); } }] : []),

@@ -33,6 +33,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   { id: 'travel_1', icon: '🧭', titleAr: 'رحّال', titleEn: 'Traveller', descAr: 'سافر إلى منطقة جديدة', descEn: 'Travel to a new area', target: 1, reward: { gems: 15, coins: 400 }, progress: (s) => s.areaIndex },
   { id: 'streak_3', icon: '🔥', titleAr: 'زائر وفي', titleEn: 'Loyal Visitor', descAr: 'زُر اللعبة 3 أيام متتالية', descEn: 'Visit 3 days in a row', target: 3, reward: { gems: 8, coins: 200 }, progress: (s) => s.loginStreak },
   { id: 'streak_7', icon: '🌙', titleAr: 'ضيف الأسبوع', titleEn: 'Week-long Guest', descAr: 'زُر اللعبة 7 أيام', descEn: 'Visit 7 days', target: 7, reward: { gems: 25, coins: 600 }, progress: (s) => s.loginStreak },
+  { id: 'invite_1', icon: '💌', titleAr: 'سفير الضيافة', titleEn: 'Hospitality Ambassador', descAr: 'شارك اللعبة مع صديق', descEn: 'Share the game with a friend', target: 1, reward: { gems: 15, coins: 300 }, progress: (s) => s.sharedCount },
   { id: 'story_3', icon: '📜', titleAr: 'راوي الحكاية', titleEn: 'Storyteller', descAr: 'شاهد 3 فصول من الحكاية', descEn: 'Watch 3 story chapters', target: 3, reward: { gems: 10, coins: 250 }, progress: (s) => s.completedStoryIds.length },
 ];
 

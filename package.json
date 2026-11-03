@@ -31,7 +31,8 @@
     "test:phone:tidy-board": "node tools/e2e/tidy-board.cjs",
     "test:phone:reset-confirm": "node tools/e2e/reset-confirm.cjs",
     "test:phone:order-ready": "node tools/e2e/order-ready.cjs",
-    "test:phone:reminders-ask": "node tools/e2e/reminders-ask.cjs"
+    "test:phone:reminders-ask": "node tools/e2e/reminders-ask.cjs",
+    "test:phone:invite": "node tools/e2e/invite.cjs"
   },
   "dependencies": {
     "@capacitor/core": "^8.5.2",

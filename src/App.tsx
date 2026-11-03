@@ -99,6 +99,7 @@ import { AchievementsModal } from './components/AchievementsModal';
 import { claimAchievement, claimableAchievements } from './game/achievements';
 import { tidyBoard } from './game/tidyBoard';
 import { planReminders } from './game/reminders';
+import { shareInvite } from './utils/share';
 import { loadReminderPref, remindersAvailable, requestReminderPermission, saveReminderPref, scheduleReminders } from './utils/notifications';
 import { readPresence, welcomeBackSummary, writePresence, type WelcomeBack } from './game/welcomeBack';
 import { tastingGuestMemory, type TastingGuest } from './game/guestMemories';
@@ -870,6 +871,19 @@ export default function App() {
     if (!allowed) showFeedback(isAr ? 'لم يُسمح بالإشعارات. يمكنك تفعيلها من إعدادات الآيفون.' : 'Notifications are not allowed. You can turn them on in iPhone Settings.');
   };
 
+  const handleInvite = async () => {
+    const result = await shareInvite(lang);
+    if (result === 'shared') {
+      setGameState((prev) => ({ ...prev, sharedCount: prev.sharedCount + 1 }));
+      showFeedback(isAr ? 'شكراً لدعوتك! تجد مكافأة الإنجاز في «الإنجازات».' : 'Thanks for sharing! Your achievement reward is in Achievements.');
+    } else if (result === 'copied') {
+      setGameState((prev) => ({ ...prev, sharedCount: prev.sharedCount + 1 }));
+      showFeedback(isAr ? 'نسخنا رابط الدعوة. الصقه في محادثة صديقك.' : 'Invite link copied. Paste it in a chat with a friend.');
+    } else if (result === 'failed') {
+      showFeedback(isAr ? 'تعذّرت المشاركة الآن.' : 'Sharing is not available right now.');
+    }
+  };
+
   const handleTidyBoard = () => {
     const r = tidyBoard(gameState);
     soundFX.triggerHaptic('light');
@@ -1590,6 +1604,7 @@ export default function App() {
         onTransfer={() => setTransferOpen(true)}
         onReplayStory={() => setStoryLogOpen(true)}
         achievementsReady={claimableAchievements(gameState)}
+        onInvite={() => void handleInvite()}
         onAchievements={() => setAchievementsOpen(true)}
         overlay={
           <>
