@@ -1,10 +1,11 @@
-import React, { useRef, useState } from 'react';
+import React, { lazy, Suspense, useRef, useState } from 'react';
 import { registerPlugin } from '@capacitor/core';
 import type { PurchasesPackage } from '@revenuecat/purchases-capacitor';
 import { initializeRevenueCatAppStore } from '../utils/revenueCatAppStore';
 import type { Language } from '../game/rules';
 import { updatePaidAccess, usePaidAccess } from '../utils/paidAccess';
 import { PaidMajlisDecor } from './PaidMajlisDecor';
+const PurchaseAccountPanel = lazy(() => import('./PurchaseAccountPanel').then(module => ({ default: module.PurchaseAccountPanel })));
 
 const SandboxCheck = registerPlugin<{ check(): Promise<{ isSandbox: boolean }> }>('SandboxCheck');
 
@@ -39,6 +40,7 @@ export function AppleSandboxPurchasePanel({ lang }: { lang: Language }) {
     <h3 className="font-black">{ar ? 'اختبار مشتريات TestFlight' : 'TestFlight purchase test'}</h3>
     <p>{ar ? 'مشتريات تجريبية عبر Apple. الزينة تظهر في المجلس بعد تأكيد الاستحقاق.' : 'Apple sandbox purchases. Decorations appear in your Majlis after entitlement confirmation.'}</p>
     <PaidMajlisDecor lang={lang} preview />
+    <Suspense fallback={<p role="status">{ar ? 'جارٍ التحميل…' : 'Loading…'}</p>}><PurchaseAccountPanel lang={lang} /></Suspense>
     {(access.decor || access.membership) && <p role="status">{ar ? 'الزينة متاحة الآن في المجلس.' : 'Your decoration corner is now available in the Majlis.'}</p>}
     <button type="button" disabled={busy} className="min-h-11 underline font-bold" onClick={() => void run(async () => {
       const { Purchases } = await import('@revenuecat/purchases-capacitor');
