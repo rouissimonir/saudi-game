@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createInitialGameState } from '../game/rules';
-import { BACKUP_KEY, SAVE_KEY, clearSave, readSave, writeSave } from './saveStorage';
+import { BACKUP_KEY, SAVE_KEY, clearSave, readSave, restoreBackup, writeSave } from './saveStorage';
 
 function memoryStore() {
   const values = new Map<string, string>();
@@ -88,4 +88,16 @@ test('a reset removes both slots and cannot clear the primary if backup removal 
   assert.ok(values.has(SAVE_KEY));
   assert.ok(clearSave(storage));
   assert.equal(values.size, 0);
+});
+
+test('restoreBackup puts a valid backup back as the main save and refuses a missing or corrupt one', () => {
+  const { storage, values } = memoryStore();
+  assert.equal(restoreBackup(storage), false, 'no backup');
+  values.set(BACKUP_KEY, '{not json');
+  assert.equal(restoreBackup(storage), false, 'corrupt backup');
+  const good = createInitialGameState();
+  values.set(SAVE_KEY, '{broken');
+  values.set(BACKUP_KEY, JSON.stringify(good));
+  assert.equal(restoreBackup(storage), true);
+  assert.equal(readSave(storage).status, 'loaded');
 });

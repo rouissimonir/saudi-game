@@ -34,6 +34,16 @@ export function writeSave(storage: Storage, state: GameState): boolean {
   } catch { return false; }
 }
 
+/** Put the last valid backup back as the main save (used when the game keeps crashing on the current one). */
+export function restoreBackup(storage: Storage): boolean {
+  try {
+    const backup = storage.getItem(BACKUP_KEY);
+    if (!backup || !parseSave(backup)) return false;
+    storage.setItem(SAVE_KEY, backup);
+    return true;
+  } catch { return false; }
+}
+
 /** Remove backup first, so a failed reset cannot silently resurrect an old game. */
 export function clearSave(storage: Storage): boolean {
   try { storage.removeItem(BACKUP_KEY); storage.removeItem(SAVE_KEY); return true; } catch { return false; }
@@ -49,4 +59,8 @@ export function persistSave(state: GameState): boolean {
 
 export function removeSave(): boolean {
   try { return clearSave(localStorage); } catch { return false; }
+}
+
+export function restoreBackupSave(): boolean {
+  try { return restoreBackup(localStorage); } catch { return false; }
 }
