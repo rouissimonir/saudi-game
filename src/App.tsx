@@ -139,6 +139,8 @@ function useLazyScene(key: string | null, build: (m: SceneModule) => Scene | nul
   return scene;
 }
 /** The player's language choice survives reloads; Arabic until they switch. */
+const IDLE_HINT_MS = 8000;
+const IDLE_HINT_MAX_MERGES = 120;
 const LANG_KEY = 'qahwa_lang';
 function loadLanguage(): Language {
   try {
@@ -276,6 +278,8 @@ export default function App() {
 
   const bannerTimeoutRef = useRef<number | null>(null);
   const [activeScene, setActiveScene] = useState<string | null>(null);
+  /** Two tiles to nudge after a few idle seconds, for newer players only. */
+  const [idleHint, setIdleHint] = useState<number[] | null>(null);
   const [storyLogOpen, setStoryLogOpen] = useState(false);
   const [keyArtReady, setKeyArtReady] = useState(false);
   const [replayChapterId, setReplayChapterId] = useState<string | null>(null);
@@ -735,6 +739,34 @@ export default function App() {
   };
 
   // Auto-Merge / Smart Hint Action
+  // After 8 idle seconds on the board, softly pulse one mergeable pair (only for players still learning, never over a dialog).
+  const inTutorial = getTutorialStep(gameState) !== null;
+  useEffect(() => {
+    if (shellState !== 'playing' || workspace !== 'merge' || activeScene || inTutorial || gameState.totalMerges >= IDLE_HINT_MAX_MERGES) {
+      setIdleHint(null);
+      return;
+    }
+    let timer: number | undefined;
+    const show = () => {
+      if (document.querySelector('[role="dialog"]')) { timer = window.setTimeout(show, IDLE_HINT_MS); return; }
+      const pair = findBestMergePair(gameState.board, autoMergeReservations(gameState.activeOrders, tastingFocus?.items, gameState.inventory));
+      setIdleHint(pair ? [pair[0], pair[1]] : null);
+    };
+    const arm = () => {
+      window.clearTimeout(timer);
+      setIdleHint((hint) => (hint ? null : hint));
+      timer = window.setTimeout(show, IDLE_HINT_MS);
+    };
+    document.addEventListener('pointerdown', arm, true);
+    document.addEventListener('keydown', arm, true);
+    arm();
+    return () => {
+      window.clearTimeout(timer);
+      document.removeEventListener('pointerdown', arm, true);
+      document.removeEventListener('keydown', arm, true);
+    };
+  }, [shellState, workspace, activeScene, inTutorial, gameState.totalMerges, gameState.board, gameState.activeOrders, gameState.inventory, tastingFocus]);
+
   const handleAutoMergeOrHint = () => {
     const pair = findBestMergePair(gameState.board, autoMergeReservations(gameState.activeOrders, tastingFocus?.items, gameState.inventory));
     if (!pair) {
@@ -1807,6 +1839,7 @@ export default function App() {
                       isCelebrating={Boolean(celebratingCells[cell.index])}
                       isFocused={focusedCells.has(cell.index)}
                       isTutorialTarget={Boolean(tutorialPair?.indices.includes(cell.index))}
+                      isHinted={Boolean(idleHint?.includes(cell.index))}
                       isMergeTarget={Boolean(
                         selectedCell && selectedCell.index !== cell.index && !selectedCell.sandLocked && canMergeItems(selectedCell.itemId, cell.itemId)
                       )}

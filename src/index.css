@@ -213,6 +213,10 @@
   box-shadow: 0 1px 0 0 #065F46;
 }
 
+[data-board-highlight][data-hint] { animation: hint-pulse 1.1s ease-in-out infinite; }
+@keyframes hint-pulse { 0%, 100% { opacity: 0.55; transform: scale(1); } 50% { opacity: 1; transform: scale(1.06); } }
+@media (prefers-reduced-motion: reduce) { [data-board-highlight][data-hint] { animation: none; } }
+
 .serve-pill {
   /* a light sweep crosses the pill once when it appears, then the soft glow pulses */
   background-image:

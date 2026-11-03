@@ -10,6 +10,8 @@ interface BoardCellProps {
   isCelebrating: boolean;
   isFocused: boolean;
   isTutorialTarget: boolean;
+  /** A gentle "try this pair" nudge shown after a few idle seconds. */
+  isHinted?: boolean;
   isMergeTarget: boolean;
   isOrderNeeded: boolean;
   isRecipeNeeded: boolean;
@@ -30,6 +32,7 @@ export const BoardCell = memo(function BoardCell({
   isCelebrating,
   isFocused,
   isTutorialTarget,
+  isHinted = false,
   isMergeTarget,
   isOrderNeeded,
   isRecipeNeeded,
@@ -58,13 +61,13 @@ export const BoardCell = memo(function BoardCell({
     : `${isAr ? 'خلية فارغة' : 'Empty Tile'} (${cell.row + 1},${cell.col + 1})`;
   const highlight = isCelebrating || isDragOver ? 'celebration'
     : isSelected ? 'selected'
-    : isMergeTarget || isTutorialTarget ? 'merge'
+    : isMergeTarget || isTutorialTarget || isHinted ? 'merge'
     : isFocused ? 'focused' : null;
 
   return (
     <button
       type="button"
-      aria-label={`${accessibleLabel}${isSelected ? (isAr ? '، محدد' : ', selected') : ''}${isMergeTarget ? (isAr ? '، يمكن دمجه مع العنصر المحدد' : ', can merge with the selected item') : ''}${isFocused ? (isAr ? '، مفيد للمهمة المختارة' : ', useful for the focused goal') : ''}${isTutorialTarget ? (isAr ? '، مقترح للدمج الأول' : ', suggested for your first merge') : ''}${isRecipeNeeded ? (isAr ? '، جاهز للوصفة المختارة' : ', ready for the focused recipe') : ''}`}
+      aria-label={`${accessibleLabel}${isSelected ? (isAr ? '، محدد' : ', selected') : ''}${isMergeTarget ? (isAr ? '، يمكن دمجه مع العنصر المحدد' : ', can merge with the selected item') : ''}${isFocused ? (isAr ? '، مفيد للمهمة المختارة' : ', useful for the focused goal') : ''}${isTutorialTarget ? (isAr ? '، مقترح للدمج الأول' : ', suggested for your first merge') : ''}${isHinted ? (isAr ? '، مقترح للدمج' : ', suggested merge') : ''}${isRecipeNeeded ? (isAr ? '، جاهز للوصفة المختارة' : ', ready for the focused recipe') : ''}`}
       data-cell-index={cell.index}
       data-recipe-needed={isRecipeNeeded || undefined}
       onPointerDown={(e) => onPointerDown(e, cell.index)}
@@ -83,7 +86,7 @@ export const BoardCell = memo(function BoardCell({
           : ''
       }`}
     >
-      {highlight && <span aria-hidden="true" data-board-highlight={highlight} className={`pointer-events-none absolute inset-0 z-20 rounded-xl border-solid ${highlight === 'focused' ? 'border-2' : 'border-[3px]'} ${highlight === 'merge' ? 'border-[#10B981]' : highlight === 'celebration' ? 'border-[#FDE047]' : 'border-[#F59E0B]'}`} />}
+      {highlight && <span aria-hidden="true" data-board-highlight={highlight} data-hint={isHinted || undefined} className={`pointer-events-none absolute inset-0 z-20 rounded-xl border-solid ${highlight === 'focused' ? 'border-2' : 'border-[3px]'} ${highlight === 'merge' ? 'border-[#10B981]' : highlight === 'celebration' ? 'border-[#FDE047]' : 'border-[#F59E0B]'}`} />}
       {itemDef && (
         <>
           <ItemArtwork itemId={itemDef.id} size="board" />

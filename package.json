@@ -23,7 +23,8 @@
     "test:phone:restoration": "node tools/e2e/restoration-first-session.cjs",
     "test:phone:guest-majlis": "node tools/e2e/guest-majlis-reaction.cjs",
     "test:phone:restored-places": "node tools/e2e/restored-places.cjs",
-    "test:phone:board-layout": "node tools/e2e/phone-board-layout.cjs"
+    "test:phone:board-layout": "node tools/e2e/phone-board-layout.cjs",
+    "test:phone:idle-hint": "node tools/e2e/idle-hint.cjs"
   },
   "dependencies": {
     "@capacitor/core": "^8.5.2",
