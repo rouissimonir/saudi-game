@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { ArrowRightLeft, AudioLines, BookOpen, Castle, Coins, Gem, Gift, Grid3x3, Hammer, Languages, Menu, Pause, ScrollText, ShoppingBag, Smartphone, Star, Trophy, Volume2, VolumeX, X, Zap } from 'lucide-react';
+import { ArrowRightLeft, AudioLines, BookOpen, Award, Castle, Coins, Gem, Gift, Grid3x3, Hammer, Languages, Menu, Pause, ScrollText, ShoppingBag, Smartphone, Star, Trophy, Volume2, VolumeX, X, Zap } from 'lucide-react';
 import { Language } from '../game/rules';
 import { formatCountdown } from './ProgressionModals';
 import { useNow } from '../utils/useNow';
@@ -38,6 +38,9 @@ export const GameHud: React.FC<{
   onPause: () => void;
   onTransfer: () => void;
   onReplayStory: () => void;
+  /** Finished achievements waiting to be collected (badge on the menu entry). */
+  achievementsReady: number;
+  onAchievements: () => void;
   /** Optional strip under the resource row (the live festival bar). */
   below?: React.ReactNode;
   /** Transient toasts that float just under the header, whatever its height. */
@@ -95,7 +98,7 @@ export const GameHud: React.FC<{
 
         <button type="button" onClick={() => { if (longPressed.current) { longPressed.current = false; return; } setMenuOpen((v) => !v); }} onPointerDown={() => { longPressed.current = false; pressTimer.current = window.setTimeout(() => { longPressed.current = true; setDebugTools(true); setMenuOpen(true); }, 900); }} onPointerUp={() => window.clearTimeout(pressTimer.current)} onPointerLeave={() => window.clearTimeout(pressTimer.current)} onPointerCancel={() => window.clearTimeout(pressTimer.current)} aria-label={isAr ? 'القائمة' : 'Menu'} aria-expanded={menuOpen} className="relative w-9 h-9 min-[360px]:w-10 min-[360px]:h-10 rounded-full hud-pill flex items-center justify-center shrink-0">
           {menuOpen ? <X className="w-5 h-5 text-[#5C3A21]" /> : <Menu className="w-5 h-5 text-[#5C3A21]" />}
-          {p.freeSpins > 0 && !menuOpen && <span className="absolute top-0 right-0 w-3 h-3 rounded-full bg-[#10B981] border-2 border-white" />}
+          {(p.freeSpins > 0 || p.achievementsReady > 0) && !menuOpen && <span className="absolute top-0 right-0 w-3 h-3 rounded-full bg-[#10B981] border-2 border-white" />}
         </button>
       </div>
       {p.below}
@@ -121,6 +124,7 @@ export const GameHud: React.FC<{
             { icon: <Languages className="w-4 h-4" />, label: isAr ? 'English' : 'العربية', on: p.onToggleLanguage },
             { icon: p.muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />, label: p.muted ? (isAr ? 'تشغيل الصوت' : 'Sound on') : isAr ? 'كتم الصوت' : 'Mute', on: p.onToggleMute },
             { icon: <Smartphone className="w-4 h-4" />, label: p.hapticsEnabled ? (isAr ? 'إيقاف الاهتزاز' : 'Turn haptics off') : (isAr ? 'تشغيل الاهتزاز' : 'Turn haptics on'), on: p.onToggleHaptics },
+            { icon: <Award className="w-4 h-4 text-[#D97706]" />, label: isAr ? 'الإنجازات' : 'Achievements', badge: p.achievementsReady > 0, on: p.onAchievements },
             { icon: <BookOpen className="w-4 h-4" />, label: isAr ? 'حلقات القصة' : 'Story episodes', on: p.onReplayStory },
             { icon: <ArrowRightLeft className="w-4 h-4" />, label: isAr ? 'نقل التقدم لجهاز آخر' : 'Transfer progress', on: p.onTransfer },
             ...(debugTools ? [{ icon: <AudioLines className="w-4 h-4" />, label: isAr ? 'فحص الصوت' : 'Audio check', on: () => { setAudioReport('…'); void soundFX.runAudioSelfTest().then(setAudioReport, (e: unknown) => setAudioReport(`Audio check failed: ${e instanceof Error ? e.message : String(e)}`)); } }] : []),

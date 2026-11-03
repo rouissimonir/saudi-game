@@ -215,6 +215,8 @@ export interface GameState {
   discoveredItemIds: string[];
   /** Discoveries whose collection reward has been claimed (starting items count as claimed). */
   claimedDiscoveryIds: string[];
+  /** Lifetime achievements whose reward has been collected (see achievements.ts). */
+  claimedAchievements: string[];
   completedStoryIds: string[];
   activeStoryId: string | null;
   liveOpsPoints: number;
@@ -1122,6 +1124,7 @@ export function createInitialGameState(): GameState {
       'chest_1',
     ],
     claimedDiscoveryIds: [],
+    claimedAchievements: [],
     liveEvent: null,
     festivalDelivery: null,
     seenScenes: [],

@@ -94,6 +94,8 @@ import { canUndoSale, sellWithReceipt, undoSale, type SaleReceipt } from './game
 import { focusCells, ingredientNeeds, orderNeeds, tutorialMergePair } from './game/orderGuide';
 import { OrderGuide } from './components/OrderGuide';
 import { saveHapticsEnabled } from './utils/haptics';
+import { AchievementsModal } from './components/AchievementsModal';
+import { claimAchievement, claimableAchievements } from './game/achievements';
 import { readPresence, welcomeBackSummary, writePresence, type WelcomeBack } from './game/welcomeBack';
 import { tastingGuestMemory, type TastingGuest } from './game/guestMemories';
 import { GuestMemoryModal } from './components/GuestMemoryModal';
@@ -286,6 +288,7 @@ export default function App() {
   /** Two tiles to nudge after a few idle seconds, for newer players only. */
   const [idleHint, setIdleHint] = useState<number[] | null>(null);
   const [storyLogOpen, setStoryLogOpen] = useState(false);
+  const [achievementsOpen, setAchievementsOpen] = useState(false);
   const [keyArtReady, setKeyArtReady] = useState(false);
   const [replayChapterId, setReplayChapterId] = useState<string | null>(null);
   const [endingOpen, setEndingOpen] = useState(false);
@@ -460,11 +463,11 @@ export default function App() {
       if (activeScene !== pending) setActiveScene(pending);
       return;
     }
-    if (activeScene || gameState.activeStoryId || replayChapterId || endingOpen || storyLogOpen || rememberedGuest ||
+    if (activeScene || gameState.activeStoryId || replayChapterId || endingOpen || storyLogOpen || achievementsOpen || rememberedGuest ||
         tastingOpen || taifWelcomeOpen || guideOrderId || shopModalOpen || chainModalOpen || leaderboardOpen ||
         transferOpen || eventOpen || energyOpen || questsOpen || workshopOpen || pourOpen || dragGhost) return;
     setDailyLoginDay(dailyLoginAfterTutorial(gameState, localDay));
-  }, [shellState, saveBlocked, pageVisible, activeScene, gameState.activeStoryId, gameState.seenScenes, gameState.tutorialDismissed, gameState.totalMerges, gameState.ordersCompleted, gameState.lastLoginDay, gameState.loginStreak, localDay, replayChapterId, endingOpen, storyLogOpen, rememberedGuest, tastingOpen, taifWelcomeOpen, guideOrderId, shopModalOpen, chainModalOpen, leaderboardOpen, transferOpen, eventOpen, energyOpen, questsOpen, workshopOpen, pourOpen, dragGhost]);
+  }, [shellState, saveBlocked, pageVisible, activeScene, gameState.activeStoryId, gameState.seenScenes, gameState.tutorialDismissed, gameState.totalMerges, gameState.ordersCompleted, gameState.lastLoginDay, gameState.loginStreak, localDay, replayChapterId, endingOpen, storyLogOpen, achievementsOpen, rememberedGuest, tastingOpen, taifWelcomeOpen, guideOrderId, shopModalOpen, chainModalOpen, leaderboardOpen, transferOpen, eventOpen, energyOpen, questsOpen, workshopOpen, pourOpen, dragGhost]);
 
   // Warm the prologue's art while a new player is still on the title screen.
   useEffect(() => {
@@ -803,6 +806,15 @@ export default function App() {
       document.removeEventListener('keydown', arm, true);
     };
   }, [shellState, workspace, activeScene, inTutorial, gameState.totalMerges, gameState.board, gameState.activeOrders, gameState.inventory, tastingFocus]);
+
+  const handleClaimAchievement = (id: string) => {
+    const res = claimAchievement(gameState, id);
+    if (!res.claimed || !res.reward) return;
+    soundFX.playOrderComplete();
+    soundFX.triggerHaptic('medium');
+    setGameState(res.state);
+    showFeedback(isAr ? `إنجاز جديد! +${res.reward.gems} 💎 +${res.reward.coins} 🪙` : `Achievement! +${res.reward.gems} 💎 +${res.reward.coins} 🪙`);
+  };
 
   const handleAutoMergeOrHint = () => {
     const pair = findBestMergePair(gameState.board, autoMergeReservations(gameState.activeOrders, tastingFocus?.items, gameState.inventory));
@@ -1486,6 +1498,8 @@ export default function App() {
         onPause={() => handleTogglePause()}
         onTransfer={() => setTransferOpen(true)}
         onReplayStory={() => setStoryLogOpen(true)}
+        achievementsReady={claimableAchievements(gameState)}
+        onAchievements={() => setAchievementsOpen(true)}
         overlay={
           <>
             {(saveFailed || showRecovered) && <div role="status" data-testid="save-notice" className="pointer-events-auto max-w-[440px] w-full rounded-2xl bg-[#7F1D1D] border-2 border-[#FCA5A5] px-3 py-2 text-xs font-bold text-white shadow-lg flex flex-wrap gap-2 items-center"><span className="flex-1 min-w-[160px]">{saveFailed ? (isAr ? 'تعذّر حفظ التقدم. أعد المحاولة أو انسخ رمز النقل قبل مغادرة اللعبة.' : 'Progress could not be saved. Retry or copy your transfer code before leaving.') : (isAr ? 'استعدنا النسخة الاحتياطية. قد تكون آخر خطوة غير محفوظة.' : 'A backup was restored. Your most recent action may be missing.')}</span>{saveFailed ? <><button type="button" data-testid="retry-save" onClick={() => setSaveFailed(!saveGameState(gameState))} className="min-h-11 underline shrink-0">{isAr ? 'إعادة الحفظ' : 'Retry save'}</button><button type="button" onClick={() => setTransferOpen(true)} className="min-h-11 underline shrink-0">{isAr ? 'نقل التقدم' : 'Transfer'}</button></> : <button type="button" onClick={() => setShowRecovered(false)} className="min-h-11 underline shrink-0">{isAr ? 'حسناً' : 'OK'}</button>}</div>}
@@ -2095,6 +2109,7 @@ export default function App() {
         <LiveEventModal lang={lang} state={gameState} onClose={() => setEventOpen(false)} onClaim={handleClaimEventMilestone} onAcknowledge={() => setGameState(prev => ({ ...prev, festivalDelivery: null }))} />
       )}
 
+      {achievementsOpen && <AchievementsModal lang={lang} state={gameState} onClose={() => setAchievementsOpen(false)} onClaim={handleClaimAchievement} />}
       {energyOpen && (
         <EnergyModal
           lang={lang}
