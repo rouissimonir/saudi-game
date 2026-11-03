@@ -29,7 +29,8 @@
     "test:phone:achievements": "node tools/e2e/achievements.cjs",
     "test:phone:discovery-card": "node tools/e2e/discovery-card.cjs",
     "test:phone:tidy-board": "node tools/e2e/tidy-board.cjs",
-    "test:phone:reset-confirm": "node tools/e2e/reset-confirm.cjs"
+    "test:phone:reset-confirm": "node tools/e2e/reset-confirm.cjs",
+    "test:phone:order-ready": "node tools/e2e/order-ready.cjs"
   },
   "dependencies": {
     "@capacitor/core": "^8.5.2",

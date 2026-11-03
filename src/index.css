@@ -217,6 +217,10 @@
 @keyframes hint-pulse { 0%, 100% { opacity: 0.55; transform: scale(1); } 50% { opacity: 1; transform: scale(1.06); } }
 @media (prefers-reduced-motion: reduce) { [data-board-highlight][data-hint] { animation: none; } }
 
+.order-ready-bump { animation: order-ready-bump 0.7s ease-out; }
+@keyframes order-ready-bump { 0% { transform: scale(1); } 25% { transform: scale(1.05); } 50% { transform: scale(0.99); } 75% { transform: scale(1.02); } 100% { transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) { .order-ready-bump { animation: none; } }
+
 .hit-44::after {
   /* Grow only the touch area to 44px; the button keeps its drawn size. The element must be positioned (add `relative`). */
   content: '';

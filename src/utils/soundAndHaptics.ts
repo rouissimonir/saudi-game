@@ -720,6 +720,28 @@ export class SoundAndHapticsManager {
     this.playFile(ORDER_COMPLETE_URL, 0.85, () => this.playOrderCompleteSynth());
   }
 
+  /** A tiny two-note "ding" when a guest's order becomes ready to serve (much quieter than the serve fanfare). */
+  public playOrderReady() {
+    if (this.muted) return;
+    this.triggerHaptic('light');
+    const ctx = this.ensureContext();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    [587.33, 880].forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now + i * 0.09);
+      gain.gain.setValueAtTime(0.0001, now + i * 0.09);
+      gain.gain.exponentialRampToValueAtTime(0.07, now + i * 0.09 + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.09 + 0.22);
+      osc.connect(gain);
+      gain.connect(this.output(ctx));
+      osc.start(now + i * 0.09);
+      osc.stop(now + i * 0.09 + 0.25);
+    });
+  }
+
   /** Bigger fanfare for a level-up; falls back to the order-complete chime. */
   public playLevelUp() {
     this.triggerHaptic('heavy');

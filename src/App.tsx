@@ -286,6 +286,9 @@ export default function App() {
 
   const bannerTimeoutRef = useRef<number | null>(null);
   const [activeScene, setActiveScene] = useState<string | null>(null);
+  /** Orders that just became ready, for a one-shot bounce on their card. */
+  const [justReady, setJustReady] = useState<string[]>([]);
+  const readyBefore = useRef<Set<string> | null>(null);
   const latestState = useRef(gameState);
   latestState.current = gameState;
   /** Shown once after a long break: energy regained and guests waiting. Dismissible, never a modal. */
@@ -792,6 +795,20 @@ export default function App() {
     const timer = window.setTimeout(() => setWelcomeBack(null), 14_000);
     return () => window.clearTimeout(timer);
   }, [welcomeBack]);
+
+  // A guest's order turning ready is a small reward moment: a soft ding, a light tap and a one-time bounce on the card.
+  useEffect(() => {
+    const ready = new Set(gameState.activeOrders.filter((order) => findCellsForOrder(gameState.board, order.requiredItemIds) !== null).map((order) => order.id));
+    const before = readyBefore.current;
+    readyBefore.current = ready;
+    if (!before || shellState !== 'playing') return;
+    const fresh = [...ready].filter((id) => !before.has(id));
+    if (fresh.length === 0) return;
+    soundFX.playOrderReady();
+    setJustReady(fresh);
+    const timer = window.setTimeout(() => setJustReady([]), 900);
+    return () => window.clearTimeout(timer);
+  }, [gameState.board, gameState.activeOrders, shellState]);
 
   // After 8 idle seconds on the board, softly pulse one mergeable pair (only for players still learning, never over a dialog).
   const inTutorial = getTutorialStep(gameState) !== null;
@@ -1755,7 +1772,7 @@ export default function App() {
                   <div
                     key={order.id}
                     data-testid={`guest-card-${order.id}`}
-                    className={`relative rounded-2xl p-1.5 sm:p-2 border-2 flex flex-col justify-between transition-all shadow-md overflow-hidden ${focusedOrder?.id === order.id ? 'ring-2 ring-[#F59E0B]' : ''} ${
+                    className={`relative rounded-2xl p-1.5 sm:p-2 border-2 flex flex-col justify-between transition-all shadow-md overflow-hidden ${justReady.includes(order.id) ? 'order-ready-bump' : ''} ${focusedOrder?.id === order.id ? 'ring-2 ring-[#F59E0B]' : ''} ${
                       isReady
                         ? 'bg-gradient-to-b from-[#ECFDF5] to-[#D1FAE5] border-[#059669] ring-2 ring-[#10B981]/40'
                         : order.isVip
@@ -1799,7 +1816,7 @@ export default function App() {
                         <div className="text-[10px] sm:text-[11px] leading-tight font-extrabold text-[#2C1E14] line-clamp-2 break-words">
                           {isAr ? order.customerNameAr : order.customerNameEn}
                         </div>
-                        <div className="inline-flex items-center gap-0.5 text-[9px] sm:text-[10px] font-black tabular-nums text-[#B45309]">
+                        <div className="flex flex-wrap items-center gap-x-0.5 text-[9px] sm:text-[10px] font-black tabular-nums text-[#B45309]">
                           <span data-testid={`order-coins-${order.id}`}>+{reward.total}</span>
                           <span>·</span>
                           <span className="inline-flex items-center gap-0.5 text-[#D97706]">
