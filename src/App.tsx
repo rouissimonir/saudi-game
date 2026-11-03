@@ -100,6 +100,7 @@ import { claimAchievement, claimableAchievements } from './game/achievements';
 import { tidyBoard } from './game/tidyBoard';
 import { planReminders } from './game/reminders';
 import { shareInvite } from './utils/share';
+import { WRITE_REVIEW_URL, readRateRecord, shouldAskForRating, writeRateRecord } from './game/ratePrompt';
 import { loadReminderPref, remindersAvailable, requestReminderPermission, saveReminderPref, scheduleReminders } from './utils/notifications';
 import { readPresence, welcomeBackSummary, writePresence, type WelcomeBack } from './game/welcomeBack';
 import { tastingGuestMemory, type TastingGuest } from './game/guestMemories';
@@ -305,6 +306,9 @@ export default function App() {
   /** Energy/daily-gift reminders (installed app only): null until the player has chosen. */
   const [reminderPref, setReminderPref] = useState(loadReminderPref);
   const canRemind = remindersAvailable();
+  /** Switched on for the App Store release with VITE_RATE_PROMPT=1; off for TestFlight and the website. */
+  const ratePromptEnabled = canRemind && import.meta.env.VITE_RATE_PROMPT === '1';
+  const [rateAsk, setRateAsk] = useState(false);
   const [keyArtReady, setKeyArtReady] = useState(false);
   const [replayChapterId, setReplayChapterId] = useState<string | null>(null);
   const [endingOpen, setEndingOpen] = useState(false);
@@ -831,6 +835,14 @@ export default function App() {
     return () => { window.clearTimeout(timer); document.removeEventListener('visibilitychange', onHide); };
   }, [canRemind, reminderPref, lang, energyFullBucket, localDay]);
 
+  // A one-time, dismissible request for an App Store rating once the player is clearly enjoying the game.
+  useEffect(() => {
+    if (rateAsk || shellState !== 'playing' || workspace !== 'merge' || activeScene || gameState.activeStoryId) return;
+    if (!shouldAskForRating(gameState, readRateRecord(), Date.now(), ratePromptEnabled)) return;
+    const timer = window.setTimeout(() => setRateAsk(true), 2500);
+    return () => window.clearTimeout(timer);
+  }, [rateAsk, shellState, workspace, activeScene, gameState.activeStoryId, gameState.level, gameState.ordersCompleted, ratePromptEnabled]);
+
   // After 8 idle seconds on the board, softly pulse one mergeable pair (only for players still learning, never over a dialog).
   const inTutorial = getTutorialStep(gameState) !== null;
   useEffect(() => {
@@ -882,6 +894,13 @@ export default function App() {
     } else if (result === 'failed') {
       showFeedback(isAr ? 'تعذّرت المشاركة الآن.' : 'Sharing is not available right now.');
     }
+  };
+
+  const handleRate = (rate: boolean) => {
+    const record = readRateRecord();
+    writeRateRecord({ asks: record.asks + 1, lastAskAt: Date.now(), done: rate });
+    setRateAsk(false);
+    if (rate) window.open(WRITE_REVIEW_URL, '_blank');
   };
 
   const handleTidyBoard = () => {
@@ -1645,6 +1664,16 @@ export default function App() {
         {/* Persistent prompts sit just above the bottom navigation */}
         <div className="fixed bottom-[calc(64px+env(safe-area-inset-bottom))] inset-x-0 z-30 flex flex-col items-center gap-1.5 px-3 pointer-events-none">
           {/* Longer messages sit above the bottom bar so they never cover the guest orders */}
+          {rateAsk && !welcomeBack && dailyLoginDay === null && !activeScene && !guideOrderId && (
+            <div role="dialog" aria-label={isAr ? 'تقييم اللعبة' : 'Rate the game'} data-testid="rate-ask" className="pointer-events-auto max-w-[440px] w-full rounded-2xl bg-[#241812] border-2 border-[#D99B26] shadow-xl px-3 py-2 text-[#FFF8E8]">
+              <div className="text-xs font-black text-[#FBBF24]">{isAr ? 'هل تستمتع بالمجلس؟ ⭐' : 'Enjoying the Majlis? ⭐'}</div>
+              <div className="mt-0.5 text-xs font-bold leading-snug">{isAr ? 'تقييمك على آب ستور يساعدنا كثيراً لنكمل ونطوّر اللعبة.' : 'A rating on the App Store helps us keep building the game.'}</div>
+              <div className="mt-2 flex gap-2">
+                <button type="button" data-testid="rate-yes" onClick={() => handleRate(true)} className="min-h-11 flex-1 rounded-xl bg-[#FBBF24] px-3 text-xs font-black text-[#3B2410]">{isAr ? 'قيّم الآن' : 'Rate now'}</button>
+                <button type="button" onClick={() => handleRate(false)} className="min-h-11 flex-1 rounded-xl border border-[#D99B26] px-3 text-xs font-bold text-[#FBBF24]">{isAr ? 'لاحقاً' : 'Later'}</button>
+              </div>
+            </div>
+          )}
           {canRemind && reminderPref === null && gameState.ordersCompleted >= 1 && !welcomeBack && dailyLoginDay === null && !activeScene && !guideOrderId && (
             <div role="dialog" aria-label={isAr ? 'تذكيرات' : 'Reminders'} data-testid="reminder-ask" className="pointer-events-auto max-w-[440px] w-full rounded-2xl bg-[#241812] border-2 border-[#D99B26] shadow-xl px-3 py-2 text-[#FFF8E8]">
               <div className="text-xs font-black text-[#FBBF24]">{isAr ? 'هل تريد تذكيراً؟' : 'Want a reminder?'}</div>
