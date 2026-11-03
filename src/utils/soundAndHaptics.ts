@@ -34,6 +34,16 @@ export function loadMuted(): boolean {
   try { return localStorage.getItem(MUTE_KEY) === 'true'; } catch { return false; }
 }
 
+const MUSIC_KEY = 'qahwa_music_off';
+
+export function loadMusicEnabled(): boolean {
+  try { return localStorage.getItem(MUSIC_KEY) !== 'true'; } catch { return true; }
+}
+
+export function saveMusicEnabled(enabled: boolean): void {
+  try { localStorage.setItem(MUSIC_KEY, String(!enabled)); } catch { /* the setting remains active for this session */ }
+}
+
 export function saveMuted(muted: boolean): void {
   try { localStorage.setItem(MUTE_KEY, String(muted)); } catch { /* The setting remains active for this session. */ }
 }
@@ -86,6 +96,8 @@ export class SoundAndHapticsManager {
     }
   }
   public hapticsEnabled = loadHapticsEnabled();
+  /** Background music only; voices and effects follow `muted`. */
+  public musicEnabled = loadMusicEnabled();
   private ambientTimer: number | null = null;
   private ambientStep = 0;
 
@@ -431,6 +443,7 @@ export class SoundAndHapticsManager {
    * otherwise a soft synthesized oud phrase over a low D drone. Safe to call repeatedly.
    */
   public startAmbient() {
+    if (!this.musicEnabled) return;
     this.ambientWanted = true;
     if (this.muted || typeof window === 'undefined') return;
     if (this.ambientSource || this.ambientTimer !== null || this.ambientScheduled) return;

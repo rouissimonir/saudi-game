@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { loadMuted, saveMuted, SoundAndHapticsManager } from './soundAndHaptics';
+import { loadMuted, loadMusicEnabled, saveMusicEnabled, saveMuted, SoundAndHapticsManager } from './soundAndHaptics';
 
 test('player gesture resumes a suspended audio context immediately and respects mute', () => {
   const originalWindow = globalThis.window;
@@ -348,5 +348,31 @@ test('an interrupted audio context is resumed and the callback form of decodeAud
     if (originalWindow === undefined) Reflect.deleteProperty(globalThis, 'window');
     else Object.defineProperty(globalThis, 'window', { configurable: true, value: originalWindow });
     globalThis.fetch = originalFetch;
+  }
+});
+
+test('music can be switched off on its own and the choice is remembered', () => {
+  const original = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
+  const values = new Map<string, string>();
+  Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: { getItem: (key: string) => values.get(key) ?? null, setItem: (key: string, value: string) => values.set(key, value) } });
+  const originalWindow = globalThis.window;
+  Object.defineProperty(globalThis, 'window', { configurable: true, value: {} });
+  try {
+    assert.equal(loadMusicEnabled(), true, 'music is on by default');
+    saveMusicEnabled(false);
+    assert.equal(loadMusicEnabled(), false);
+    assert.equal(loadMuted(), false, 'effects and voices are not muted by the music choice');
+    const sound = new SoundAndHapticsManager();
+    assert.equal(sound.musicEnabled, false);
+    // With music off, starting the ambient loop schedules nothing (no timers, no downloads).
+    sound.startAmbient();
+    assert.equal((sound as unknown as { ambientScheduled: boolean }).ambientScheduled, false);
+    saveMusicEnabled(true);
+    assert.equal(loadMusicEnabled(), true);
+  } finally {
+    if (originalWindow === undefined) Reflect.deleteProperty(globalThis, 'window');
+    else Object.defineProperty(globalThis, 'window', { configurable: true, value: originalWindow });
+    if (original) Object.defineProperty(globalThis, 'localStorage', original);
+    else Reflect.deleteProperty(globalThis, 'localStorage');
   }
 });

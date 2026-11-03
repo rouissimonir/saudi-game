@@ -69,6 +69,7 @@ import {
   soundFX,
   loadMuted,
   saveMuted,
+  saveMusicEnabled,
   saveGameState,
   clearSavedGameState,
 } from './utils/soundAndHaptics';
@@ -265,6 +266,7 @@ export default function App() {
     return saved;
   });
   const [hapticsEnabled, setHapticsEnabled] = useState(() => soundFX.hapticsEnabled);
+  const [musicOn, setMusicOn] = useState(() => soundFX.musicEnabled);
   const [dragGhost, setDragGhost] = useState<{ itemId: string; x: number; y: number; from: number; over: number | null } | null>(null);
   const dropRef = useRef<((from: number, to: number) => void) | null>(null);
   const suppressClickRef = useRef(false);
@@ -432,10 +434,10 @@ export default function App() {
 
   // Background music while playing, warm the item-art cache once
   useEffect(() => {
-    if (pageVisible && shellState === 'playing' && !muted) soundFX.startAmbient();
+    if (pageVisible && shellState === 'playing' && !muted && musicOn) soundFX.startAmbient();
     else soundFX.stopAmbient();
     return () => soundFX.stopAmbient();
-  }, [shellState, muted, pageVisible]);
+  }, [shellState, muted, pageVisible, musicOn]);
   useEffect(() => {
     preloadItemArt();
     prefetchScreens();
@@ -517,6 +519,14 @@ export default function App() {
   const handleTogglePause = useCallback((e?: React.MouseEvent<HTMLButtonElement>) => {
     e?.currentTarget.blur();
     setShellState((prev) => (prev === 'playing' ? 'paused' : prev === 'paused' ? 'playing' : prev));
+  }, []);
+
+  const handleToggleMusic = useCallback(() => {
+    const next = !soundFX.musicEnabled;
+    soundFX.musicEnabled = next;
+    saveMusicEnabled(next);
+    if (next) soundFX.unlockAudio();
+    setMusicOn(next);
   }, []);
 
   const handleToggleHaptics = useCallback(() => {
@@ -1524,6 +1534,8 @@ export default function App() {
         onToggleLanguage={handleToggleLanguage}
         onToggleMute={() => handleToggleMute()}
         onToggleHaptics={handleToggleHaptics}
+        musicEnabled={musicOn}
+        onToggleMusic={handleToggleMusic}
         onPause={() => handleTogglePause()}
         onTransfer={() => setTransferOpen(true)}
         onReplayStory={() => setStoryLogOpen(true)}
