@@ -1,0 +1,45 @@
+name: Apple signing certificates
+
+# Run by hand: Actions > Apple signing certificates > Run workflow.
+# "list" shows every certificate in the Apple account (no secrets are printed).
+# "clean" shows, and with delete=true removes, the "Created via API" development certificates that cloud signing
+# creates on each CI run, which is what fills Apple's certificate limit. Distribution certificates are never removed.
+# Uses the same secrets as the TestFlight build (environment "dev").
+
+'on':
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'list or clean'
+        type: choice
+        options: [list, clean]
+        default: list
+      delete:
+        description: 'With clean: really remove the stale development certificates'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  certificates:
+    runs-on: ubuntu-latest
+    environment: dev
+    timeout-minutes: 5
+    env:
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Certificates
+        run: |
+          if [ "${{ inputs.action }}" = "clean" ] && [ "${{ inputs.delete }}" = "true" ]; then
+            node tools/apple-certs.mjs clean --delete
+          else
+            node tools/apple-certs.mjs "${{ inputs.action }}"
+          fi
