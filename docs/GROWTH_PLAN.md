@@ -36,7 +36,7 @@ A top-10 chart position comes from revenue, retention and ratings together. This
 ## Not code, and decisive
 
 1. **Revenue.** Real purchases do not exist yet (see `docs/MONETIZATION_DISCOVERY.md`). Without a verified purchase, restore and fulfillment flow there is no grossing. Decide the first offers, then build and test them in the Apple sandbox on a device.
-2. **Arabic review.** All Arabic text and voice lines still need a native Saudi reviewer (`docs/ARABIC_REVIEW.md`). The new texts in this pass (reminders, achievements, prompts) are included in `npm run review:export`.
+2. **Arabic review.** All Arabic text and voice lines still need a native Saudi reviewer (`docs/ARABIC_REVIEW.md`). The new texts in this pass (reminders, achievements, prompts) are picked up when you run `npm run review:export`; regenerate the review sheet before it goes to a reviewer (it was not regenerated here, so existing row ids stay stable).
 3. **Measurement.** There is no analytics. Decide a privacy-conscious way to measure first-session completion, day-1 and day-7 return and purchase conversion before tuning anything.
 4. **App Store page.** Screenshots, preview video, Arabic and English keywords, a privacy policy and support URL. Set `ITSAppUsesNonExemptEncryption` in `Info.plist` only after the owner confirms the encryption declaration, so builds stop waiting at "Missing Compliance".
 5. **Playtests.** Moderated first-session sessions with Saudi players on real iPhones, small and large screens (`docs/PRODUCT_DIRECTION.md`).
