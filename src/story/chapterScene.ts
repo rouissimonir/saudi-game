@@ -5,6 +5,7 @@ import { chapter2Scene } from './scenes/chapter2';
 import { chapter3Scene } from './scenes/chapter3';
 import { chapter4Scene } from './scenes/chapter4';
 import { AREA_SCENES } from './scenes/areaChapters';
+import { withStoryVoices } from './voice';
 
 /** Chapters with a hand-written script (choices, Rashid, callbacks); the rest use the generic adapter below. */
 export const HAND_WRITTEN: Record<string, (flags: Record<string, string>) => Scene> = {
@@ -58,7 +59,7 @@ function speakerExpr(line: string, index: number, last: boolean): Expression {
  */
 export function chapterScene(chapter: StoryChapter, speaker: CastId | null, flags: Record<string, string> = {}): Scene {
   const written = HAND_WRITTEN[chapter.id];
-  if (written) return written(flags);
+  if (written) return withStoryVoices(written(flags));
   const bg = chapterBg(chapter.id);
   const who: CastId = speaker && speaker !== 'layla' ? speaker : 'noura';
   const count = Math.min(chapter.dialogueAr.length, chapter.dialogueEn.length);
@@ -93,5 +94,5 @@ export function chapterScene(chapter: StoryChapter, speaker: CastId | null, flag
     textAr: reply.ar,
     textEn: reply.en,
   });
-  return { id: `chapter:${chapter.id}`, titleAr: chapter.titleAr, titleEn: chapter.titleEn, beats };
+  return withStoryVoices({ id: `chapter:${chapter.id}`, titleAr: chapter.titleAr, titleEn: chapter.titleEn, beats });
 }

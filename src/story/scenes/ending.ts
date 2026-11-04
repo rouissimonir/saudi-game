@@ -2,6 +2,7 @@ import { Scene } from '../types';
 import { paintedBg } from '../chapterScene';
 import { say, titleCard } from './build';
 import { HOST_DRAFTS } from '../hostDrafts';
+import { withStoryVoices } from '../voice';
 
 type Flags = Record<string, string>;
 
@@ -57,7 +58,7 @@ export function endingScene(f: Flags, seenScenes?: string[]): Scene {
   const name = partner
     ? { ar: 'مجلس الشراكة', en: 'The Majlis of Partnership' }
     : { ar: 'المجلس الصامد', en: 'The Majlis That Stood Firm' };
-  return {
+  return withStoryVoices({
     id: 'ending',
     titleAr: 'الخاتمة: حكاية مجلسك',
     titleEn: 'Epilogue: Your Majlis Story',
@@ -79,5 +80,5 @@ export function endingScene(f: Flags, seenScenes?: string[]): Scene {
         'ودلّة جدّي… للحين تصبّ أول فنجال.',
         "And Grandpa's dallah… still pours the first cup."),
     ],
-  };
+  });
 }

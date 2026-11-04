@@ -10,6 +10,10 @@ Setup (the key is read from the environment and never written to disk):
     python3 tools/voice/generate_elevenlabs.py generate --limit 1      # try a single line first
     python3 tools/voice/generate_elevenlabs.py generate                # all lines
 
+Story scenes (the spoken dialogue of every chapter) are a second set: `npm run voice:story` writes
+tools/voice/story_lines.json, then `generate --set story` records the missing ones into public/assets/audio/story/
+(narration uses the ghabga voice; each speaker needs a voice_id in voices.json).
+
 Lines come from tools/voice/lines.json (refresh with `npm run voice:export`). Output goes to
 public/assets/audio/voice/<id>.mp3, where the game picks it up automatically. Lines whose text, voice and
 settings have not changed since the last run are skipped (see manifest.json), so re-running is cheap.
@@ -24,6 +28,12 @@ BASE = os.environ.get('ELEVENLABS_BASE_URL', 'https://api.elevenlabs.io').rstrip
 DEFAULT_OUT = os.path.join(ROOT, 'public', 'assets', 'audio', 'voice')
 LINES = os.path.join(ROOT, 'tools', 'voice', 'lines.json')
 CONFIG = os.path.join(ROOT, 'tools', 'voice', 'voices.json')
+STORY_LINES = os.path.join(ROOT, 'tools', 'voice', 'story_lines.json')
+STORY_OUT = os.path.join(ROOT, 'public', 'assets', 'audio', 'story')
+# Not shipped: kept next to the tool so the story folder only holds the mp3 files.
+STORY_MANIFEST = os.path.join(ROOT, 'tools', 'voice', 'story_manifest.json')
+# Story speakers that share another character's voice (the opening already uses ghabga for its narrator).
+STORY_VOICE_ALIAS = {'narr': 'ghabga'}
 
 
 def fail(msg, code=2):
@@ -89,17 +99,29 @@ def file_hash(text, voice, cfg):
     return hashlib.sha256(blob.encode('utf-8')).hexdigest()[:16]
 
 
-def normalise(src, dst):
-    """Trim edge silence and match loudness so every character sits at a similar level (needs ffmpeg)."""
+def normalise(src, dst, story=False):
+    """Trim edge silence and match loudness so every character sits at a similar level (needs ffmpeg).
+    Story clips match the opening's files: loudnorm I=-18.5, mono, 64 kbps."""
+    loud = 'loudnorm=I=-18.5:TP=-2:LRA=7' if story else 'loudnorm=I=-18:TP=-2:LRA=7'
     af = ('silenceremove=start_periods=1:start_threshold=-50dB:start_duration=0.02,areverse,'
-          'silenceremove=start_periods=1:start_threshold=-50dB:start_duration=0.02,areverse,'
-          'loudnorm=I=-18:TP=-2:LRA=7')
-    subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-i', src, '-af', af, '-ar', '44100', '-b:a', '128k', dst], check=True)
+          'silenceremove=start_periods=1:start_threshold=-50dB:start_duration=0.02,areverse,' + loud)
+    extra = ['-ac', '1', '-b:a', '64k'] if story else ['-b:a', '128k']
+    subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-i', src, '-af', af, '-ar', '44100', *extra, dst], check=True)
 
 
 def cmd_generate(args):
-    plan = json.load(open(LINES, encoding='utf-8'))['lines']
+    story = args.set == 'story'
     cfg = json.load(open(CONFIG, encoding='utf-8'))
+    if story:
+        if not os.path.exists(STORY_LINES):
+            fail('tools/voice/story_lines.json is missing: run `npm run voice:story` first.')
+        # Same shape as lines.json, so the loop below treats both sets alike; the speaker plays the character's part.
+        plan = [{'id': l['id'], 'ar': l['ar'], 'character': STORY_VOICE_ALIAS.get(l['speaker'], l['speaker'])}
+                for l in json.load(open(STORY_LINES, encoding='utf-8'))['lines']]
+        if args.out == DEFAULT_OUT:
+            args.out = STORY_OUT
+    else:
+        plan = json.load(open(LINES, encoding='utf-8'))['lines']
     only = set(args.only.split(',')) if args.only else None
     todo = [l for l in plan if not only or l['character'] in only]
     if args.limit:
@@ -108,7 +130,7 @@ def cmd_generate(args):
     if missing and not args.dry_run:
         fail('no voice_id set in tools/voice/voices.json for: ' + ', '.join(missing))
     os.makedirs(args.out, exist_ok=True)
-    manifest_path = os.path.join(args.out, 'manifest.json')
+    manifest_path = STORY_MANIFEST if story else os.path.join(args.out, 'manifest.json')
     manifest = json.load(open(manifest_path)) if os.path.exists(manifest_path) else {}
     do_norm = (not args.no_normalize) and shutil.which('ffmpeg') is not None
     if not args.no_normalize and not do_norm:
@@ -141,7 +163,7 @@ def cmd_generate(args):
             with tempfile.NamedTemporaryFile(suffix='.mp3', delete=False) as tmp:
                 tmp.write(audio)
             try:
-                normalise(tmp.name, out_path)
+                normalise(tmp.name, out_path, story)
             finally:
                 os.unlink(tmp.name)
         else:
@@ -162,6 +184,7 @@ def main():
     lib.add_argument('--language', default='ar'); lib.add_argument('--gender', choices=['male', 'female']); lib.add_argument('--limit', type=int, default=30)
     lib.set_defaults(fn=cmd_library)
     g = sub.add_parser('generate', help='generate the mp3 files')
+    g.add_argument('--set', choices=['characters', 'story'], default='characters', help='which lines: the in-game character lines (default) or the story-scene dialogue')
     g.add_argument('--only', help='comma list of characters, e.g. noura,tariq')
     g.add_argument('--limit', type=int, help='only the first N lines (cheap trial)')
     g.add_argument('--dry-run', action='store_true'); g.add_argument('--force', action='store_true')
