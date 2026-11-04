@@ -40,30 +40,25 @@ export function AppleSandboxPurchasePanel({ lang }: { lang: Language }) {
     <h3 className="font-black">{ar ? 'اختبار مشتريات TestFlight' : 'TestFlight purchase test'}</h3>
     <p>{ar ? 'مشتريات تجريبية عبر Apple. الزينة تظهر في المجلس بعد تأكيد الاستحقاق.' : 'Apple sandbox purchases. Decorations appear in your Majlis after entitlement confirmation.'}</p>
     <PaidMajlisDecor lang={lang} preview />
-    <Suspense fallback={<p role="status">{ar ? 'جارٍ التحميل…' : 'Loading…'}</p>}><PurchaseAccountPanel lang={lang} /></Suspense>
     {(access.decor || access.membership) && <p role="status">{ar ? 'الزينة متاحة الآن في المجلس.' : 'Your decoration corner is now available in the Majlis.'}</p>}
     <button type="button" disabled={busy} className="min-h-11 underline font-bold" onClick={() => void run(async () => {
       const { Purchases } = await import('@revenuecat/purchases-capacitor');
       const offerings = await Purchases.getOfferings();
-      const available = offerings.current?.availablePackages.filter(pkg => ['$rc_monthly', 'decor_pack'].includes(pkg.identifier)) ?? [];
+      const available = offerings.current?.availablePackages.filter(pkg => pkg.identifier === 'decor_pack') ?? [];
       setPackages(available);
       setStatus(available.length ? '' : (ar ? 'لا توجد عروض متاحة للاختبار حالياً.' : 'No test offers are available right now.'));
     })}>{ar ? 'عرض منتجات الاختبار' : 'Load test products'}</button>
     {packages.map(pkg => <div key={pkg.identifier} className="rounded-xl bg-white p-2">
       <p className="font-bold">{pkg.product.title} · {pkg.product.priceString}</p>
-      <p>{pkg.identifier === '$rc_monthly'
-        ? (ar ? 'ألوان ركن الضيافة متاحة طوال مدة الاشتراك. لا تتضمن طاقة أو جواهر.' : 'Access to the hospitality corner palettes while subscribed. Includes no energy or gems.')
-        : (ar ? 'ألوان ركن الضيافة الثلاثة بشكل دائم. شراء لمرة واحدة.' : 'All three hospitality corner palettes permanently. One-time purchase.')}</p>
-      {pkg.identifier === '$rc_monthly' && <p>{ar ? 'اشتراك شهري تجريبي يتجدد تلقائياً في بيئة الاختبار.' : 'Monthly test subscription; renews automatically in the sandbox.'}</p>}
-      <button type="button" disabled={busy || (pkg.identifier === '$rc_monthly' ? access.membership : access.decor)} className="min-h-11 underline font-bold disabled:opacity-50" onClick={() => void run(async () => {
+      <p>{ar ? 'ألوان ركن الضيافة الثلاثة بشكل دائم. شراء لمرة واحدة.' : 'All three hospitality corner palettes permanently. One-time purchase.'}</p>
+      <button type="button" disabled={busy || access.decor} className="min-h-11 underline font-bold disabled:opacity-50" onClick={() => void run(async () => {
         const { Purchases } = await import('@revenuecat/purchases-capacitor');
         const result = await Purchases.purchasePackage({ aPackage: pkg });
         updatePaidAccess(result.customerInfo.entitlements.active);
-        const entitlement = pkg.identifier === '$rc_monthly' ? 'majlis_membership' : 'majlis_decor_pack';
-        setStatus(result.customerInfo.entitlements.active[entitlement]
+        setStatus(result.customerInfo.entitlements.active.majlis_decor_pack
           ? (ar ? 'تم تأكيد الشراء. الزينة متاحة في المجلس.' : 'Purchase confirmed. Decorations are available in your Majlis.')
           : (ar ? 'لم يتم تأكيد الاستحقاق بعد. لا توجد مزايا داخل اللعبة.' : 'The entitlement is not confirmed yet. No game benefits are delivered.'));
-      })}>{(pkg.identifier === '$rc_monthly' ? access.membership : access.decor) ? (ar ? 'مفعّلة' : 'Active') : (ar ? 'اختبار الشراء' : 'Test purchase')}</button>
+      })}>{access.decor ? (ar ? 'مفعّلة' : 'Active') : (ar ? 'اختبار الشراء' : 'Test purchase')}</button>
     </div>)}
     <button type="button" disabled={busy} className="min-h-11 underline font-bold" onClick={() => void run(async () => {
       const { Purchases } = await import('@revenuecat/purchases-capacitor');
@@ -74,6 +69,7 @@ export function AppleSandboxPurchasePanel({ lang }: { lang: Language }) {
         ? (ar ? 'تم تأكيد استحقاق اختبار قابل للاستعادة.' : 'A restorable test entitlement is active.')
         : (ar ? 'لم يتم العثور على استحقاقات اختبار نشطة.' : 'No active test entitlements were found.'));
     })}>{ar ? 'اختبار استعادة المشتريات' : 'Test restore purchases'}</button>
+    <Suspense fallback={<p role="status">{ar ? 'جارٍ التحميل…' : 'Loading…'}</p>}><PurchaseAccountPanel lang={lang} /></Suspense>
     <p role="status">{status}</p>
   </section>;
 }
