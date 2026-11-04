@@ -1,0 +1,11 @@
+version: 1
+id: refill-checkpoint-local
+name: refill-checkpoint
+slug: refill-checkpoint
+protocol: http
+port: 4501
+interceptRequests: true
+scenarios:
+  - name: default
+    path: ./default.js
+    default: true

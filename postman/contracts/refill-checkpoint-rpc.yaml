@@ -1,0 +1,50 @@
+openapi: 3.0.3
+info:
+  title: Sandbox checkpoint API simulation contract
+  version: 0.1.0
+  description: Minimal local contract for the game's account-bound checkpoint client; not a complete Supabase specification.
+paths:
+  /auth/v1/user:
+    get:
+      responses:
+        '200': { description: Authenticated user object. }
+        '401': { description: Missing or invalid user session. }
+  /rest/v1/sandbox_game_checkpoints:
+    get:
+      responses:
+        '200': { description: Owner-scoped checkpoint rows. }
+        '401': { description: Missing or invalid user session. }
+  /rest/v1/rpc/save_sandbox_checkpoint_bound:
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [p_user, p_expected_revision, p_state]
+              properties:
+                p_user: { type: string, format: uuid }
+                p_expected_revision: { type: integer, minimum: 0 }
+                p_state: { type: object }
+      responses:
+        '200': { description: One row containing the new revision and saved game. }
+        '403': { description: The authenticated account does not match. }
+        '409': { description: The supplied checkpoint revision is stale; code 40001. }
+  /rest/v1/rpc/claim_sandbox_wallet_bound:
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [p_user, p_expected_revision, p_claim_id]
+              properties:
+                p_user: { type: string, format: uuid }
+                p_expected_revision: { type: integer, minimum: 0 }
+                p_claim_id: { type: string, format: uuid }
+      responses:
+        '200': { description: One row containing the current checkpoint, credited amounts and replay flag. }
+        '403': { description: The authenticated account does not match. }
+        '409': { description: The supplied checkpoint revision is stale; code 40001. }

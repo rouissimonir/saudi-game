@@ -11,3 +11,6 @@ mocks:
   - name: refill-inbox
     routeKey: ledger
     path: ../mocks/refill-inbox/config.yaml
+  - name: refill-checkpoint
+    routeKey: cloud
+    path: ../mocks/refill-checkpoint/config.yaml

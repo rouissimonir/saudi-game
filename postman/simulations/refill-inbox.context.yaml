@@ -1,6 +1,6 @@
 purpose:
-  stands_in_for: The private Supabase enqueue_refill PostgREST endpoint.
-  unblocks: Testing webhook request serialization and handling of a database outage without live purchase data.
+  stands_in_for: The Supabase inbox, checkpoint RPCs and Auth user endpoint.
+  unblocks: Testing webhook and checkpoint client HTTP behavior without real accounts or purchase data.
 assumptions:
   - id: rpc-post-success
     status: unknown
@@ -23,8 +23,19 @@ assumptions:
     verification: On 2026-11-04 the simulation logged enqueue 200 followed by processor 503; simulation.test.ts observed webhook 200.
     source: postman/mocks/refill-inbox/default.js; supabase/functions/refill-webhook/simulation.test.ts
     updated_at: '2026-11-04'
+  - id: checkpoint-session-races
+    status: supported
+    claim: In the local simulation, the checkpoint client rejects a conflicting save and discards a response when the account changes during a claim.
+    reason: The stand-in returned a conflict and then a different authenticated user; the client reported the corresponding errors instead of applying a save.
+    verification: On 2026-11-04 the Postman logs showed the save, claim, conflict and user-check requests, and the client simulation test passed. This does not prove live Supabase session or network behavior.
+    source: postman/mocks/refill-checkpoint/default.js; src/utils/sandboxCheckpoint.simulation.test.ts
+    updated_at: '2026-11-04'
 fingerprints:
   - id: initial-inbox-simulation
     date: '2026-11-04'
     commit: '32a1424 plus uncommitted worker changes'
+    cli: '1.74.0'
+  - id: checkpoint-simulation
+    date: '2026-11-04'
+    commit: 'd402fcc plus uncommitted account-bound checkpoint changes'
     cli: '1.74.0'
