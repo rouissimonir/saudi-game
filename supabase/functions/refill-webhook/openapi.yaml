@@ -1,0 +1,36 @@
+openapi: 3.0.3
+info:
+  title: Qahwa sandbox refill notification prototype
+  version: 0.1.0
+  description: Not deployed. Accepts authenticated RevenueCat sandbox events; paid refill delivery is not enabled.
+paths:
+  /refill-webhook:
+    post:
+      operationId: receiveRefillNotification
+      security:
+        - webhookAuthorization: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [event]
+              properties:
+                api_version: { type: string }
+                event:
+                  type: object
+                  additionalProperties: true
+      responses:
+        '200': { description: Recorded idempotently, or an unrelated product was ignored. }
+        '400': { description: Body is not valid JSON. }
+        '401': { description: Authorization header did not match. }
+        '405': { description: Method is not POST. }
+        '413': { description: Body exceeded 65536 bytes. }
+        '503': { description: Configuration, identity, event type, quantity, environment or ledger needs review or retry. }
+components:
+  securitySchemes:
+    webhookAuthorization:
+      type: apiKey
+      in: header
+      name: Authorization

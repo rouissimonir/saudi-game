@@ -1,0 +1,9 @@
+# Refill webhook — not deployed
+
+This prototype accepts RevenueCat POST events only after checking a configured authorization header. It recognizes the iOS refill product in sandbox, one unit at a time. It resolves only a single unambiguous `qahwa:<Supabase UUID>` identity and calls the service-only `record_refill` RPC. Unrelated products receive 200; invalid authorization receives 401; supported-product events requiring review and ledger errors receive 503. No request bodies or credentials are logged.
+
+Required function secrets: `REVENUECAT_WEBHOOK_AUTH`, `SUPABASE_URL`, and the Supabase-provided `SUPABASE_SERVICE_ROLE_KEY`. The RevenueCat integration must send the same authorization header. Never put either secret in the app or Git. JWT verification must be disabled for this function because RevenueCat authenticates using the configured header instead.
+
+This prototype must not be deployed for paid purchases yet. It has no durable webhook inbox, monitoring, or recovery for failures beyond RevenueCat's limited retries; `REFUND_REVERSED`, multiple quantities, account transfers and reconciliation are deliberately rejected for review. The app does not yet assign the `qahwa:<UUID>` RevenueCat identity or redeem credits. Test with authenticated sandbox events and replay failures before enabling refill purchases. RevenueCat's webhook feature may depend on its plan; check the account's actual entitlement and cost before activation.
+
+Run the tests with `npx tsx --test supabase/functions/refill-webhook/events.test.ts supabase/functions/refill-webhook/index.test.ts`. They cover event classification and several rejected or ignored HTTP requests without accessing the ledger. They do not test deployment, a real RevenueCat event, valid server authentication over a deployed network, or successful and failed network calls to the ledger. The provisional HTTP contract is in `openapi.yaml`.
