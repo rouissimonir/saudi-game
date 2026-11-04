@@ -1,0 +1,31 @@
+openapi: 3.0.3
+info:
+  title: Refill inbox RPC simulation contract
+  version: 0.1.0
+  description: Local stand-in for the project's PostgREST enqueue_refill RPC. It does not establish Supabase behavior.
+servers:
+  - url: http://127.0.0.1
+paths:
+  /rest/v1/rpc/enqueue_refill:
+    post:
+      operationId: enqueueRefill
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [p_event, p_user, p_environment, p_transaction, p_kind]
+              properties:
+                p_event: { type: string }
+                p_user: { type: string, format: uuid }
+                p_environment: { type: string, enum: [SANDBOX] }
+                p_transaction: { type: string }
+                p_kind: { type: string, enum: [purchase, refund] }
+      responses:
+        '200':
+          description: RPC accepted the request.
+          content:
+            application/json:
+              schema: { type: object, nullable: true }
+        '503': { description: RPC unavailable. }

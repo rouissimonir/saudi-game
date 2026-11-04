@@ -1,8 +1,8 @@
 /** A normalized, authenticated RevenueCat event may affect one sandbox wallet. */
 export type RefillDecision =
   | { action: 'ignore' }
-  | { action: 'review'; reason: 'unsupported_environment' | 'unsupported_quantity' | 'unknown_identity' | 'ambiguous_identity' | 'unsupported_event' | 'invalid_transaction' }
-  | { action: 'record'; userId: string; transactionId: string; kind: 'purchase' | 'refund'; environment: 'SANDBOX' };
+  | { action: 'review'; reason: 'unsupported_environment' | 'unsupported_quantity' | 'unknown_identity' | 'ambiguous_identity' | 'unsupported_event' | 'invalid_transaction' | 'invalid_event' }
+  | { action: 'record'; eventId: string; userId: string; transactionId: string; kind: 'purchase' | 'refund'; environment: 'SANDBOX' };
 
 const product = 'sa.qahwamajlis.energy.refill';
 const app = 'appd8c8c1ea34';
@@ -21,11 +21,12 @@ export function classifyRefillEvent(payload: unknown): RefillDecision {
   const kind = event.type === 'NON_RENEWING_PURCHASE' ? 'purchase'
     : event.type === 'CANCELLATION' && event.cancel_reason === 'CUSTOMER_SUPPORT' ? 'refund' : null;
   if (!kind) return { action: 'review', reason: 'unsupported_event' };
+  if (typeof event.id !== 'string' || !/^[A-Za-z0-9_-]{1,200}$/.test(event.id)) return { action: 'review', reason: 'invalid_event' };
   if (typeof event.transaction_id !== 'string' || !/^[0-9]{1,200}$/.test(event.transaction_id)) return { action: 'review', reason: 'invalid_transaction' };
   const candidates = [event.app_user_id, event.original_app_user_id, ...(Array.isArray(event.aliases) ? event.aliases : [])]
     .flatMap(value => typeof value === 'string' ? [identity.exec(value)?.[1]?.toLowerCase()].filter((id): id is string => Boolean(id)) : []);
   const ids = [...new Set(candidates)];
   if (!ids.length) return { action: 'review', reason: 'unknown_identity' };
   if (ids.length !== 1) return { action: 'review', reason: 'ambiguous_identity' };
-  return { action: 'record', userId: ids[0], transactionId: event.transaction_id, kind, environment: 'SANDBOX' };
+  return { action: 'record', eventId: event.id, userId: ids[0], transactionId: event.transaction_id, kind, environment: 'SANDBOX' };
 }

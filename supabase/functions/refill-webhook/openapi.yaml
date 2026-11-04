@@ -22,7 +22,7 @@ paths:
                   type: object
                   additionalProperties: true
       responses:
-        '200': { description: Recorded idempotently, or an unrelated product was ignored. }
+        '200': { description: Queued idempotently, or an unrelated product was ignored. Acceptance does not mean the wallet has been credited. }
         '400': { description: Body is not valid JSON. }
         '401': { description: Authorization header did not match. }
         '405': { description: Method is not POST. }

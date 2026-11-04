@@ -41,11 +41,11 @@ Deno.serve(async (request: Request) => {
   if (decision.action === 'review') return new Response(`Review: ${decision.reason}`, { status: 503 });
 
   try {
-    const result = await fetch(`${url}/rest/v1/rpc/record_refill`, {
+    const result = await fetch(`${url}/rest/v1/rpc/enqueue_refill`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', apikey: serviceKey, Authorization: `Bearer ${serviceKey}` },
-      body: JSON.stringify({ p_user: decision.userId, p_environment: decision.environment, p_transaction: decision.transactionId, p_kind: decision.kind }),
+      body: JSON.stringify({ p_event: decision.eventId, p_user: decision.userId, p_environment: decision.environment, p_transaction: decision.transactionId, p_kind: decision.kind }),
     });
-    return result.ok ? new Response('Recorded', { status: 200 }) : new Response('Ledger unavailable', { status: 503 });
+    return result.ok ? new Response('Accepted', { status: 200 }) : new Response('Inbox unavailable', { status: 503 });
   } catch { return new Response('Ledger unavailable', { status: 503 }); }
 });

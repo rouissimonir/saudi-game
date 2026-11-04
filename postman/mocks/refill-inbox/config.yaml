@@ -1,0 +1,11 @@
+version: 1
+id: 25962ac1-cbfd-4745-b602-ac268227f505
+name: refill-inbox
+slug: refill-inbox
+protocol: http
+port: 4500
+interceptRequests: true
+scenarios:
+  - name: default
+    path: ./default.js
+    default: true

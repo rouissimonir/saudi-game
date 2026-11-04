@@ -1,0 +1,23 @@
+purpose:
+  stands_in_for: The private Supabase enqueue_refill PostgREST endpoint.
+  unblocks: Testing webhook request serialization and handling of a database outage without live purchase data.
+assumptions:
+  - id: rpc-post-success
+    status: unknown
+    claim: A service-role POST with the documented arguments queues an event and returns a successful HTTP status.
+    reason: The simulation checks the outgoing request shape but does not prove deployed PostgREST authentication or HTTP behavior.
+    verification: On 2026-11-04 the local handler received HTTP 200 from the stand-in and returned 200; the separate database transaction test exercised the SQL function directly.
+    source: postman/contracts/refill-inbox-rpc.yaml; postman/mocks/refill-inbox/default.js; supabase/functions/refill-webhook/simulation.test.ts
+    updated_at: '2026-11-04'
+  - id: rpc-failure-response
+    status: supported
+    claim: When the local stand-in returns HTTP 503, the webhook handler returns 503.
+    reason: This is a caller behavior verified against a controlled failure; it is not a claim about live Supabase availability.
+    verification: On 2026-11-04 the simulation logged the handler's second RPC request and returned 503, and the handler test observed 503.
+    source: postman/mocks/refill-inbox/default.js; supabase/functions/refill-webhook/simulation.test.ts
+    updated_at: '2026-11-04'
+fingerprints:
+  - id: initial-inbox-simulation
+    date: '2026-11-04'
+    commit: '8cf2474 plus uncommitted inbox changes'
+    cli: '1.74.0'
