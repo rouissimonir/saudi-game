@@ -16,8 +16,15 @@ assumptions:
     verification: On 2026-11-04 the simulation logged the handler's second RPC request and returned 503, and the handler test observed 503.
     source: postman/mocks/refill-inbox/default.js; supabase/functions/refill-webhook/simulation.test.ts
     updated_at: '2026-11-04'
+  - id: fast-worker-failure
+    status: supported
+    claim: When the stand-in accepts an event but its immediate worker request returns 503, the handler returns 200.
+    reason: The event has already been accepted by the stand-in; the real queue's durability and scheduled retry need separate evidence.
+    verification: On 2026-11-04 the simulation logged enqueue 200 followed by processor 503; simulation.test.ts observed webhook 200.
+    source: postman/mocks/refill-inbox/default.js; supabase/functions/refill-webhook/simulation.test.ts
+    updated_at: '2026-11-04'
 fingerprints:
   - id: initial-inbox-simulation
     date: '2026-11-04'
-    commit: '8cf2474 plus uncommitted inbox changes'
+    commit: '32a1424 plus uncommitted worker changes'
     cli: '1.74.0'

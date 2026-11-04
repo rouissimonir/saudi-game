@@ -46,6 +46,16 @@ Deno.serve(async (request: Request) => {
       headers: { 'Content-Type': 'application/json', apikey: serviceKey, Authorization: `Bearer ${serviceKey}` },
       body: JSON.stringify({ p_event: decision.eventId, p_user: decision.userId, p_environment: decision.environment, p_transaction: decision.transactionId, p_kind: decision.kind }),
     });
-    return result.ok ? new Response('Accepted', { status: 200 }) : new Response('Inbox unavailable', { status: 503 });
+    if (!result.ok) return new Response('Inbox unavailable', { status: 503 });
+    // Best-effort fast delivery; an accepted event stays in the inbox if this fails or times out.
+    try {
+      await fetch(`${url}/rest/v1/rpc/process_refill_inbox`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', apikey: serviceKey, Authorization: `Bearer ${serviceKey}` },
+        body: JSON.stringify({ p_limit: 50 }),
+        signal: AbortSignal.timeout(4000),
+      });
+    } catch { /* The scheduled worker retries accepted events. */ }
+    return new Response('Accepted', { status: 200 });
   } catch { return new Response('Ledger unavailable', { status: 503 }); }
 });

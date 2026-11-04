@@ -29,3 +29,18 @@ paths:
             application/json:
               schema: { type: object, nullable: true }
         '503': { description: RPC unavailable. }
+  /rest/v1/rpc/process_refill_inbox:
+    post:
+      operationId: processRefillInbox
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [p_limit]
+              properties:
+                p_limit: { type: integer, minimum: 1, maximum: 100 }
+      responses:
+        '200': { description: Batch processing completed. }
+        '503': { description: Worker unavailable. }
