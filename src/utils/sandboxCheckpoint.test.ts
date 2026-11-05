@@ -11,6 +11,10 @@ test('remote checkpoint must contain a valid game and a safe integer revision', 
   assert.throws(() => parseSandboxCheckpoint({ revision: -1, game_state: state }));
   assert.throws(() => parseSandboxCheckpoint({ revision: 2, game_state: { ...state, board: [] } }));
   assert.throws(() => parseSandboxCheckpoint({ revision: 2, game_state: { ...state, energy: '100' } }));
+  const { energy: _energy, ...missingEnergy } = state;
+  const { diamonds: _diamonds, ...missingDiamonds } = state;
+  assert.throws(() => parseSandboxCheckpoint({ revision: 2, game_state: missingEnergy }));
+  assert.throws(() => parseSandboxCheckpoint({ revision: 2, game_state: missingDiamonds }));
 });
 
 test('claim responses must have whole amounts and an explicit replay flag', () => {

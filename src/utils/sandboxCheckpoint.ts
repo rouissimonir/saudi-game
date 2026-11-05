@@ -14,6 +14,9 @@ const object = (value: unknown): value is Record<string, unknown> => Boolean(val
 /** Validate before allowing any remote response to be offered to the save system. */
 export function parseSandboxCheckpoint(value: unknown): SandboxCheckpoint {
   if (!object(value) || !wholeNumber(value.revision)) throw new Error('Invalid checkpoint response');
+  // normalizeSave fills missing fields for old local saves. A purchase checkpoint
+  // must explicitly contain both balances so a damaged response cannot reset them.
+  if (!object(value.game_state) || !wholeNumber(value.game_state.energy) || !wholeNumber(value.game_state.diamonds)) throw new Error('Invalid game checkpoint');
   const gameState = normalizeSave(value.game_state);
   if (!gameState || !wholeNumber(gameState.energy) || !wholeNumber(gameState.diamonds)) throw new Error('Invalid game checkpoint');
   return { revision: value.revision, gameState };
