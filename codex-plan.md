@@ -1,6 +1,6 @@
 # Codex plan: Qahwa & Majlis
 
-Last updated: 2026-11-01
+Last updated: 2026-11-05
 
 ## Goal and product identity
 
@@ -9,6 +9,8 @@ Build a leading Capacitor iOS merge game around Saudi hospitality: players prepa
 The source of truth for the design direction and pacing investigation is [docs/PRODUCT_DIRECTION.md](docs/PRODUCT_DIRECTION.md). Treat competitor rankings and other market claims in older documentation as historical and unverified until independently rechecked.
 
 ## Work completed so far
+
+- **TestFlight purchase-panel visibility (2026-11-05):** Manual build 28 ([run 41814307079](https://github.com/rouissimonir/saudi-game/actions/runs/41814307079)) enabled the sandbox purchase panel. Subsequent automatic build 29 ([run 41817711395](https://github.com/rouissimonir/saudi-game/actions/runs/41817711395)) disabled it, so testers running build 29 cannot see “Load test products.” Build 28 must be selected explicitly, or a new manually enabled sandbox build uploaded. The installed build and an actual product load and purchase remain unverified. Neither build is a completed, release-ready paid shop.
 
 - **Account-bound sandbox checkpoint client (2026-11-04):** Applied a migration that requires the authenticated account to match the requested account on each checkpoint save and claim; the earlier unbound client RPCs were revoked. Rollback-only database tests cover account mismatch, stale revisions, repeated claims and isolation. A client now validates account state and returned saves without changing local progress automatically. Local parser tests and Postman simulations cover valid save/claim responses, malformed data, conflicting saves and account changes during a request. The app is not wired to use these calls; the actual authenticated Supabase HTTP path, crash recovery, offline/cross-device conflicts, guest linking and TestFlight purchases remain unverified.
 
