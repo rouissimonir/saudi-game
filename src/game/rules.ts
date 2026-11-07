@@ -238,6 +238,10 @@ export interface GameState {
   coinEnergyToday: { dayKey: string; count: number } | null;
   /** Day key of the last free shop gift, so it can be claimed once a day. */
   shopGiftDay: string;
+  /** Store transaction IDs of paid packs already added to this save (newest last), so a retry or restore never pays twice. */
+  packTransactions: string[];
+  /** Day key of the last paid pack bought, so the daily offer can say it was taken. */
+  packBoughtDay: string;
   lastEnergyTick: number;
   dailyQuests: {
     dayKey: string;
@@ -1149,6 +1153,8 @@ export function createInitialGameState(): GameState {
     sandTilesBought: 0,
     coinEnergyToday: null,
     shopGiftDay: '',
+    packTransactions: [],
+    packBoughtDay: '',
     lastEnergyTick: 0,
     dailyQuests: null,
     questDelivery: null,

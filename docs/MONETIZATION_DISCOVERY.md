@@ -51,3 +51,14 @@ The `RevenueCat Test Store simulator` GitHub Actions workflow builds this synthe
 6. Before release, recheck the applicable [App Review Guidelines](https://developer.apple.com/app-store/review/guidelines/), including digital purchases, non-expiring purchased currency and disclosure of paid randomized-item odds where relevant. Review privacy, security, support and regional pricing with the responsible team.
 
 After launch, evaluate the chosen Saudi Casual grossing chart with a documented source and measurement period, alongside player retention, purchase conversion, refunds and reliability. Do not interpret a single chart position or a small playtest as proof of a durable top-10 game.
+
+## Daily pack offer (client built, dark by default)
+
+Added on branch `feat/daily-pack`; not merged or verified on a device.
+
+- `src/game/dailyPack.ts`: the pack catalog (`PAID_PACKS`), today's offer by calendar day among packs the App Store actually lists, and idempotent delivery by store transaction ID (`packTransactions` in the save, latest 200).
+- `src/utils/packPurchase.ts` / `useDailyPacks.ts`: list packs with the store's localized price, buy, treat a cancelled sheet as no error, and re-deliver a recent charged purchase the save never received (24 hour window, so a reinstall does not hand back old purchases).
+- `DailyPackModal.tsx`: popup once a day after the login gift, and the same card at the top of the shop. Contents are fixed and shown before purchase.
+- Off unless the build sets `VITE_DAILY_PACKS=1` together with `VITE_REVENUECAT_IOS_KEY` (production bundle on native iOS).
+
+Known gaps: delivery is local, so the save (editable, transferable) is the only record of what was granted. Refunds are not clawed back. The webhook in `supabase/functions/refill-webhook` still ignores PRODUCTION events and is not yet used by this flow. Pack amounts (100 energy, 30 gems) are placeholders. Only one App Store product exists, so the daily offer is that single pack until more products are created and added to `PAID_PACKS`. Needs a sandbox test on a signed iPhone before enabling.

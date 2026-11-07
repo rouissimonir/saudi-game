@@ -87,6 +87,9 @@ import { EnergyModal, QuestsModal, WorkshopModal } from './components/Progressio
 import { bannerKey } from './game/majlisStages';
 import { BottomNav, GameHud, NavTab } from './components/GameChrome';
 import { DailyLoginModal } from './components/DailyLoginModal';
+import { DailyPackModal } from './components/DailyPackModal';
+import { packOfferDue } from './game/dailyPack';
+import { dailyPacksEnabled, useDailyPacks } from './utils/useDailyPacks';
 import { ItemArtwork, preloadItemArt } from './components/ItemArtwork';
 import { EVENT_ORDER_POINTS, activeLiveEvent, addEventPoints, claimEventMilestone, mergeEventPoints, settleExpiredEvent } from './game/events';
 import { LiveEventBar, LiveEventModal } from './components/LiveEventUI';
@@ -326,6 +329,10 @@ export default function App() {
   const [sandPromptIndex, setSandPromptIndex] = useState<number | null>(null);
   const [dailyLoginDay, setDailyLoginDay] = useState<number | null>(null);
   const [localDay, setLocalDay] = useState(() => dayKeyFromDate(new Date()));
+  const gameStateRef = useRef(gameState);
+  gameStateRef.current = gameState;
+  const [packShownDay, setPackShownDay] = useState(() => { try { return localStorage.getItem('qahwa_pack_shown') ?? ''; } catch { return ''; } });
+  const dailyPacks = useDailyPacks(React.useMemo(dailyPacksEnabled, []), localDay, setGameState, gameStateRef);
   const [levelUpToast, setLevelUpToast] = useState<LevelUpReward | null>(null);
   const [comboLive, setComboLive] = useState(false);
   const comboTimeoutRef = useRef<number | null>(null);
@@ -2294,6 +2301,18 @@ export default function App() {
         <WorkshopModal lang={lang} state={gameState} onClose={() => setWorkshopOpen(false)} onUpgrade={handleUpgradeGenerator} />
       )}
       <DailyLoginModal lang={lang} day={gameState.activeStoryId ? null : dailyLoginDay} boardFull={findNearestEmptyCell(gameState.board, 24) === null} onClaim={handleClaimDailyLogin} />
+      {dailyPacks.offer && (
+        <DailyPackModal
+          lang={lang}
+          offer={dailyPacks.offer}
+          status={dailyPacks.status}
+          bought={gameState.packBoughtDay === localDay}
+          open={dailyLoginDay === null && gameState.lastLoginDay === localDay && packOfferDue(gameState, packShownDay, localDay) &&
+            !activeScene && !gameState.activeStoryId && !shopModalOpen && !energyOpen && !tastingOpen && !taifWelcomeOpen && !transferOpen && !endingOpen}
+          onBuy={() => void dailyPacks.buy().then((ok) => { if (ok) { soundFX.playOrderComplete(); showFeedback(isAr ? 'تمت إضافة الحقيبة!' : 'Pack added!'); } })}
+          onClose={() => { setPackShownDay(localDay); dailyPacks.resetStatus(); try { localStorage.setItem('qahwa_pack_shown', localDay); } catch { /* shown again next launch */ } }}
+        />
+      )}
       {pourOpen && (
         <Suspense fallback={null}>
         <FinjanPourModal lang={lang} isOpen={pourOpen} tokens={gameState.pourTokens} onFinish={handleFinishPour} onClose={() => setPourOpen(false)} />
@@ -2406,6 +2425,10 @@ export default function App() {
             milestones={gameState.liveOpsMilestones}
             vipPassActive={gameState.vipPassActive}
             maxEnergy={gameState.maxEnergy}
+            packOffer={dailyPacks.offer}
+            packStatus={dailyPacks.status}
+            packBought={gameState.packBoughtDay === localDay}
+            onBuyPack={() => void dailyPacks.buy().then((ok) => { if (ok) { soundFX.playOrderComplete(); showFeedback(isAr ? 'تمت إضافة الحقيبة!' : 'Pack added!'); } })}
             onClose={() => setShopModalOpen(false)}
             onClaimGift={handleClaimShopGift}
             onClaimMilestone={handleClaimMilestone}

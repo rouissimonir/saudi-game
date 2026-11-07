@@ -7,6 +7,9 @@ import { Sheet } from './ProgressionModals';
 import { Capacitor } from '@capacitor/core';
 import { canInitializeTestStore } from '../utils/revenueCatTestStore';
 import { RevenueCatTestPanel } from './RevenueCatTestPanel';
+import { DailyPackCard } from './DailyPackModal';
+import type { ListedPack } from '../utils/packPurchase';
+import type { PackStatus } from '../utils/useDailyPacks';
 import { AppleSandboxPurchasePanel } from './AppleSandboxPurchasePanel';
 import { canInitializeAppStore } from '../utils/revenueCatAppStore';
 
@@ -18,6 +21,10 @@ interface ShopAndMadaModalProps {
   milestones: LiveOpsMilestone[];
   vipPassActive: boolean;
   maxEnergy: number;
+  packOffer?: ListedPack | null;
+  packStatus?: PackStatus;
+  packBought?: boolean;
+  onBuyPack?: () => void;
   onClose: () => void;
   onClaimGift: () => void;
   onClaimMilestone: (milestoneId: string) => void;
@@ -41,6 +48,10 @@ export const ShopAndMadaModal: React.FC<ShopAndMadaModalProps> = ({
   milestones,
   vipPassActive,
   maxEnergy,
+  packOffer,
+  packStatus = 'idle',
+  packBought = false,
+  onBuyPack,
   onClose,
   onClaimGift,
   onClaimMilestone,
@@ -83,6 +94,7 @@ export const ShopAndMadaModal: React.FC<ShopAndMadaModalProps> = ({
         <>
           {import.meta.env.DEV && canInitializeTestStore(true, Capacitor.getPlatform(), import.meta.env.VITE_REVENUECAT_TEST_KEY) && <RevenueCatTestPanel />}
           {import.meta.env.VITE_APPLE_SANDBOX_PURCHASE_TEST === '1' && canInitializeAppStore(import.meta.env.PROD, Capacitor.getPlatform(), import.meta.env.VITE_REVENUECAT_IOS_KEY) && <AppleSandboxPurchasePanel lang={lang} />}
+          {packOffer && onBuyPack && <DailyPackCard lang={lang} offer={packOffer} status={packStatus} bought={packBought} onBuy={onBuyPack} />}
           <div className="rounded-2xl border-2 border-[#34D399] bg-white p-3 flex items-center gap-3" data-testid="shop-gift">
             <div className="w-12 h-12 rounded-2xl bg-[#ECFDF5] flex items-center justify-center shrink-0">
               <Gift className="w-6 h-6 text-[#059669]" />

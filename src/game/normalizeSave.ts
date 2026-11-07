@@ -56,5 +56,7 @@ export function normalizeSave(raw: unknown): GameState | null {
     seenScenes: parsed.seenScenes ?? ['prologue'],
     storyFlags: { ...parsed.storyFlags },
     selectedCellIndex: null,
+    packTransactions: Array.isArray(parsed.packTransactions) ? parsed.packTransactions.filter((id): id is string => typeof id === 'string').slice(-200) : [],
+    packBoughtDay: typeof parsed.packBoughtDay === 'string' ? parsed.packBoughtDay : '',
   };
 }
