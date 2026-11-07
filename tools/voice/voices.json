@@ -66,7 +66,64 @@
       "style": 0.3,
       "speed": 0.95,
       "voice_name": "Faisal alotaibi - Warm Saudi Voice"
+    },
+    "hani": {
+      "voice_id": "",
+      "stability": 0.5,
+      "similarity_boost": 0.8,
+      "style": 0.3,
+      "speed": 0.95,
+      "voice_name": "<cast a Saudi voice for Abu Hani (Jeddah)>"
+    },
+    "reem": {
+      "voice_id": "",
+      "stability": 0.5,
+      "similarity_boost": 0.8,
+      "style": 0.3,
+      "speed": 0.95,
+      "voice_name": "<cast a Saudi voice for Reem>"
+    },
+    "hessa": {
+      "voice_id": "",
+      "stability": 0.5,
+      "similarity_boost": 0.8,
+      "style": 0.3,
+      "speed": 0.95,
+      "voice_name": "<cast a Saudi voice for Hessa>"
+    },
+    "aisha": {
+      "voice_id": "",
+      "stability": 0.5,
+      "similarity_boost": 0.8,
+      "style": 0.3,
+      "speed": 0.95,
+      "voice_name": "<cast a Saudi voice for Aisha>"
+    },
+    "khalid": {
+      "voice_id": "",
+      "stability": 0.5,
+      "similarity_boost": 0.8,
+      "style": 0.3,
+      "speed": 0.95,
+      "voice_name": "<cast a Saudi voice for Abu Khalid>"
+    },
+    "dana": {
+      "voice_id": "",
+      "stability": 0.5,
+      "similarity_boost": 0.8,
+      "style": 0.3,
+      "speed": 0.95,
+      "voice_name": "<cast a Saudi voice for Dana>"
+    },
+    "nasser": {
+      "voice_id": "",
+      "stability": 0.5,
+      "similarity_boost": 0.8,
+      "style": 0.3,
+      "speed": 0.95,
+      "voice_name": "<cast a Saudi voice for Nasser>"
     }
   },
-  "_comment_story": "Story-scene lines (public/assets/audio/story/pro_*.mp3) were generated through the ElevenLabs connector with eleven_v4, first take, then trimmed and loudness-matched with ffmpeg (loudnorm I=-18.5, TP=-2, mono 64 kbps). Narration (pro_narr_*) uses the ghabga voice."
+  "_comment_story": "Story-scene lines (public/assets/audio/story/pro_*.mp3) were generated through the ElevenLabs connector with eleven_v4, first take, then trimmed and loudness-matched with ffmpeg (loudnorm I=-18.5, TP=-2, mono 64 kbps). Narration (pro_narr_*) uses the ghabga voice.",
+  "_comment_story_set": "Story-scene dialogue (generate --set story). Narration ('narr') uses the ghabga voice. The seven area hosts (hani, reem, hessa, aisha, khalid, dana, nasser) have no voice_id yet: cast and audition them, and have a native Saudi speaker approve, before generating."
 }

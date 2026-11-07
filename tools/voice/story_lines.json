@@ -1,0 +1,1914 @@
+{
+  "lines": [
+    {
+      "id": "aisha_154d99ce",
+      "speaker": "aisha",
+      "ar": "تشترون من المزارعين مباشرة؟ أرسم لهم باب المخزن… بركة وخير.",
+      "en": "You'll buy straight from the farmers? I'll paint their storehouse door, for blessing and plenty.",
+      "scenes": [
+        "area_4"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "aisha_4fc49a04",
+      "speaker": "aisha",
+      "ar": "خذي هالفرشاة. إذا طلعتي من مجلس ناقصه لون، ارسميه.",
+      "en": "Take this brush. If you ever leave a majlis missing a colour, paint it in.",
+      "scenes": [
+        "area_4"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "aisha_5000d959",
+      "speaker": "aisha",
+      "ar": "أهلاً فوق الغيم. أنا عائشة، أرسم القَطّ على جدران البيوت مثل ما علّمتني أمي.",
+      "en": "Welcome above the clouds. I'm Aisha. I paint Al-Qatt on house walls, the way my mother taught me.",
+      "scenes": [
+        "area_4"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "aisha_def8624f",
+      "speaker": "aisha",
+      "ar": "والشباب يتعلمون؟ ابعثي لي البنات بعد: أعلّمهم الرسم وهم ينتظرون البن يتحمّص.",
+      "en": "And the youth are learning? Send me the girls too: I'll teach them to paint while the beans roast.",
+      "scenes": [
+        "area_4"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "aisha_f8778c06",
+      "speaker": "aisha",
+      "ar": "نرسم البيت قبل ما يجي الضيوف، والخطوط تقول لهم: أنتم من أهلنا.",
+      "en": "We paint the house before the guests arrive, and the lines tell them: you are family.",
+      "scenes": [
+        "area_4"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "dana_103976a4",
+      "speaker": "dana",
+      "ar": "شراكة مع راشد؟! ممتاز. أصلاً كنت أبي أحطكم على المسرح مع بعض.",
+      "en": "A partnership with Rashid?! Perfect. I was hoping to put you on the same stage.",
+      "scenes": [
+        "area_6"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "dana_2f41fde7",
+      "speaker": "dana",
+      "ar": "مجلس مستقل؟ عادي، الطابور يحكم. أجهّز لكم ماي وكراسي للصف.",
+      "en": "Staying independent? Fine by me, the queue will decide. I will set out water and chairs for the line.",
+      "scenes": [
+        "area_6"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "dana_4fa21ed2",
+      "speaker": "dana",
+      "ar": "أنتِ ليلى؟ أنا دانة، منتجة الفعاليات. عندي لك أحلى ركن، بس عندي مشكلة.",
+      "en": "You're Layla? I'm Dana, the event producer. I've got you the best stand, but I also have a problem.",
+      "scenes": [
+        "area_6"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "dana_70652558",
+      "speaker": "dana",
+      "ar": "هذي بطاقة تفتح كل الأبواب. البوليفارد يسكر آخر الليل، بس المجلس ما يسكر.",
+      "en": "An all-access pass. The Boulevard closes at the end of the night, but the Majlis never does.",
+      "scenes": [
+        "area_6"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "dana_fe3df28b",
+      "speaker": "dana",
+      "ar": "الشاشات والأضواء تسرق الليل. وزوارنا يبون شي حقيقي يمسكونه بإيديهم: فنجال.",
+      "en": "Screens and lights steal the night. Our visitors want something real to hold in their hands: a cup.",
+      "scenes": [
+        "area_6"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "faisal_0f80233a",
+      "speaker": "faisal",
+      "ar": "جدّتي بتبكي من الفرحة… شكراً يا ليلى.",
+      "en": "My grandmother will cry with joy… thank you, Layla.",
+      "scenes": [
+        "area_1"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "faisal_1b63b350",
+      "speaker": "faisal",
+      "ar": "يلا يا ليلى… الطابور وصل لآخر البوليفارد!",
+      "en": "Come on, Layla… the queue reaches the end of the Boulevard!",
+      "scenes": [
+        "area_6"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "faisal_221f5a4c",
+      "speaker": "faisal",
+      "ar": "تثقين فيني؟! وعد، بتكون أحلى لاتيه ذاقتها.",
+      "en": "You trust me with it?! I promise, it'll be the best latte she's ever had.",
+      "scenes": [
+        "chap_2"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "faisal_2a5509b4",
+      "speaker": "faisal",
+      "ar": "بس تدرين؟ راشد رجع الصبح يبي فنجال ثاني… وسألني من وين نجيب البن!",
+      "en": "But guess what? Rashid came back this morning for a second cup… and asked where we buy our beans!",
+      "scenes": [
+        "chap_2"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "faisal_60cb77af",
+      "speaker": "faisal",
+      "ar": "هذي البلد! بيت جدّتي هنا، وروشانه الخشبي ينتظرنا من سنين.",
+      "en": "This is Al-Balad! My grandmother's house is here, and its wooden rawshan has been waiting for years.",
+      "scenes": [
+        "area_1"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "faisal_767be44b",
+      "speaker": "faisal",
+      "ar": "عطونا ركن في البوليفارد! آلاف الزوار كل ليلة!",
+      "en": "They gave us a stand on the Boulevard! Thousands of visitors every night!",
+      "scenes": [
+        "area_6"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "faisal_a852a693",
+      "speaker": "faisal",
+      "ar": "وأقدّم قهوة الهيل مع المعمول الحجازي!",
+      "en": "And I'll serve cardamom qahwa with Hijazi ma'amoul!",
+      "scenes": [
+        "area_1"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "faisal_a8abd249",
+      "speaker": "faisal",
+      "ar": "والأهم: لمى، أشهر ناقدة قهوة في الخليج، جاية الليلة تقيّمنا على الهواء!",
+      "en": "And the big news: Lama, the most famous coffee critic in the Gulf, is coming tonight to review us live!",
+      "scenes": [
+        "chap_2"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "faisal_c11974db",
+      "speaker": "faisal",
+      "ar": "وتصدقين؟ راشد كلّم تجار سوق العلوي عنّا… من بعد الغبقة صار يمدحنا!",
+      "en": "And believe it or not, Rashid told the Al-Alawi merchants about us… since the ghabga he can't stop praising us!",
+      "scenes": [
+        "area_1"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "faisal_d1453189",
+      "speaker": "faisal",
+      "ar": "الأصالة دايماً تفوز! أجهّز الدلة الكبيرة.",
+      "en": "Heritage always wins! I'll get the big dallah ready.",
+      "scenes": [
+        "chap_2"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "faisal_de59fe37",
+      "speaker": "faisal",
+      "ar": "بس انتبهي… راشد فتح كشك قهوة عند مدخل السوق، قبلنا بأسبوع.",
+      "en": "But watch out… Rashid opened a coffee kiosk at the souq entrance, a week before us.",
+      "scenes": [
+        "area_1"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "faisal_e1686316",
+      "speaker": "faisal",
+      "ar": "وأقدّم لاتيه الزعفران في فنجان حجازي!",
+      "en": "And I'll serve the saffron latte in a Hijazi cup!",
+      "scenes": [
+        "area_1"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "faisal_e5085d8c",
+      "speaker": "faisal",
+      "ar": "بس انتبهي… شفت رجال راشد يقيسون الزقاق اللي قدام المجلس.",
+      "en": "But careful… I saw Rashid's men measuring the lane in front of the Majlis.",
+      "scenes": [
+        "chap_2"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "faisal_f022eb2e",
+      "speaker": "faisal",
+      "ar": "ليلى! الدلة النجدية جنب الـ V60… الشباب والشيّاب صاروا يجون سوا!",
+      "en": "Layla! The Najdi dallah next to the V60… the young crowd and the elders are coming together!",
+      "scenes": [
+        "chap_2"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "hani_037b5c99",
+      "speaker": "hani",
+      "ar": "هالروشان؟ أبوي كان يقعد تحته يشرب شاهي. رجّعيه وأنا أول ضيف!",
+      "en": "That rawshan? My father used to sit under it drinking tea. Bring it back and I will be your first guest!",
+      "scenes": [
+        "area_1"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "hani_1aee146f",
+      "speaker": "hani",
+      "ar": "خذي هالعلبة، أول هيل الموسم. وإذا مرّ يوم وطعم القهوة ضاع، تذكّري زقاق البلد.",
+      "en": "Take this tin, the season's first cardamom. And if coffee ever loses its taste, remember the lane of Al-Balad.",
+      "scenes": [
+        "area_1"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "hani_4c62b47e",
+      "speaker": "hani",
+      "ar": "أهلاً بنت الدرعية! أنا أبو هاني، أبيع الهيل في هالزقاق من أربعين سنة.",
+      "en": "Welcome, daughter of Diriyah! I'm Abu Hani, and I've sold cardamom in this lane for forty years.",
+      "scenes": [
+        "area_1"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "hani_eb70ca5c",
+      "speaker": "hani",
+      "ar": "ركن في سوق العلوي؟ أعطيك أحسن مكان قدام دكاني، والهيل علي!",
+      "en": "A corner in Al-Alawi souq? I'll give you the best spot in front of my shop, and the cardamom is on me!",
+      "scenes": [
+        "area_1"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "hani_fca17515",
+      "speaker": "hani",
+      "ar": "بس الزقاق ما عاد يفوح قهوة مثل أول… الناس مشغولة، والبيوت القديمة تنتظر.",
+      "en": "But the lane doesn't smell of coffee like it used to… people are busy, and the old houses are waiting.",
+      "scenes": [
+        "area_1"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "hessa_06c3a662",
+      "speaker": "hessa",
+      "ar": "يا هلا! أنا حصة. أقطّر ماء الورد من صغري، في قدر أمي النحاس.",
+      "en": "Welcome! I'm Hessa. I've distilled rose water since I was a girl, in my mother's copper still.",
+      "scenes": [
+        "area_3"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "hessa_a44197c4",
+      "speaker": "hessa",
+      "ar": "ورد ورمان للصغار! أنا أقطف لهم الرمان بنفسي من مدرّجي.",
+      "en": "Rose and pomegranate for the kids! I will pick the pomegranates for them myself from my terrace.",
+      "scenes": [
+        "area_3"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "hessa_a9be4f56",
+      "speaker": "hessa",
+      "ar": "هذي قارورة من أول تقطير الموسم. رشّي منها على ضيوفك، وخلّي الورد يتكلم عنّا.",
+      "en": "A bottle from the season's first distilling. Sprinkle a little on your guests, and let the roses speak for us.",
+      "scenes": [
+        "area_3"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "hessa_af6e88f3",
+      "speaker": "hessa",
+      "ar": "الورد يتفتح كم أسبوع بس، ويذبل بسرعة. نقطفه بدري ونقطّره نفس اليوم.",
+      "en": "The roses bloom for only a few weeks, and fade fast. We pick them early and distil them the same day.",
+      "scenes": [
+        "area_3"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "hessa_c7822516",
+      "speaker": "hessa",
+      "ar": "فنجال الخطوبة؟ أعطيك أول قطرات التقطير. هذي ما تنباع… تنقدَّم.",
+      "en": "The Proposal Cup? I will give you the first drops from the still. Those are not sold, they are served.",
+      "scenes": [
+        "area_3"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "khalid_0f70e5c7",
+      "speaker": "khalid",
+      "ar": "النخلة تعلّمك الصبر. تاخذ سنين لين تثمر، وتعطي أجيال. وهالسنة الماي يبي حسابه.",
+      "en": "A palm teaches patience: years before it fruits, then it gives for generations. And this year the water needs counting.",
+      "scenes": [
+        "area_5"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "khalid_1e5578af",
+      "speaker": "khalid",
+      "ar": "مجلس تمر! أجيب لك من كل نخلة وكل موسم، وقارني بين الخلاص والرزيز.",
+      "en": "A date majlis! I will bring you dates from every palm and every season, and you compare Khalas and Ruzeiz.",
+      "scenes": [
+        "area_5"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "khalid_3603e598",
+      "speaker": "khalid",
+      "ar": "تفضّلي يا بنتي! أنا أبو خالد، أسقي هالنخل من نفس عين أبوي وجدّي.",
+      "en": "Welcome, my girl! I'm Abu Khalid. I water these palms from the same spring as my father and grandfather.",
+      "scenes": [
+        "area_5"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "khalid_4298befe",
+      "speaker": "khalid",
+      "ar": "نقسمه بالدور مثل ما كان أهلنا. الكل ياخذ حقه، والكل يترك للثاني.",
+      "en": "We share it in turns, as our elders did. Everyone takes their share, and everyone leaves some for the next.",
+      "scenes": [
+        "area_5"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "khalid_73b2c551",
+      "speaker": "khalid",
+      "ar": "هذي سلّة خلاص من أول الصرام. التمر قبل القهوة… ولا تنسين تاكلين منه.",
+      "en": "A basket of Khalas from the first harvest. Dates come before the coffee… and don't forget to eat some.",
+      "scenes": [
+        "area_5"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "khalid_7bb0a51f",
+      "speaker": "khalid",
+      "ar": "سر الدبس تنقالينه؟ جدّتك سخية. بس بشرط: اللي يتعلمه يعزم جيرانه.",
+      "en": "Share the date-syrup secret? Your grandmother is generous. One condition: whoever learns it invites the neighbours.",
+      "scenes": [
+        "area_5"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "lama_00dbc82c",
+      "speaker": "lama",
+      "ar": "باقي خطوة وحدة: المشربية الملكية. رمّميها، وأعلنكم المجلس الأول في المملكة!",
+      "en": "Just one step left: the Royal Mashrabiya balcony. Restore it, and I will crown you the #1 Majlis in the Kingdom!",
+      "scenes": [
+        "chap_4"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "lama_36bb5db9",
+      "speaker": "lama",
+      "ar": "وركنكم في سوق العلوي؟ صار أشهر محطة في جدة!",
+      "en": "And your corner in Al-Alawi souq? It became the most famous stop in Jeddah!",
+      "scenes": [
+        "area_2"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "lama_6f8f13a8",
+      "speaker": "lama",
+      "ar": "المكان خيالي! الفوانيس وصوت النجر… الفيديو تعدّى مليونين مشاهدة في ساعة!",
+      "en": "This place is magical! The lanterns, the ringing mortar… my video passed two million views in an hour!",
+      "scenes": [
+        "chap_4"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "lama_86ba32f0",
+      "speaker": "lama",
+      "ar": "والكل يسأل عن لاتيه الزعفران! صار ترند في الخليج كله.",
+      "en": "And everyone's asking about the saffron latte! It's trending across the Gulf.",
+      "scenes": [
+        "chap_4"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "lama_a5a5c994",
+      "speaker": "lama",
+      "ar": "متابعيني يسألون عن قهوة تحت نجوم العلا! شوفي السما… ولا غيمة.",
+      "en": "My followers keep asking for coffee under the AlUla stars! Look at that sky… not a single cloud.",
+      "scenes": [
+        "area_2"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "lama_c58c5cbb",
+      "speaker": "lama",
+      "ar": "والكل يسأل عن قهوتكم بالهيل! قالوا: هذي قهوة الأجداد صدق.",
+      "en": "And everyone is asking about your cardamom qahwa! They say it tastes like their grandparents' coffee.",
+      "scenes": [
+        "chap_4"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "lama_d435ca44",
+      "speaker": "lama",
+      "ar": "جاهزة! خلّي المملكة كلها تشرب معنا تحت النجوم.",
+      "en": "I'm ready! Let the whole Kingdom drink with us under the stars.",
+      "scenes": [
+        "area_2"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "lama_f4268c51",
+      "speaker": "lama",
+      "ar": "أول مرة من سنين أشوف السما بدون شاشة… شكراً.",
+      "en": "For the first time in years I'm seeing the sky without a screen… thank you.",
+      "scenes": [
+        "area_2"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "lama_f5600158",
+      "speaker": "lama",
+      "ar": "وقصة روشان جدّة فيصل في جدة؟ أبكت نص الخليج!",
+      "en": "And the story of Faisal's family rawshan in Jeddah? It made half the Gulf cry!",
+      "scenes": [
+        "area_2"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "layla_005d435d",
+      "speaker": "layla",
+      "ar": "الغيم تحتنا يا شيخ… كأننا في مجلس فوق السما!",
+      "en": "The clouds are below us, Sheikh… it's like a majlis above the sky!",
+      "scenes": [
+        "area_4"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "layla_017d78eb",
+      "speaker": "layla",
+      "ar": "جدّي كان يقول: المجلس يتّسع للكل. تعال، الركن يكفينا.",
+      "en": "Grandpa used to say: a majlis has room for everyone. Come, the stand is big enough for us both.",
+      "scenes": [
+        "area_6"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "layla_02c9faa5",
+      "speaker": "layla",
+      "ar": "العلا علّمتني: أجمل الأشياء ما تحتاج زحمة.",
+      "en": "AlUla taught me: the most beautiful things don't need a crowd.",
+      "scenes": [
+        "area_2"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "layla_02e72f71",
+      "speaker": "layla",
+      "ar": "موسم الورد صار موسمنا.",
+      "en": "Rose season has become our season.",
+      "scenes": [
+        "area_3"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "layla_0b31d58b",
+      "speaker": "layla",
+      "ar": "شوف بعينك… كل حجر هنا رجع بإيدينا. وبنكمّل!",
+      "en": "See for yourself… every stone here came back by our own hands. And we're not stopping!",
+      "scenes": [
+        "chap_1"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "layla_0d3af42a",
+      "speaker": "layla",
+      "ar": "وإذا سألوا عن السر… قولي لهم: القهوة أحلى مع الناس.",
+      "en": "And if they ask the secret… tell them coffee tastes better shared.",
+      "scenes": [
+        "area_2"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "layla_15b4d55b",
+      "speaker": "layla",
+      "ar": "نعطيهم فنجال بحجم الدرعية.",
+      "en": "We'll hand them a cup as big as Diriyah.",
+      "scenes": [
+        "area_6"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "layla_28b9d7be",
+      "speaker": "layla",
+      "ar": "مجلس مفتوح من آلاف السنين… وحنا نحسب نفسنا أول من فكّر فيه!",
+      "en": "An open majlis for thousands of years… and we thought we invented it!",
+      "scenes": [
+        "area_2"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "layla_28fc2504",
+      "speaker": "layla",
+      "ar": "وعد يا شيخ… بنكون جاهزين لرمضان!",
+      "en": "I promise, Sheikh… we'll be ready for Ramadan!",
+      "scenes": [
+        "chap_3"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "layla_297e8740",
+      "speaker": "layla",
+      "ar": "والصغار؟ نسوي لهم ورد ورمان بارد… عشان يحبون الطايف مثلنا.",
+      "en": "And for the kids? A cold rose-and-pomegranate drink… so they love Taif like we do.",
+      "scenes": [
+        "area_3"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "layla_2abc9e1a",
+      "speaker": "layla",
+      "ar": "يا شيخ… جدّي كان عنده خلطة يسمّيها \"الملكية\". تعرف سرّها؟",
+      "en": "Sheikh… Grandpa had a blend he called \"the Royal\". Do you know its secret?",
+      "scenes": [
+        "chap_3"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "layla_3791b1af",
+      "speaker": "layla",
+      "ar": "تشرّفنا يا شيخ طارق… بس كأنك تعرف المكان من قبل؟",
+      "en": "It's an honour, Sheikh Tariq… but you seem to know this place already?",
+      "scenes": [
+        "chap_3"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "layla_391cd014",
+      "speaker": "layla",
+      "ar": "لجدّتي نورة، ولفيصل، وللشيخ طارق ولمى… ولكل من صبّ فنجال معنا.",
+      "en": "For Grandma Noura, for Faisal, for Sheikh Tariq and Lama… and for everyone who poured a cup with us.",
+      "scenes": [
+        "area_7"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "layla_3fcc0421",
+      "speaker": "layla",
+      "ar": "نشتري من المزارع مباشرة، وبالسعر اللي يستاهله تعبهم.",
+      "en": "We buy straight from the farms, at the price their work deserves.",
+      "scenes": [
+        "area_4"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "layla_413aaaa9",
+      "speaker": "layla",
+      "ar": "نسيم البحر وريحة الهيل من السوق… جدة غير!",
+      "en": "The sea breeze and cardamom drifting from the souq… Jeddah is something else!",
+      "scenes": [
+        "area_1"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "layla_436dfecb",
+      "speaker": "layla",
+      "ar": "ريحة البن الخولاني والهيل… كأنه ما راح!",
+      "en": "The scent of Khawlani coffee and cardamom… it's as if he never left!",
+      "scenes": [
+        "chap_1"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "layla_4e43a9d4",
+      "speaker": "layla",
+      "ar": "والجناح الجاي… بيكون أحلى!",
+      "en": "And the next wing… will be even better!",
+      "scenes": [
+        "chap_1"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "layla_54aa60b4",
+      "speaker": "layla",
+      "ar": "يا جدّة! أول مرة أسمع هالقصة!",
+      "en": "Grandma! I've never heard that story!",
+      "scenes": [
+        "area_3"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "layla_5601c203",
+      "speaker": "layla",
+      "ar": "نبني منصة رصد عند سفح الجبال… وقهوة الليل على ضوء الفوانيس.",
+      "en": "We build a stargazing deck at the foot of the cliffs… night coffee by lantern light.",
+      "scenes": [
+        "area_2"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "layla_59fb8486",
+      "speaker": "layla",
+      "ar": "خلّنا نفاجئها! لاتيه الزعفران حقّك يا فيصل، بلمسة هيل.",
+      "en": "Let's surprise her! Your saffron latte, Faisal, with a touch of cardamom.",
+      "scenes": [
+        "chap_2"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "layla_5c2669ec",
+      "speaker": "layla",
+      "ar": "من الدرعية لجدة… والمجلس يكبر!",
+      "en": "From Diriyah to Jeddah… the Majlis keeps growing!",
+      "scenes": [
+        "area_1"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "layla_5dc6fb06",
+      "speaker": "layla",
+      "ar": "وليش ما يحمّصون شباب القرية بنهم بأيديهم؟ نعلّمهم، ويصير لهم مجلسهم.",
+      "en": "And why shouldn't the village youth roast their own beans? We teach them, and they get a majlis of their own.",
+      "scenes": [
+        "area_4"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "layla_5f3b9c30",
+      "speaker": "layla",
+      "ar": "خلّ المجلس البلدي يجي ويشوف. بنكسب بشرف، مو بالأوراق.",
+      "en": "Let the council come and see. We'll win fair and square, not with paperwork.",
+      "scenes": [
+        "chap_4"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "layla_64dfc6c4",
+      "speaker": "layla",
+      "ar": "قهوة جدّتي جنب القهوة المختصة… الرياض كلها بتذوق الدرعية.",
+      "en": "Grandma's qahwa next to specialty coffee… all of Riyadh will taste Diriyah.",
+      "scenes": [
+        "area_6"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "layla_658068aa",
+      "speaker": "layla",
+      "ar": "سر دبس جدّتك؟ نشاركه مع أهل الأحساء… الأسرار الحلوة تنقال.",
+      "en": "Your grandmother's date-syrup secret? We share it with Al-Ahsa… sweet secrets are meant to be told.",
+      "scenes": [
+        "area_5"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "layla_667703e3",
+      "speaker": "layla",
+      "ar": "كل واحة… مجلس ينتظر أحد يفتحه.",
+      "en": "Every oasis… is a majlis waiting for someone to open it.",
+      "scenes": [
+        "area_5"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "layla_6d384e04",
+      "speaker": "layla",
+      "ar": "المشربية؟ اعتبريها خلصت!",
+      "en": "The Mashrabiya? Consider it done!",
+      "scenes": [
+        "chap_4"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "layla_774e5f33",
+      "speaker": "layla",
+      "ar": "البيت قبل السوق. نرجّع روشان جدّتك، ونخلّيه مجلس للعايلة والجيران.",
+      "en": "Home before the souq. We restore your grandmother's rawshan and make it a majlis for family and neighbours.",
+      "scenes": [
+        "area_1"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "layla_9122df0d",
+      "speaker": "layla",
+      "ar": "نقدّم لها اللي ما تلقاه بأي مكان ثاني: قهوة جدّي بالهيل، والتمر السكري.",
+      "en": "We'll give her what she can't find anywhere else: Grandpa's cardamom qahwa and Sukkari dates.",
+      "scenes": [
+        "chap_2"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "layla_9d020003",
+      "speaker": "layla",
+      "ar": "لجدّي… اللي بنى أول مجلس بإيديه، وعلّمنا إن القهوة تجمع القلوب.",
+      "en": "For my grandfather… who built the first Majlis with his own hands, and taught us that coffee brings hearts together.",
+      "scenes": [
+        "area_7"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "layla_a41c2abd",
+      "speaker": "layla",
+      "ar": "أول فنجال لك يا شيخ… مثل ما كان جدّي يسوّي مع ضيوفه.",
+      "en": "The first cup is yours, Sheikh… just as Grandpa did for his guests.",
+      "scenes": [
+        "chap_3"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "layla_a7f957dd",
+      "speaker": "layla",
+      "ar": "الليلة بدون جوالات. بس النجوم، والفناجيل، والسوالف.",
+      "en": "Tonight, no phones. Just the stars, the cups and the conversation.",
+      "scenes": [
+        "area_2"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "layla_ade73ab0",
+      "speaker": "layla",
+      "ar": "المجلس يبقى لأهله. وخلّ الناس تذوق وتحكم.",
+      "en": "The Majlis stays with its family. Let people taste, and judge.",
+      "scenes": [
+        "area_6"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "layla_af46464f",
+      "speaker": "layla",
+      "ar": "يعني الفنجال بعد اللؤلؤة؟",
+      "en": "So the cup came after the pearl?",
+      "scenes": [
+        "area_7"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "layla_b43cc440",
+      "speaker": "layla",
+      "ar": "الحجوزات ممتلئة ثلاث أسابيع… ما كنت أحلم بهذا!",
+      "en": "Booked solid for three weeks… I never dreamed of this!",
+      "scenes": [
+        "chap_4"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "layla_bc332a4b",
+      "speaker": "layla",
+      "ar": "نرجّع له ريحته يا عم أبو هاني. هذا وعد.",
+      "en": "We'll bring its smell back, Uncle Abu Hani. That's a promise.",
+      "scenes": [
+        "area_1"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "layla_bcd1cb50",
+      "speaker": "layla",
+      "ar": "ملايين النخل يا جدّة… وعيون ماء في وسط الصحرا!",
+      "en": "Millions of palms, Grandma… and springs in the middle of the desert!",
+      "scenes": [
+        "area_5"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "layla_d1b858a6",
+      "speaker": "layla",
+      "ar": "يلا نجهّز المجلس… الليلة ليلتنا!",
+      "en": "Let's get the Majlis ready… tonight is our night!",
+      "scenes": [
+        "chap_2"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "layla_d50d0e81",
+      "speaker": "layla",
+      "ar": "حيّاك الله، تفضّل فنجالك. المجلس مفتوح للكل… حتى لك.",
+      "en": "You're welcome here, have a cup. The Majlis is open to everyone… even you.",
+      "scenes": [
+        "chap_1"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "layla_d6235469",
+      "speaker": "layla",
+      "ar": "ودلّة جدّي… للحين تصبّ أول فنجال.",
+      "en": "And Grandpa's dallah… still pours the first cup.",
+      "scenes": [
+        "ending"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "layla_db9de8f4",
+      "speaker": "layla",
+      "ar": "ارسمي لنا جداراً في المجلس، ويحس الدرعية إن الجبال بيتها.",
+      "en": "Paint us a wall of the Majlis, and Diriyah will feel the mountains are home.",
+      "scenes": [
+        "area_4"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "layla_dbedd577",
+      "speaker": "layla",
+      "ar": "يعني ريحة الفنجال… هي ريحة صباح واحد.",
+      "en": "So the scent in a cup is the scent of one single morning.",
+      "scenes": [
+        "area_3"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "layla_dd8bfad0",
+      "speaker": "layla",
+      "ar": "نقدّم قهوة جدّي بماء الورد… ونسمّيها \"فنجال الخطوبة\"!",
+      "en": "We serve Grandpa's rose-water qahwa… and call it \"the Proposal Cup\"!",
+      "scenes": [
+        "area_3"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "layla_dfc238b0",
+      "speaker": "layla",
+      "ar": "ونقوش السدو رجّعت روح المجلس. جدّتي ما وقفت تبتسم من الصبح.",
+      "en": "And the Sadu weaving brought the Majlis's soul back. Grandma hasn't stopped smiling all morning.",
+      "scenes": [
+        "chap_2"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "layla_e1af8da6",
+      "speaker": "layla",
+      "ar": "رمضان كريم يا راشد. تفضّل اجلس، الغبقة ما تكمل إلا بالضيوف.",
+      "en": "Ramadan Kareem, Rashid. Please sit, a ghabga isn't complete without guests.",
+      "scenes": [
+        "chap_4"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "layla_e80277c9",
+      "speaker": "layla",
+      "ar": "من المزرعة للفنجال… وكل حبة لها قصة.",
+      "en": "From the farm to the cup… every bean has a story.",
+      "scenes": [
+        "area_4"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "layla_f3c9c1a0",
+      "speaker": "layla",
+      "ar": "نسوي مجلس تذوّق: خلاص ورزيز وشيشي… وكل ضيف يختار تمرته مع قهوته.",
+      "en": "A tasting majlis: Khalas, Ruzeiz and Sheshi… every guest picks a date for their coffee.",
+      "scenes": [
+        "area_5"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "layla_f6a67bd3",
+      "speaker": "layla",
+      "ar": "جدة تحب الكرم… نصبّ القهوة لكل من يمرّ في السوق!",
+      "en": "Jeddah loves generosity… we pour coffee for everyone who walks through the souq!",
+      "scenes": [
+        "area_1"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "narr_00ae70c6",
+      "speaker": "narr",
+      "ar": "راشد ينتظر ردّك…",
+      "en": "Rashid is waiting for your answer…",
+      "scenes": [
+        "area_6"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "narr_07e367c7",
+      "speaker": "narr",
+      "ar": "الفصل الرابع: ليالي الغبقة تحت الفوانيس",
+      "en": "Chapter 4: Ramadan Ghabga Under the Lanterns",
+      "scenes": [
+        "chap_4"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "narr_10809f53",
+      "speaker": "narr",
+      "ar": "قدّمتي للمى لاتيه الزعفران… وصار ترند في الخليج.",
+      "en": "You served Lama Faisal's saffron latte… and it trended across the Gulf.",
+      "scenes": [
+        "ending"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "narr_14534116",
+      "speaker": "narr",
+      "ar": "الفصل السادس: نجوم العلا",
+      "en": "Chapter 6: The Stars of AlUla",
+      "scenes": [
+        "area_2"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "narr_171a3a0d",
+      "speaker": "narr",
+      "ar": "من وين نبدأ في جدة؟",
+      "en": "Where do we start in Jeddah?",
+      "scenes": [
+        "area_1"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "narr_184a2596",
+      "speaker": "narr",
+      "ar": "كيف تكون ليلة الافتتاح؟",
+      "en": "How should opening night go?",
+      "scenes": [
+        "area_2"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "narr_1e9ea3de",
+      "speaker": "narr",
+      "ar": "وصبّيتي للشيخ طارق أول فنجال… فشاف جدّك فيك.",
+      "en": "You poured Sheikh Tariq the first cup… and he saw your grandfather in you.",
+      "scenes": [
+        "ending"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "narr_2c908a97",
+      "speaker": "narr",
+      "ar": "الخاتمة: حكاية مجلسك",
+      "en": "Epilogue: Your Majlis Story",
+      "scenes": [
+        "ending"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "narr_3720a757",
+      "speaker": "narr",
+      "ar": "وفي الرياض، خلّيتي القهوة هي اللي تحكم.",
+      "en": "And in Riyadh, you let the coffee decide.",
+      "scenes": [
+        "ending"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "narr_399cd857",
+      "speaker": "narr",
+      "ar": "الفصل الحادي عشر: لؤلؤة الخليج",
+      "en": "Chapter 11: Pearl of the Gulf",
+      "scenes": [
+        "area_7"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "narr_3d1e0f9b",
+      "speaker": "narr",
+      "ar": "الفصل العاشر: موسم الرياض",
+      "en": "Chapter 10: Riyadh Season",
+      "scenes": [
+        "area_6"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "narr_3df93bef",
+      "speaker": "narr",
+      "ar": "الفصل التاسع: الواحة الكبرى",
+      "en": "Chapter 9: The Great Oasis",
+      "scenes": [
+        "area_5"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "narr_3e9a2375",
+      "speaker": "narr",
+      "ar": "وش نسوي في القيصرية؟",
+      "en": "What do we do in the Qaisariya souq?",
+      "scenes": [
+        "area_5"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "narr_42dddf9a",
+      "speaker": "narr",
+      "ar": "كيف تكرمين الشيخ طارق؟",
+      "en": "How will you honour Sheikh Tariq?",
+      "scenes": [
+        "chap_3"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "narr_44d2dff5",
+      "speaker": "narr",
+      "ar": "يوم وصلتي، رديتي على راشد بأدب… وبحزم.",
+      "en": "The day you arrived, you answered Rashid politely… and firmly.",
+      "scenes": [
+        "ending"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "narr_663f624f",
+      "speaker": "narr",
+      "ar": "وش نقدّم في موسم الورد؟",
+      "en": "What do we serve for rose season?",
+      "scenes": [
+        "area_3"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "narr_69490549",
+      "speaker": "narr",
+      "ar": "في أبها، اشتريتي من المزارعين بالعدل.",
+      "en": "In Abha, you paid the coffee farmers fairly.",
+      "scenes": [
+        "ending"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "narr_6f582724",
+      "speaker": "narr",
+      "ar": "يوم وصلتي، وقفتي في وجه راشد: \"إرث جدّي ما ينباع!\"",
+      "en": "The day you arrived, you stood up to Rashid: \"My grandfather's legacy is not for sale!\"",
+      "scenes": [
+        "ending"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "narr_72670e19",
+      "speaker": "narr",
+      "ar": "الفصل الخامس: رواشين جدة",
+      "en": "Chapter 5: The Rawasheen of Jeddah",
+      "scenes": [
+        "area_1"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "narr_7f8d5db3",
+      "speaker": "narr",
+      "ar": "الفصل الأول: مفتاح قصر الطين",
+      "en": "Chapter 1: The Mud-Brick Key",
+      "scenes": [
+        "chap_1"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "narr_8624c13d",
+      "speaker": "narr",
+      "ar": "في أبها، علّمتي شباب القرية يحمّصون بنهم.",
+      "en": "In Abha, you taught the village youth to roast their own beans.",
+      "scenes": [
+        "ending"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "narr_8edd6e22",
+      "speaker": "narr",
+      "ar": "قدّمتي للمى قهوة جدّك بالهيل… وذاق الخليج طعم الأصالة.",
+      "en": "You served Lama Grandpa's cardamom qahwa… and the Gulf tasted heritage.",
+      "scenes": [
+        "ending"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "narr_9e16f3b2",
+      "speaker": "narr",
+      "ar": "الفصل الثاني: سحر السدو النجدي",
+      "en": "Chapter 2: Threads of Najdi Sadu",
+      "scenes": [
+        "chap_2"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "narr_9e2b87bc",
+      "speaker": "narr",
+      "ar": "وش تقدّمين للمى؟",
+      "en": "What will you serve Lama?",
+      "scenes": [
+        "chap_2"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "narr_a2a510eb",
+      "speaker": "narr",
+      "ar": "وفي الرياض، فتحتي باب المجلس حتى لراشد.",
+      "en": "And in Riyadh, you opened the Majlis door even to Rashid.",
+      "scenes": [
+        "ending"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "narr_aefe1eac",
+      "speaker": "narr",
+      "ar": "الفصل الثامن: فوق الغيم",
+      "en": "Chapter 8: Above the Clouds",
+      "scenes": [
+        "area_4"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "narr_b8469f38",
+      "speaker": "narr",
+      "ar": "كيف نساعد مزارعين البن؟",
+      "en": "How do we help the coffee farmers?",
+      "scenes": [
+        "area_4"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "narr_bf80e726",
+      "speaker": "narr",
+      "ar": "الفصل الثالث: سر الخلطة الملكية",
+      "en": "Chapter 3: Secret of the Royal Blend",
+      "scenes": [
+        "chap_3"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "narr_c6c6791e",
+      "speaker": "narr",
+      "ar": "لمن تهدين التكريم؟",
+      "en": "Who is the honour for?",
+      "scenes": [
+        "area_7"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "narr_d12e00a7",
+      "speaker": "narr",
+      "ar": "كيف تتعاملين مع راشد؟",
+      "en": "How will you handle Rashid?",
+      "scenes": [
+        "chap_1"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "narr_d89557ed",
+      "speaker": "narr",
+      "ar": "وعرفتي من الشيخ طارق سر الخلطة الملكية.",
+      "en": "Sheikh Tariq trusted you with the secret of the Royal Blend.",
+      "scenes": [
+        "ending"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "narr_de06b043",
+      "speaker": "narr",
+      "ar": "نهايتك: المجلس الصامد",
+      "en": "Your ending: The Majlis That Stood Firm",
+      "scenes": [
+        "ending"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "narr_df0f6c5b",
+      "speaker": "narr",
+      "ar": "رفّ المجلس مليان هدايا من المدن اللي مرّيتي فيها…",
+      "en": "The Majlis shelf is full of gifts from the cities you visited…",
+      "scenes": [
+        "ending"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "narr_e6be4162",
+      "speaker": "narr",
+      "ar": "نهايتك: مجلس الشراكة",
+      "en": "Your ending: The Majlis of Partnership",
+      "scenes": [
+        "ending"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "narr_e97b1a9b",
+      "speaker": "narr",
+      "ar": "راشد واقف عند الباب في ليلة الغبقة…",
+      "en": "Rashid is standing at the door on ghabga night…",
+      "scenes": [
+        "chap_4"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "narr_f913156d",
+      "speaker": "narr",
+      "ar": "الفصل السابع: موسم الورد",
+      "en": "Chapter 7: Rose Season",
+      "scenes": [
+        "area_3"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "nasser_10ec361a",
+      "speaker": "nasser",
+      "ar": "جدّك؟ عرفته! كان يرسل البن من نجد لسفننا. رجّال كريم.",
+      "en": "Your grandfather? I knew him. He sent coffee beans from Najd to our ships. A generous man.",
+      "scenes": [
+        "area_7"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "nasser_14f55844",
+      "speaker": "nasser",
+      "ar": "خذي هالمحارة، فيها لؤلؤة صغيرة. اللؤلؤة ما تنباع… تنهدى.",
+      "en": "Take this small shell, with a little pearl inside. A pearl is not sold, it is given.",
+      "scenes": [
+        "area_7"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "nasser_36f78f94",
+      "speaker": "nasser",
+      "ar": "حيّاك الله يا ليلى! أنا النوخذة ناصر، قدت سفينة غوص أربعين موسم.",
+      "en": "God welcome you, Layla! I'm Captain Nasser. I led a pearl-diving ship for forty seasons.",
+      "scenes": [
+        "area_7"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "nasser_d09e3ac3",
+      "speaker": "nasser",
+      "ar": "وإذا طلع الغواص من القاع، أول شي ينتظره على السفينة فنجال قهوة.",
+      "en": "And when a diver came up from the seabed, the first thing waiting on deck was a cup of coffee.",
+      "scenes": [
+        "area_7"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "nasser_d8d7032b",
+      "speaker": "nasser",
+      "ar": "للفريق! اللؤلؤة الحقيقية دايماً الرجال على السفينة، ومن ينتظرنا عند الشاطئ.",
+      "en": "For the team! The real pearl is always the crew on the deck, and those who wait for us on the shore.",
+      "scenes": [
+        "area_7"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "noura_021d0070",
+      "speaker": "noura",
+      "ar": "وحطّي حبّة القرنفل من خلطته الملكية… مثل ما سواها بالضبط.",
+      "en": "And add the clove from his royal blend… exactly the way he made it.",
+      "scenes": [
+        "area_3"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "noura_14c23ff6",
+      "speaker": "noura",
+      "ar": "خلاص الأحساء أطيب تمر مع القهوة… هذا اللي كان أبوي يقوله.",
+      "en": "Al-Ahsa's Khalas dates are the best with coffee… that's what my father always said.",
+      "scenes": [
+        "area_5"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "noura_2ae8fb54",
+      "speaker": "noura",
+      "ar": "شوفي يا ليلى! أول جناح رجع يلمع… جدّك كان يستقبل الضيوف من هالمدخل.",
+      "en": "Look, Layla! The first wing shines again… your grandfather welcomed guests through this very archway.",
+      "scenes": [
+        "chap_1"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "noura_37e2e94e",
+      "speaker": "noura",
+      "ar": "وهذا مفتاحه، مفتاح قصر الطين. ما يفتح الباب بس… يفتح قلوب أهل الحي.",
+      "en": "And this is his key, the mud-brick key. It doesn't just open the door… it opens the neighbourhood's hearts.",
+      "scenes": [
+        "chap_1"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "noura_44cc8783",
+      "speaker": "noura",
+      "ar": "يشيلون الورد من بدري، ثم يودّونه للمعمل عشان يقطّرون ماء الورد.",
+      "en": "The roses are picked early, then taken to the workshop to distil rose water.",
+      "scenes": [
+        "area_3"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "noura_63bddf72",
+      "speaker": "noura",
+      "ar": "ومزارعين أبها يسلّمون عليك… قالوا: ما أحد عاملنا بعدلك.",
+      "en": "And the Abha farmers send their greetings… they said no one ever treated them so fairly.",
+      "scenes": [
+        "area_5"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "noura_6a597087",
+      "speaker": "noura",
+      "ar": "خلّيه يقول اللي يبي. وصية جدّك واضحة: نحيي المجلس ونكرم الضيوف، والأرض تبقى لنا.",
+      "en": "Let him talk. Your grandfather's will is clear: we revive the Majlis and honour our guests, and the land stays ours.",
+      "scenes": [
+        "chap_1"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "noura_8adc2d8b",
+      "speaker": "noura",
+      "ar": "الله يرحمه… كان بيضحك لو شاف اسمها.",
+      "en": "God rest him… he would have laughed to see that name.",
+      "scenes": [
+        "area_3"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "noura_91af869a",
+      "speaker": "noura",
+      "ar": "شوفي وين وصلتي يا ليلى… من مجلس طين متشقق، لأول مجلس في المملكة.",
+      "en": "Look how far you have come, Layla… from a cracked mud-brick majlis to the first Majlis of the Kingdom.",
+      "scenes": [
+        "ending"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "noura_a298d992",
+      "speaker": "noura",
+      "ar": "صدقتي. السر اللي ما ينقال… يموت مع صاحبه.",
+      "en": "You're right. A secret never told… dies with its keeper.",
+      "scenes": [
+        "area_5"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "noura_a2b8070b",
+      "speaker": "noura",
+      "ar": "وهنا… في موسم الورد، جدّك طلب يدي. جاب لي فنجال قهوة بماء الورد.",
+      "en": "And here… in rose season, your grandfather asked for my hand. He brought me a cup of coffee with rose water.",
+      "scenes": [
+        "area_3"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "noura_d23906d7",
+      "speaker": "noura",
+      "ar": "وشباب أبها حمّصوا أول دفعة بأيديهم… أرسلوها لنا هدية.",
+      "en": "And the Abha youngsters roasted their first batch themselves… they sent it to us as a gift.",
+      "scenes": [
+        "area_5"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "noura_e027bcc0",
+      "speaker": "noura",
+      "ar": "فكرة حلوة! الصغار اليوم… ضيوف المجلس بكرة.",
+      "en": "Lovely idea! Today's children… are tomorrow's guests of the Majlis.",
+      "scenes": [
+        "area_3"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "noura_e2449040",
+      "speaker": "noura",
+      "ar": "أبوي كان بيفرح… التمر والقهوة، والناس حولها.",
+      "en": "My father would have loved it… dates and coffee, with people all around.",
+      "scenes": [
+        "area_5"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "noura_e7e792e3",
+      "speaker": "noura",
+      "ar": "كنا نطلع الطايف في موسم الورد، والبيت كله ريحة ورد.",
+      "en": "We used to visit Taif in rose season, and the whole house smelled of roses.",
+      "scenes": [
+        "area_3"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "rashid_44d67f5c",
+      "speaker": "rashid",
+      "ar": "طيب. نشوف طابور مين أطول.",
+      "en": "Fine. We'll see whose queue is longer.",
+      "scenes": [
+        "area_6"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "rashid_47bba647",
+      "speaker": "rashid",
+      "ar": "مبروك على الترميم… بس الموسم قصير، والمجلس البلدي ما ينتظر أحد.",
+      "en": "Congratulations on the repairs… but the season is short, and the council waits for no one.",
+      "scenes": [
+        "chap_1"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "rashid_6031c8f6",
+      "speaker": "rashid",
+      "ar": "القهوة… طيبة. لا تحسبين هالشي بيغيّر رأيي.",
+      "en": "The coffee is… good. Don't think that changes my mind.",
+      "scenes": [
+        "chap_1"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "rashid_7596f734",
+      "speaker": "rashid",
+      "ar": "عادل… والمجلس الأفضل يفوز.",
+      "en": "Fair enough… may the best Majlis win.",
+      "scenes": [
+        "chap_4"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "rashid_7adcee27",
+      "speaker": "rashid",
+      "ar": "ركني قبال ركنك بالضبط. الليلة الناس بتختار… وبتختارني.",
+      "en": "My stand is right across from yours. Tonight the people choose… and they'll choose me.",
+      "scenes": [
+        "area_6"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "rashid_9fb78907",
+      "speaker": "rashid",
+      "ar": "نشوف مين يضحك آخر.",
+      "en": "We'll see who laughs last.",
+      "scenes": [
+        "chap_4"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "rashid_a0e6f1e1",
+      "speaker": "rashid",
+      "ar": "وأنا… كنت أبي أشتري المجلس. اليوم أنا فخور إني صرت جزء منه.",
+      "en": "And I… I wanted to buy the Majlis. Today I am proud to be part of it.",
+      "scenes": [
+        "area_7"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "rashid_a330f34e",
+      "speaker": "rashid",
+      "ar": "ما توقعت هالكرم… أوعدك ما تندمين.",
+      "en": "I didn't expect such generosity… I promise you won't regret it.",
+      "scenes": [
+        "area_6"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "rashid_ad5af3ed",
+      "speaker": "rashid",
+      "ar": "جيت أشوف بنفسي… وأعترف: قهوتكم أطيب قهوة في الدرعية.",
+      "en": "I came to see for myself… and I admit it: your coffee is the best in Diriyah.",
+      "scenes": [
+        "chap_4"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "rashid_b1d6ce31",
+      "speaker": "rashid",
+      "ar": "فهمت… واحترم قرارك.",
+      "en": "I understand… and I respect your decision.",
+      "scenes": [
+        "area_6"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "rashid_b6d55c1c",
+      "speaker": "rashid",
+      "ar": "ما توقعت تنجزين بهالسرعة… نشوف إلى متى.",
+      "en": "I didn't expect you to work this fast… we'll see how long it lasts.",
+      "scenes": [
+        "chap_1"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "rashid_c9461a54",
+      "speaker": "rashid",
+      "ar": "استانسي بليلتك. المجلس البلدي يجتمع الأسبوع الجاي.",
+      "en": "Enjoy your night. The council meets next week.",
+      "scenes": [
+        "chap_4"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "rashid_d03ab52f",
+      "speaker": "rashid",
+      "ar": "جيت أعترف قدام الكل: وصية جدّك كانت صح. المجلس ما ينباع.",
+      "en": "I came to admit it in front of everyone: your grandfather's will was right. The Majlis is not for sale.",
+      "scenes": [
+        "area_7"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "rashid_d5166e1b",
+      "speaker": "rashid",
+      "ar": "مفتاح؟ ورقة من المجلس البلدي أقوى من أي مفتاح، يا ليلى.",
+      "en": "A key? One permit from the council beats any key, Layla.",
+      "scenes": [
+        "chap_1"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "rashid_e67b6462",
+      "speaker": "rashid",
+      "ar": "ما توقعت… طيب. فنجال واحد بس.",
+      "en": "I didn't expect that… fine. Just one cup.",
+      "scenes": [
+        "chap_4"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "rashid_fedfa900",
+      "speaker": "rashid",
+      "ar": "ليلى… من ليلة الغبقة وأنا أفكر. خلّينا نشتغل سوا: كشكي جنبك، وقهوتك هي النجمة.",
+      "en": "Layla… I've been thinking since ghabga night. Let's work together: my kiosk next to yours, and your coffee is the star.",
+      "scenes": [
+        "area_6"
+      ],
+      "recorded": true
+    },
+    {
+      "id": "reem_22752a3d",
+      "speaker": "reem",
+      "ar": "بث مباشر؟ حطّوا الكاميرات عند المنصة… بس لا تقربون الصخور المنقوشة، هذي أمانة.",
+      "en": "A live stream? Set the cameras at the deck… but keep clear of the carved rocks, they're a trust.",
+      "scenes": [
+        "area_2"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "reem_5003b4cc",
+      "speaker": "reem",
+      "ar": "هذا دفتري، كتبت فيه الأسماء اللي سمّاها الأجداد للنجوم. كمّليه أنتِ.",
+      "en": "This is my notebook, with the names the ancestors gave the stars. You finish it.",
+      "scenes": [
+        "area_2"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "reem_77e3eeaf",
+      "speaker": "reem",
+      "ar": "مرحبا ليلى! أنا ريم، مرشدة التراث هنا. هالجبال تشوف المسافرين من آلاف السنين.",
+      "en": "Hello, Layla! I'm Reem, a heritage guide here. These cliffs have watched travellers for thousands of years.",
+      "scenes": [
+        "area_2"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "reem_b59a2745",
+      "speaker": "reem",
+      "ar": "كل قافلة كانت توقف هنا تشرب وتستريح. الواحة دايماً كانت مجلساً مفتوحاً.",
+      "en": "Every caravan stopped here to drink and rest. This oasis has always been an open majlis.",
+      "scenes": [
+        "area_2"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "reem_cd7ae40c",
+      "speaker": "reem",
+      "ar": "ليلة هادية؟ هذا اللي كانت تسويه القوافل: نجمة، وفنجال، وسالفة.",
+      "en": "A quiet night? That is what the caravans did: a star, a cup and a story.",
+      "scenes": [
+        "area_2"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "sultan_901ddb0b",
+      "speaker": "sultan",
+      "ar": "من الدرعية لجدة والعلا والطايف وأبها والأحساء والرياض… أحييتي روح المجلس في كل المملكة.",
+      "en": "From Diriyah to Jeddah, AlUla, Taif, Abha, Al-Ahsa and Riyadh… you revived the spirit of the Majlis across the Kingdom.",
+      "scenes": [
+        "area_7"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "sultan_99eb91fb",
+      "speaker": "sultan",
+      "ar": "أجدادنا غاصوا في هالبحر يدوّرون اللؤلؤ… وأنتِ لقيتي لؤلؤة من نوع ثاني.",
+      "en": "Our ancestors dived these waters searching for pearls… and you found a pearl of another kind.",
+      "scenes": [
+        "area_7"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "sultan_ddbe981a",
+      "speaker": "sultan",
+      "ar": "باسم أهل الخليج، أعلن مجلسكم أول مجالس المملكة. لمن تهدين هالتكريم؟",
+      "en": "On behalf of the people of the Gulf, I name yours the first Majlis of the Kingdom. To whom do you dedicate this honour?",
+      "scenes": [
+        "area_7"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "sultan_e02a7c7d",
+      "speaker": "sultan",
+      "ar": "وهذي بداية الحكاية، مو نهايتها. ارفعوا الفناجيل!",
+      "en": "And this is the beginning of the story, not its end. Raise your cups!",
+      "scenes": [
+        "area_7"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "tariq_1ad0e2a0",
+      "speaker": "tariq",
+      "ar": "هيل، وزعفران، وحبّة قرنفل وحدة بس… والباقي محبّة. هذا سرّه.",
+      "en": "Cardamom, saffron and a single clove… the rest is love. That's the secret.",
+      "scenes": [
+        "chap_3"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "tariq_2f0bd0ec",
+      "speaker": "tariq",
+      "ar": "نفس الكرم، ونفس اليد. الله يرحمه… شفته فيك اليوم.",
+      "en": "The same generosity, the same hand. God rest him… I saw him in you today.",
+      "scenes": [
+        "chap_3"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "tariq_45572a4e",
+      "speaker": "tariq",
+      "ar": "وسمعت عن لاتيه الزعفران حقّكم… حتى عيال عيالي يتكلمون عنه!",
+      "en": "And I've heard about your saffron latte… even my grandchildren talk about it!",
+      "scenes": [
+        "chap_3"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "tariq_5b533110",
+      "speaker": "tariq",
+      "ar": "وسمعت أن لمى امتدحت قهوتكم بالهيل… وهذا والله الصح.",
+      "en": "And I heard Lama praised your cardamom qahwa… as she should.",
+      "scenes": [
+        "chap_3"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "tariq_75655ac8",
+      "speaker": "tariq",
+      "ar": "لكن راشد يبي يشتري محصول المزارع كله قبلنا… بسعر بخس.",
+      "en": "But Rashid wants to buy the farms' entire harvest before us… at a low price.",
+      "scenes": [
+        "area_4"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "tariq_a0826d49",
+      "speaker": "tariq",
+      "ar": "تزرعين المستقبل يا بنتي… مثل ما نزرع البن.",
+      "en": "You are planting the future, my girl… just as we plant coffee.",
+      "scenes": [
+        "area_4"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "tariq_a8f8d74a",
+      "speaker": "tariq",
+      "ar": "أعلن دعمي لمجلسكم في كأس التراث! رمّموا النافورة وركن العود قبل ليالي الغبقة.",
+      "en": "I am backing your Majlis in the Heritage Cup! Restore the fountain and the oud corner before the ghabga nights.",
+      "scenes": [
+        "chap_3"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "tariq_abb3bff6",
+      "speaker": "tariq",
+      "ar": "وراشد جاني يبي يشتري حصة في أرضكم… رفضت. هالمجلس ما يتقاس بالفلوس.",
+      "en": "And Rashid came to me wanting to buy a share of your land… I refused. This Majlis can't be measured in money.",
+      "scenes": [
+        "chap_3"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "tariq_ba8ae25a",
+      "speaker": "tariq",
+      "ar": "هذا كلام جدّك بالحرف. التاجر الصادق يكبر مع أهله.",
+      "en": "Those are your grandfather's words exactly. An honest merchant grows with his people.",
+      "scenes": [
+        "area_4"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "tariq_cb2d6bb1",
+      "speaker": "tariq",
+      "ar": "جدّك كان رفيق دربي. حمّصنا البن سوا على هالأرض قبل خمسين سنة.",
+      "en": "Your grandfather was my oldest friend. We roasted beans together on this very floor fifty years ago.",
+      "scenes": [
+        "chap_3"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "tariq_ced0a582",
+      "speaker": "tariq",
+      "ar": "هنا على المدرجات الجنوبية ينبت البن الخولاني… أصل كل فنجال شربناه.",
+      "en": "Here on the southern terraces grows Khawlani coffee… the origin of every cup we ever drank.",
+      "scenes": [
+        "area_4"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "tariq_dd0137e0",
+      "speaker": "tariq",
+      "ar": "وراشد عرض سياراته تنقل المحصول للدرعية… صار يحبكم وهو ما يعترف.",
+      "en": "And Rashid offered his trucks to carry the harvest to Diriyah… he's fond of you, though he won't admit it.",
+      "scenes": [
+        "area_4"
+      ],
+      "recorded": false
+    },
+    {
+      "id": "tariq_dd271de8",
+      "speaker": "tariq",
+      "ar": "تذوّقت القهوة في مئات المجالس… بس هالفنجال مع الكليجا رجّعني لأيام الصبا.",
+      "en": "I have tasted qahwa in hundreds of majlises… but this finjan with kleija took me back to my youth.",
+      "scenes": [
+        "chap_3"
+      ],
+      "recorded": false
+    }
+  ]
+}
