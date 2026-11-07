@@ -1,0 +1,162 @@
+{
+  "noura_greet_1": {
+    "hash": "612cac7000ccb0ce",
+    "chars": 33,
+    "voice_id": "ckaeRWMtCV0u0pUT3wX1"
+  },
+  "noura_greet_2": {
+    "hash": "7c754dcf3d873c70",
+    "chars": 41,
+    "voice_id": "ckaeRWMtCV0u0pUT3wX1"
+  },
+  "noura_served_1": {
+    "hash": "9109ee58e2bc2ea6",
+    "chars": 44,
+    "voice_id": "ckaeRWMtCV0u0pUT3wX1"
+  },
+  "noura_served_2": {
+    "hash": "d1c966c0c405626a",
+    "chars": 28,
+    "voice_id": "ckaeRWMtCV0u0pUT3wX1"
+  },
+  "noura_served_3": {
+    "hash": "9d4f7b47a7bb03a1",
+    "chars": 25,
+    "voice_id": "ckaeRWMtCV0u0pUT3wX1"
+  },
+  "noura_vip_1": {
+    "hash": "3d62cd8c147fb65b",
+    "chars": 39,
+    "voice_id": "ckaeRWMtCV0u0pUT3wX1"
+  },
+  "faisal_greet_1": {
+    "hash": "a90b7f4e59de526a",
+    "chars": 41,
+    "voice_id": "aLv8a8fbjjLsORNUDQ1J"
+  },
+  "faisal_greet_2": {
+    "hash": "303e2b5b87beab0a",
+    "chars": 32,
+    "voice_id": "aLv8a8fbjjLsORNUDQ1J"
+  },
+  "faisal_served_1": {
+    "hash": "2adf2a8cce25981a",
+    "chars": 37,
+    "voice_id": "aLv8a8fbjjLsORNUDQ1J"
+  },
+  "faisal_served_2": {
+    "hash": "a2955e0bfc30e549",
+    "chars": 31,
+    "voice_id": "aLv8a8fbjjLsORNUDQ1J"
+  },
+  "faisal_served_3": {
+    "hash": "bc44040f88a66b96",
+    "chars": 36,
+    "voice_id": "aLv8a8fbjjLsORNUDQ1J"
+  },
+  "faisal_vip_1": {
+    "hash": "d18c937076de234c",
+    "chars": 42,
+    "voice_id": "aLv8a8fbjjLsORNUDQ1J"
+  },
+  "tariq_greet_1": {
+    "hash": "2750d7ccf2717600",
+    "chars": 24,
+    "voice_id": "j5yKf07d4XvSvuWfxQwD"
+  },
+  "tariq_greet_2": {
+    "hash": "a8f557ecacd72388",
+    "chars": 27,
+    "voice_id": "j5yKf07d4XvSvuWfxQwD"
+  },
+  "tariq_served_1": {
+    "hash": "10f87324d2e55225",
+    "chars": 27,
+    "voice_id": "j5yKf07d4XvSvuWfxQwD"
+  },
+  "tariq_served_2": {
+    "hash": "23aa4297803cb8cd",
+    "chars": 40,
+    "voice_id": "j5yKf07d4XvSvuWfxQwD"
+  },
+  "tariq_vip_1": {
+    "hash": "c5b1535634ffa117",
+    "chars": 42,
+    "voice_id": "j5yKf07d4XvSvuWfxQwD"
+  },
+  "lama_greet_1": {
+    "hash": "490c168bd90221f6",
+    "chars": 28,
+    "voice_id": "VjxKp6w1MCufETfW5zFM"
+  },
+  "lama_greet_2": {
+    "hash": "43b173368a79e2fb",
+    "chars": 31,
+    "voice_id": "VjxKp6w1MCufETfW5zFM"
+  },
+  "lama_served_1": {
+    "hash": "d5ef974635973f20",
+    "chars": 33,
+    "voice_id": "VjxKp6w1MCufETfW5zFM"
+  },
+  "lama_served_2": {
+    "hash": "d50850c9f6614897",
+    "chars": 29,
+    "voice_id": "VjxKp6w1MCufETfW5zFM"
+  },
+  "lama_served_3": {
+    "hash": "5f9c246625d7c7d8",
+    "chars": 22,
+    "voice_id": "VjxKp6w1MCufETfW5zFM"
+  },
+  "lama_vip_1": {
+    "hash": "b1f9dd55a8d36339",
+    "chars": 44,
+    "voice_id": "VjxKp6w1MCufETfW5zFM"
+  },
+  "sultan_greet_1": {
+    "hash": "7f9b6ea116d6390c",
+    "chars": 29,
+    "voice_id": "ytGeTGTYCgaMW3Cef9LB"
+  },
+  "sultan_greet_2": {
+    "hash": "c73302dab0119715",
+    "chars": 31,
+    "voice_id": "ytGeTGTYCgaMW3Cef9LB"
+  },
+  "sultan_served_1": {
+    "hash": "042281f4a8ab14dc",
+    "chars": 41,
+    "voice_id": "ytGeTGTYCgaMW3Cef9LB"
+  },
+  "sultan_served_2": {
+    "hash": "28622c0100582d48",
+    "chars": 32,
+    "voice_id": "ytGeTGTYCgaMW3Cef9LB"
+  },
+  "sultan_vip_1": {
+    "hash": "6637f03b196aeb80",
+    "chars": 38,
+    "voice_id": "ytGeTGTYCgaMW3Cef9LB"
+  },
+  "ghabga_greet_1": {
+    "hash": "7559de9e99620aed",
+    "chars": 37,
+    "voice_id": "YKGG8oefXIWbncG7wgoX"
+  },
+  "ghabga_served_1": {
+    "hash": "6a1c0b14a709d067",
+    "chars": 32,
+    "voice_id": "YKGG8oefXIWbncG7wgoX"
+  },
+  "ghabga_served_2": {
+    "hash": "e814d0d1447ec0bf",
+    "chars": 26,
+    "voice_id": "YKGG8oefXIWbncG7wgoX"
+  },
+  "ghabga_vip_1": {
+    "hash": "f68bfb61fbaf67c3",
+    "chars": 25,
+    "voice_id": "YKGG8oefXIWbncG7wgoX"
+  }
+}
