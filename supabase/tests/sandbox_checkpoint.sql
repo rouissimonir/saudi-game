@@ -11,9 +11,9 @@ begin
  select * into r from public.save_sandbox_checkpoint_bound('df1511f4-1040-4bde-99e1-75032e189001',0,s);
  if r.revision<>1 then raise exception 'initial checkpoint failed'; end if;
  select * into r from public.claim_sandbox_wallet_bound('df1511f4-1040-4bde-99e1-75032e189001',1,'df1511f4-1040-4bde-99e1-75032e189003');
- if r.revision<>2 or (r.game_state->>'energy')::int<>130 or (r.game_state->>'diamonds')::int<>25 or r.already_claimed then raise exception 'claim mismatch'; end if;
+ if r.revision<>2 or (r.game_state->>'energy')::int<>110 or (r.game_state->>'diamonds')::int<>35 or r.already_claimed then raise exception 'claim mismatch'; end if;
  select * into r from public.claim_sandbox_wallet_bound('df1511f4-1040-4bde-99e1-75032e189001',1,'df1511f4-1040-4bde-99e1-75032e189003');
- if r.revision<>2 or not r.already_claimed or (r.game_state->>'energy')::int<>130 then raise exception 'retry duplicated credit'; end if;
+ if r.revision<>2 or not r.already_claimed or (r.game_state->>'energy')::int<>110 then raise exception 'retry duplicated credit'; end if;
  begin perform public.save_sandbox_checkpoint_bound('df1511f4-1040-4bde-99e1-75032e189001',1,s); exception when serialization_failure then denied:=true; end;
  if not denied then raise exception 'stale save accepted'; end if;
  s:=jsonb_set(r.game_state,'{energy}','120'::jsonb);
