@@ -10,6 +10,8 @@ The source of truth for the design direction and pacing investigation is [docs/P
 
 ## Work completed so far
 
+- **Refill amounts confirmed (2026-11-09):** The owner approved 100 energy and 30 gems for now. The daily-pack client uses those amounts, but the existing sandbox ledger still uses the earlier 120 energy and 20 gems; do not connect the two until credit, refund and historical transaction handling are reconciled. The current daily pack delivers locally, so server recording and recovery remain unfinished. Daily-pack TestFlight build 37 was requested in [run 42632405815](https://github.com/rouissimonir/saudi-game/actions/runs/42632405815); verify its result before asking the owner to install it.
+
 - **TestFlight purchase reported (2026-11-09):** The owner reported that buying the pack works on their iPhone. Build 30 was the most recently prepared sandbox test build, but the exact installed build, product, entitlement delivery, persistence and restore have not yet been independently confirmed. The refill pack and production purchase flow remain incomplete.
 
 - **Checkpoint balance validation (2026-11-05):** The sandbox checkpoint parser now requires explicit nonnegative integer energy and gem balances before applying legacy-save normalization. A response missing either balance is rejected rather than silently replacing it with a default. Type checking and targeted parser tests passed. This safeguard does not connect checkpoint recovery to the game or verify purchase delivery.
