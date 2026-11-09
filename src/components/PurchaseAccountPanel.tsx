@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import type { Language } from '../game/rules';
 import { cloudAccount, readSandboxWallet } from '../utils/cloudAccount';

@@ -10,3 +10,6 @@ coverage/
 # Python bytecode
 __pycache__/
 *.pyc
+
+# Ad-hoc screenshots
+/beat-*.png

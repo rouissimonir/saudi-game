@@ -1,4 +1,3 @@
-import React from 'react';
 import { findNearestEmptyCell, ITEM_CATALOG, type GameState, type Language } from '../game/rules';
 import type { OrderNeed } from '../game/orderGuide';
 

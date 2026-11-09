@@ -1,4 +1,3 @@
-import React from 'react';
 import { ITEM_CATALOG, VIP_ORDER_GEMS, orderCoinReward, type CustomerOrder, type GameState, type Language, type Season } from '../game/rules';
 import { ingredientInstruction, orderNeeds } from '../game/orderGuide';
 import { ItemArtwork } from './ItemArtwork';

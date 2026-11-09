@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { gatheringReaction, TASTING_STYLES, TASTING_TRAYS } from '../game/tasting';
 import type { Language } from '../game/rules';
 import { CustomerPortrait } from './CustomerPortrait';

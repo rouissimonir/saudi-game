@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useRef, useState } from 'react';
+import { lazy, Suspense, useRef, useState } from 'react';
 import { registerPlugin } from '@capacitor/core';
 import type { PurchasesPackage } from '@revenuecat/purchases-capacitor';
 import { initializeRevenueCatAppStore } from '../utils/revenueCatAppStore';

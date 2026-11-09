@@ -3,7 +3,7 @@ import { Coins, FastForward, Gem, Pause, Play, ScrollText, Volume2, VolumeX, X, 
 import { Language } from '../../game/rules';
 import { advance, autoDelayMs, choose, currentBeat, ScenePlay, skip, startScene, upcomingBeats } from '../../story/engine';
 import { SCENES } from '../../story/scenes';
-import { CAST_NAMES, CastId, Expression, Scene, StagePos } from '../../story/types';
+import { CAST_NAMES, CastId, Scene, StagePos } from '../../story/types';
 import { assetUrl } from '../../utils/assetUrl';
 import { usePageVisible } from '../../utils/usePageVisible';
 import { actorSrc } from './art';

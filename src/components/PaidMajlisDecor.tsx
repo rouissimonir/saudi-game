@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import type { Language } from '../game/rules';
 import { usePaidAccess } from '../utils/paidAccess';
 import { ItemArtwork } from './ItemArtwork';

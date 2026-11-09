@@ -1,4 +1,3 @@
-import React from 'react';
 import type { Language } from '../game/rules';
 import type { GuestMemory } from '../game/guestMemories';
 import { CustomerPortrait } from './CustomerPortrait';
