@@ -64,3 +64,14 @@ test('old saves load with no pack history and bad history is dropped', () => {
   assert.deepEqual(bad.packTransactions, ['a']);
   assert.equal(bad.packBoughtDay, '');
 });
+
+test('a pack recovered from an earlier day never hides or overwrites a later purchase day', () => {
+  const s = createInitialGameState();
+  const today = applyPackPurchase(s, refill, 'tx-today', '2026-11-08').state;
+  const late = applyPackPurchase(today, refill, 'tx-yesterday', '2026-11-07').state;
+  assert.equal(late.packBoughtDay, '2026-11-08');
+  assert.equal(late.energy, s.energy + 2 * refill.energy);
+  // and recovering yesterday's pack today does not mark today's offer as taken
+  assert.equal(applyPackPurchase(s, refill, 'tx-y', '2026-11-07').state.packBoughtDay, '2026-11-07');
+  assert.equal(packOfferDue(applyPackPurchase(s, refill, 'tx-y', '2026-11-07').state, '', '2026-11-08'), true);
+});

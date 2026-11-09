@@ -1,6 +1,7 @@
 import { GameState } from '../game/rules';
 import { loadSave, persistSave, removeSave } from './saveStorage';
 import { assetUrl } from './assetUrl';
+import { trackRecent } from './recentKeys';
 import { VoiceCharacter, VoiceEvent, VoiceProfile, pickVoiceLine, voiceFileUrl } from '../game/voiceLines';
 import { loadHapticsEnabled, triggerDeviceHaptic } from './haptics';
 
@@ -158,10 +159,18 @@ export class SoundAndHapticsManager {
     });
   }
 
+  /** Decoded story lines kept in memory (newest last). Older ones are decoded again if replayed; effects and music stay cached. */
+  private storyBufferOrder: string[] = [];
+
+  private rememberStoryBuffer(url: string) {
+    if (!url.includes('/audio/story/')) return;
+    for (const old of trackRecent(this.storyBufferOrder, url, 16)) this.fileBuffers.delete(old);
+  }
+
   /** Fetch and decode an audio file once; resolves null if it is missing or unreadable (the reason is kept in `reports`). */
   private loadBuffer(url: string): Promise<AudioBuffer | null> {
     const cached = this.fileBuffers.get(url);
-    if (cached) return Promise.resolve(cached);
+    if (cached) { this.rememberStoryBuffer(url); return Promise.resolve(cached); }
     const inflight = this.fileLoading.get(url);
     if (inflight) return inflight;
     const ctx = this.ensureContext();
@@ -173,6 +182,7 @@ export class SoundAndHapticsManager {
           const buf = await this.decode(ctx, data);
           this.report(url, { ok: true, stage: 'decoded', detail: `${bytes} bytes` });
           this.fileBuffers.set(url, buf);
+          this.rememberStoryBuffer(url);
           return buf as AudioBuffer | null;
         } catch (e) {
           throw new Error(`decode failed (${bytes} bytes): ${e instanceof Error ? e.message : String(e)}`);

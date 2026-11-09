@@ -171,14 +171,14 @@ export const ScenePlayer: React.FC<ScenePlayerProps> = ({ sceneId, scene: given,
   }, [auto, historyOpen, typing, beat, finale, next, text.length, pageVisible, voiceFinished]);
 
   const toggleAuto = () => {
-    setAuto((on) => {
-      try {
-        localStorage.setItem(AUTO_KEY, on ? '0' : '1');
-      } catch {
-        // storage blocked: auto mode lasts for this scene only
-      }
-      return !on;
-    });
+    // The preference is saved outside the state updater: updaters must be pure (they can run twice).
+    const next = !auto;
+    try {
+      localStorage.setItem(AUTO_KEY, next ? '1' : '0');
+    } catch {
+      // storage blocked: auto mode lasts for this scene only
+    }
+    setAuto(next);
   };
 
   useEffect(() => {

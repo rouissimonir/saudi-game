@@ -59,12 +59,12 @@ export function unappliedPurchases(
   transactions: StoreTransaction[],
   now: number,
   packs: readonly PaidPack[] = PAID_PACKS
-): { pack: PaidPack; transactionId: string }[] {
+): { pack: PaidPack; transactionId: string; purchasedAt: string }[] {
   return transactions.flatMap((t) => {
     const pack = packs.find((p) => p.productId === t.productIdentifier);
     const when = Date.parse(t.purchaseDate);
     if (!pack || !t.transactionIdentifier || Number.isNaN(when) || now - when > RECOVERY_WINDOW_MS || when > now + 60_000) return [];
-    return packPurchaseApplied(state, t.transactionIdentifier) ? [] : [{ pack, transactionId: t.transactionIdentifier }];
+    return packPurchaseApplied(state, t.transactionIdentifier) ? [] : [{ pack, transactionId: t.transactionIdentifier, purchasedAt: t.purchaseDate }];
   }).sort((a, b) => a.transactionId.localeCompare(b.transactionId));
 }
 

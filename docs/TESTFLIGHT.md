@@ -51,3 +51,15 @@ To replay the opening without erasing progress, open the in-game **Menu → Stor
 - **A purchase screen in the app.** Production builds have no screen that sells anything; the only purchase panel is developer-only. Without a screen to tap, a TestFlight build cannot test a subscription.
 - **Game benefits tied to verified purchases** (membership must come from RevenueCat, not the editable save), with restore, expiry and refunds handled.
 - **Privacy answers.** If the build includes the RevenueCat key, answer the App Privacy questions as in `docs/APP_STORE_SUBMISSION.md`, section 9, Option B.
+
+
+## Optional build settings (Run workflow)
+
+- `sandbox_purchase_test`: include the sandbox-only purchase diagnostic. Never submit such a build.
+- `daily_packs`: show the daily paid pack offer (see "Daily pack offer" in `docs/MONETIZATION_DISCOVERY.md`). Needs `REVENUECAT_IOS_KEY`. Purchases in TestFlight are sandbox purchases and cost nothing.
+
+Both are off for automatic builds from pushes to `main`.
+
+## Troubleshooting
+
+**"Your account has reached the maximum number of certificates" / "No profiles for ... were found"** (seen on 7 November 2026, runs 31 and 32). Cloud signing creates a signing certificate for each build, and Apple caps how many an account can hold. Nothing is wrong in the code. Revoke old or unused certificates at developer.apple.com > Certificates, IDs & Profiles > Certificates (keep any you use for other apps or Macs), then re-run the failed workflow. The workflow now prints this advice as an error annotation when it happens. To stop it recurring, create one distribution certificate and profile once and store them as secrets so builds reuse them.

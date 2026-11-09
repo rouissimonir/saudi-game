@@ -323,6 +323,8 @@ export default function App() {
   const gameStateRef = useRef(gameState);
   gameStateRef.current = gameState;
   const [packShownDay, setPackShownDay] = useState(() => { try { return localStorage.getItem('qahwa_pack_shown') ?? ''; } catch { return ''; } });
+  // The store answers asynchronously; if it answers after the player has started merging, the popup waits for the next launch.
+  const mergesAtLaunch = useRef(gameState.totalMerges);
   const dailyPacks = useDailyPacks(React.useMemo(dailyPacksEnabled, []), localDay, setGameState, gameStateRef);
   const [levelUpToast, setLevelUpToast] = useState<LevelUpReward | null>(null);
   const [comboLive, setComboLive] = useState(false);
@@ -2298,7 +2300,7 @@ export default function App() {
           offer={dailyPacks.offer}
           status={dailyPacks.status}
           bought={gameState.packBoughtDay === localDay}
-          open={dailyLoginDay === null && gameState.lastLoginDay === localDay && packOfferDue(gameState, packShownDay, localDay) &&
+          open={dailyLoginDay === null && gameState.lastLoginDay === localDay && packOfferDue(gameState, packShownDay, localDay) && gameState.totalMerges === mergesAtLaunch.current &&
             !activeScene && !gameState.activeStoryId && !shopModalOpen && !energyOpen && !tastingOpen && !taifWelcomeOpen && !transferOpen && !endingOpen}
           onBuy={() => void dailyPacks.buy().then((ok) => { if (ok) { soundFX.playOrderComplete(); showFeedback(isAr ? 'تمت إضافة الحقيبة!' : 'Pack added!'); } })}
           onClose={() => { setPackShownDay(localDay); dailyPacks.resetStatus(); try { localStorage.setItem('qahwa_pack_shown', localDay); } catch { /* shown again next launch */ } }}

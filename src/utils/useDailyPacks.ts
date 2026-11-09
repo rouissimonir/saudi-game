@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import type { GameState } from '../game/rules';
 import { applyPackPurchase } from '../game/dailyPack';
+import { dayKeyFromDate } from '../game/rules';
 import { initializeRevenueCatAppStore, canInitializeAppStore } from './revenueCatAppStore';
 import { ListedPack, buyPack, listedPacks, revenueCatPackPort, todaysOffer, unappliedPurchases } from './packPurchase';
 
@@ -27,29 +28,42 @@ export function useDailyPacks(
   const [status, setStatus] = useState<PackStatus>('idle');
   const busy = useRef(false);
 
-  const deliver = useCallback((pack: ListedPack['pack'], transactionId: string): boolean => {
+  const deliver = useCallback((pack: ListedPack['pack'], transactionId: string, boughtDay: string = dayKey): boolean => {
     let applied = false;
     apply((state) => {
-      const result = applyPackPurchase(state, pack, transactionId, dayKey);
+      const result = applyPackPurchase(state, pack, transactionId, boughtDay);
       applied = result.applied;
       return result.state;
     });
     return applied;
   }, [apply, dayKey]);
 
+  const loading = useRef(false);
+  const hasListed = useRef(false);
+  hasListed.current = listed.length > 0;
+
   useEffect(() => {
     if (!active) return;
     let alive = true;
-    void (async () => {
+    const load = async () => {
+      if (loading.current) return;
+      loading.current = true;
       try {
         await initializeRevenueCatAppStore();
         const port = await revenueCatPackPort();
         const found = await listedPacks(port);
         if (alive) setListed(found);
-        for (const missed of unappliedPurchases(stateRef.current, await port.transactions(), Date.now())) deliver(missed.pack, missed.transactionId);
+        for (const missed of unappliedPurchases(stateRef.current, await port.transactions(), Date.now())) {
+          deliver(missed.pack, missed.transactionId, dayKeyFromDate(new Date(missed.purchasedAt)));
+        }
       } catch { /* Offline or store unavailable: no offer is shown and nothing is charged. */ }
-    })();
-    return () => { alive = false; };
+      finally { loading.current = false; }
+    };
+    void load();
+    // Launched offline (or the store was slow): try again when the player comes back to the app.
+    const retry = () => { if (document.visibilityState === 'visible' && !hasListed.current) void load(); };
+    document.addEventListener('visibilitychange', retry);
+    return () => { alive = false; document.removeEventListener('visibilitychange', retry); };
   }, [active, deliver, stateRef]);
 
   const offer = active ? todaysOffer(listed, dayKey) : null;

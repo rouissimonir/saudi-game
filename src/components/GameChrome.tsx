@@ -154,7 +154,7 @@ export const GameHud: React.FC<{
         <div className="absolute end-2 top-full mt-1 w-72 max-w-[calc(100vw-1rem)] rounded-2xl bg-[#FFFDF9] border-2 border-[#D97706] shadow-2xl p-3 text-[#3E2723] z-50" data-testid="audio-check" dir="ltr">
           <div className="flex items-center justify-between mb-1">
             <span className="text-sm font-black">Audio check</span>
-            <button type="button" onClick={() => setAudioReport(null)} aria-label="Close" className="p-1"><X className="w-4 h-4" /></button>
+            <button type="button" onClick={() => setAudioReport(null)} aria-label={isAr ? 'إغلاق' : 'Close'} className="p-1"><X className="w-4 h-4" /></button>
           </div>
           <pre className="whitespace-pre-wrap break-words text-[11px] leading-snug select-text">{audioReport}</pre>
         </div>

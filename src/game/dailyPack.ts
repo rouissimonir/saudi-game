@@ -44,7 +44,7 @@ export function packPurchaseApplied(state: GameState, transactionId: string): bo
   return state.packTransactions.includes(transactionId);
 }
 
-/** Adds a purchased pack once per store transaction. Repeats (retry, restore, relaunch) leave the save unchanged. */
+/** Adds a purchased pack once per store transaction; `dayKey` is the day it was bought. Repeats (retry, restore, relaunch) leave the save unchanged. */
 export function applyPackPurchase(
   state: GameState,
   pack: PaidPack,
@@ -59,7 +59,8 @@ export function applyPackPurchase(
       diamonds: state.diamonds + pack.gems,
       coins: state.coins + pack.coins,
       packTransactions: [...state.packTransactions, transactionId].slice(-MAX_REMEMBERED_TRANSACTIONS),
-      packBoughtDay: dayKey,
+      // A recovered purchase from an earlier day must not hide, or overwrite, a later day's record.
+      packBoughtDay: dayKey > state.packBoughtDay ? dayKey : state.packBoughtDay,
     },
     applied: true,
   };

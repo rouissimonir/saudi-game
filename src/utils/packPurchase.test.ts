@@ -49,4 +49,5 @@ test('recovers only recent charged purchases that the save has not received', ()
     tx('bad-date', 'nonsense'),
   ], now);
   assert.deepEqual(got.map((g) => g.transactionId), ['fresh']);
+  assert.equal(got[0].purchasedAt, '2026-11-08T11:30:00Z');
 });
