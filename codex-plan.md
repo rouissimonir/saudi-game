@@ -1,6 +1,6 @@
 # Codex plan: Qahwa & Majlis
 
-Last updated: 2026-11-05
+Last updated: 2026-11-09
 
 ## Goal and product identity
 
@@ -9,6 +9,8 @@ Build a leading Capacitor iOS merge game around Saudi hospitality: players prepa
 The source of truth for the design direction and pacing investigation is [docs/PRODUCT_DIRECTION.md](docs/PRODUCT_DIRECTION.md). Treat competitor rankings and other market claims in older documentation as historical and unverified until independently rechecked.
 
 ## Work completed so far
+
+- **TestFlight purchase reported (2026-11-09):** The owner reported that buying the pack works on their iPhone. Build 30 was the most recently prepared sandbox test build, but the exact installed build, product, entitlement delivery, persistence and restore have not yet been independently confirmed. The refill pack and production purchase flow remain incomplete.
 
 - **Checkpoint balance validation (2026-11-05):** The sandbox checkpoint parser now requires explicit nonnegative integer energy and gem balances before applying legacy-save normalization. A response missing either balance is rejected rather than silently replacing it with a default. Type checking and targeted parser tests passed. This safeguard does not connect checkpoint recovery to the game or verify purchase delivery.
 
