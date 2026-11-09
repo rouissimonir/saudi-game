@@ -108,7 +108,7 @@
       "scenes": [
         "area_1"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "faisal_1b63b350",
@@ -118,7 +118,7 @@
       "scenes": [
         "area_6"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "faisal_221f5a4c",
@@ -128,7 +128,7 @@
       "scenes": [
         "chap_2"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "faisal_2a5509b4",
@@ -138,7 +138,7 @@
       "scenes": [
         "chap_2"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "faisal_60cb77af",
@@ -148,7 +148,7 @@
       "scenes": [
         "area_1"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "faisal_767be44b",
@@ -158,7 +158,7 @@
       "scenes": [
         "area_6"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "faisal_a852a693",
@@ -168,7 +168,7 @@
       "scenes": [
         "area_1"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "faisal_a8abd249",
@@ -178,7 +178,7 @@
       "scenes": [
         "chap_2"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "faisal_c11974db",
@@ -188,7 +188,7 @@
       "scenes": [
         "area_1"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "faisal_d1453189",
@@ -198,7 +198,7 @@
       "scenes": [
         "chap_2"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "faisal_de59fe37",
@@ -208,7 +208,7 @@
       "scenes": [
         "area_1"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "faisal_e1686316",
@@ -218,7 +218,7 @@
       "scenes": [
         "area_1"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "faisal_e5085d8c",
@@ -228,7 +228,7 @@
       "scenes": [
         "chap_2"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "faisal_f022eb2e",
@@ -238,7 +238,7 @@
       "scenes": [
         "chap_2"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "hani_037b5c99",
@@ -408,7 +408,7 @@
       "scenes": [
         "chap_4"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "lama_36bb5db9",
@@ -418,7 +418,7 @@
       "scenes": [
         "area_2"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "lama_6f8f13a8",
@@ -428,7 +428,7 @@
       "scenes": [
         "chap_4"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "lama_86ba32f0",
@@ -438,7 +438,7 @@
       "scenes": [
         "chap_4"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "lama_a5a5c994",
@@ -448,7 +448,7 @@
       "scenes": [
         "area_2"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "lama_c58c5cbb",
@@ -458,7 +458,7 @@
       "scenes": [
         "chap_4"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "lama_d435ca44",
@@ -468,7 +468,7 @@
       "scenes": [
         "area_2"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "lama_f4268c51",
@@ -478,7 +478,7 @@
       "scenes": [
         "area_2"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "lama_f5600158",
@@ -488,7 +488,7 @@
       "scenes": [
         "area_2"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "layla_005d435d",
@@ -978,7 +978,7 @@
       "scenes": [
         "area_6"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "narr_07e367c7",
@@ -988,7 +988,7 @@
       "scenes": [
         "chap_4"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "narr_10809f53",
@@ -998,7 +998,7 @@
       "scenes": [
         "ending"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "narr_14534116",
@@ -1008,7 +1008,7 @@
       "scenes": [
         "area_2"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "narr_171a3a0d",
@@ -1018,7 +1018,7 @@
       "scenes": [
         "area_1"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "narr_184a2596",
@@ -1028,7 +1028,7 @@
       "scenes": [
         "area_2"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "narr_1e9ea3de",
@@ -1038,7 +1038,7 @@
       "scenes": [
         "ending"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "narr_2c908a97",
@@ -1048,7 +1048,7 @@
       "scenes": [
         "ending"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "narr_3720a757",
@@ -1058,7 +1058,7 @@
       "scenes": [
         "ending"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "narr_399cd857",
@@ -1068,7 +1068,7 @@
       "scenes": [
         "area_7"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "narr_3d1e0f9b",
@@ -1078,7 +1078,7 @@
       "scenes": [
         "area_6"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "narr_3df93bef",
@@ -1088,7 +1088,7 @@
       "scenes": [
         "area_5"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "narr_3e9a2375",
@@ -1098,7 +1098,7 @@
       "scenes": [
         "area_5"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "narr_42dddf9a",
@@ -1108,7 +1108,7 @@
       "scenes": [
         "chap_3"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "narr_44d2dff5",
@@ -1118,7 +1118,7 @@
       "scenes": [
         "ending"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "narr_663f624f",
@@ -1128,7 +1128,7 @@
       "scenes": [
         "area_3"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "narr_69490549",
@@ -1138,7 +1138,7 @@
       "scenes": [
         "ending"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "narr_6f582724",
@@ -1148,7 +1148,7 @@
       "scenes": [
         "ending"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "narr_72670e19",
@@ -1158,7 +1158,7 @@
       "scenes": [
         "area_1"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "narr_7f8d5db3",
@@ -1168,7 +1168,7 @@
       "scenes": [
         "chap_1"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "narr_8624c13d",
@@ -1178,7 +1178,7 @@
       "scenes": [
         "ending"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "narr_8edd6e22",
@@ -1188,7 +1188,7 @@
       "scenes": [
         "ending"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "narr_9e16f3b2",
@@ -1198,7 +1198,7 @@
       "scenes": [
         "chap_2"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "narr_9e2b87bc",
@@ -1208,7 +1208,7 @@
       "scenes": [
         "chap_2"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "narr_a2a510eb",
@@ -1218,7 +1218,7 @@
       "scenes": [
         "ending"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "narr_aefe1eac",
@@ -1228,7 +1228,7 @@
       "scenes": [
         "area_4"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "narr_b8469f38",
@@ -1238,7 +1238,7 @@
       "scenes": [
         "area_4"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "narr_bf80e726",
@@ -1248,7 +1248,7 @@
       "scenes": [
         "chap_3"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "narr_c6c6791e",
@@ -1258,7 +1258,7 @@
       "scenes": [
         "area_7"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "narr_d12e00a7",
@@ -1268,7 +1268,7 @@
       "scenes": [
         "chap_1"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "narr_d89557ed",
@@ -1278,7 +1278,7 @@
       "scenes": [
         "ending"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "narr_de06b043",
@@ -1288,7 +1288,7 @@
       "scenes": [
         "ending"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "narr_df0f6c5b",
@@ -1298,7 +1298,7 @@
       "scenes": [
         "ending"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "narr_e6be4162",
@@ -1308,7 +1308,7 @@
       "scenes": [
         "ending"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "narr_e97b1a9b",
@@ -1318,7 +1318,7 @@
       "scenes": [
         "chap_4"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "narr_f913156d",
@@ -1328,7 +1328,7 @@
       "scenes": [
         "area_3"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "nasser_10ec361a",
@@ -1388,7 +1388,7 @@
       "scenes": [
         "area_3"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "noura_14c23ff6",
@@ -1398,7 +1398,7 @@
       "scenes": [
         "area_5"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "noura_2ae8fb54",
@@ -1408,7 +1408,7 @@
       "scenes": [
         "chap_1"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "noura_37e2e94e",
@@ -1418,7 +1418,7 @@
       "scenes": [
         "chap_1"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "noura_44cc8783",
@@ -1428,7 +1428,7 @@
       "scenes": [
         "area_3"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "noura_63bddf72",
@@ -1438,7 +1438,7 @@
       "scenes": [
         "area_5"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "noura_6a597087",
@@ -1448,7 +1448,7 @@
       "scenes": [
         "chap_1"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "noura_8adc2d8b",
@@ -1458,7 +1458,7 @@
       "scenes": [
         "area_3"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "noura_91af869a",
@@ -1468,7 +1468,7 @@
       "scenes": [
         "ending"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "noura_a298d992",
@@ -1478,7 +1478,7 @@
       "scenes": [
         "area_5"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "noura_a2b8070b",
@@ -1488,7 +1488,7 @@
       "scenes": [
         "area_3"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "noura_d23906d7",
@@ -1498,7 +1498,7 @@
       "scenes": [
         "area_5"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "noura_e027bcc0",
@@ -1508,7 +1508,7 @@
       "scenes": [
         "area_3"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "noura_e2449040",
@@ -1518,7 +1518,7 @@
       "scenes": [
         "area_5"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "noura_e7e792e3",
@@ -1528,7 +1528,7 @@
       "scenes": [
         "area_3"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "rashid_44d67f5c",
@@ -1748,7 +1748,7 @@
       "scenes": [
         "area_7"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "sultan_99eb91fb",
@@ -1758,7 +1758,7 @@
       "scenes": [
         "area_7"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "sultan_ddbe981a",
@@ -1768,7 +1768,7 @@
       "scenes": [
         "area_7"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "sultan_e02a7c7d",
@@ -1778,7 +1778,7 @@
       "scenes": [
         "area_7"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "tariq_1ad0e2a0",
@@ -1788,7 +1788,7 @@
       "scenes": [
         "chap_3"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "tariq_2f0bd0ec",
@@ -1798,7 +1798,7 @@
       "scenes": [
         "chap_3"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "tariq_45572a4e",
@@ -1808,7 +1808,7 @@
       "scenes": [
         "chap_3"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "tariq_5b533110",
@@ -1818,7 +1818,7 @@
       "scenes": [
         "chap_3"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "tariq_75655ac8",
@@ -1828,7 +1828,7 @@
       "scenes": [
         "area_4"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "tariq_a0826d49",
@@ -1838,7 +1838,7 @@
       "scenes": [
         "area_4"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "tariq_a8f8d74a",
@@ -1848,7 +1848,7 @@
       "scenes": [
         "chap_3"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "tariq_abb3bff6",
@@ -1858,7 +1858,7 @@
       "scenes": [
         "chap_3"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "tariq_ba8ae25a",
@@ -1868,7 +1868,7 @@
       "scenes": [
         "area_4"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "tariq_cb2d6bb1",
@@ -1878,7 +1878,7 @@
       "scenes": [
         "chap_3"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "tariq_ced0a582",
@@ -1888,7 +1888,7 @@
       "scenes": [
         "area_4"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "tariq_dd0137e0",
@@ -1898,7 +1898,7 @@
       "scenes": [
         "area_4"
       ],
-      "recorded": false
+      "recorded": true
     },
     {
       "id": "tariq_dd271de8",
@@ -1908,7 +1908,7 @@
       "scenes": [
         "chap_3"
       ],
-      "recorded": false
+      "recorded": true
     }
   ]
 }
