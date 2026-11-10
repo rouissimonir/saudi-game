@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createInitialGameState } from '../game/rules';
 import { PAID_PACKS } from '../game/dailyPack';
-import { PackStorePort, StorePackage, buyPack, listedPacks, todaysOffer, unappliedPurchases } from './packPurchase';
+import { PackStorePort, StorePackage, buyPack, listedPacks, matchingCurrentPackage, todaysOffer, unappliedPurchases } from './packPurchase';
 
 const refill = PAID_PACKS[0];
 const pkg: StorePackage = { identifier: 'refill_pkg', product: { identifier: refill.productId, priceString: 'SAR 4.99', title: 'Refill' } };
@@ -25,6 +25,13 @@ test('lists only known packs and keeps the store price string', async () => {
 test('a purchase reports the store transaction id', async () => {
   const [listed] = await listedPacks(port());
   assert.deepEqual(await buyPack(port(), listed), { kind: 'bought', pack: refill, transactionId: 'tx-1' });
+});
+
+test('the purchase sheet is only opened for the product and price shown to the player', () => {
+  assert.equal(matchingCurrentPackage(pkg, [pkg]), pkg);
+  assert.equal(matchingCurrentPackage(pkg, [{ ...pkg, product: { ...pkg.product, identifier: 'other' } }]), undefined);
+  assert.equal(matchingCurrentPackage(pkg, [{ ...pkg, product: { ...pkg.product, priceString: 'SAR 9.99' } }]), undefined);
+  assert.equal(matchingCurrentPackage(pkg, [{ ...pkg, identifier: 'other-package' }]), undefined);
 });
 
 test('cancel is quiet, other errors and mismatched products fail', async () => {

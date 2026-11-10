@@ -12,6 +12,13 @@ export interface PackStorePort {
 
 export interface ListedPack { pack: PaidPack; storePackage: StorePackage; priceString: string }
 
+/** Do not charge for a changed product or price after the player saw the offer. */
+export function matchingCurrentPackage<T extends StorePackage>(selected: StorePackage, current: readonly T[]): T | undefined {
+  return current.find(p => p.identifier === selected.identifier &&
+    p.product.identifier === selected.product.identifier &&
+    p.product.priceString === selected.product.priceString);
+}
+
 /** Packs the store lists right now. Prices are always the store's own localized strings. */
 export async function listedPacks(port: PackStorePort, packs: readonly PaidPack[] = PAID_PACKS): Promise<ListedPack[]> {
   const found = await port.listPackages();
@@ -75,7 +82,7 @@ export async function revenueCatPackPort(): Promise<PackStorePort> {
     listPackages: async () => (await Purchases.getOfferings()).current?.availablePackages ?? [],
     purchase: async (pkg) => {
       const offerings = await Purchases.getOfferings();
-      const real = offerings.current?.availablePackages.find((p) => p.identifier === pkg.identifier);
+      const real = matchingCurrentPackage(pkg, offerings.current?.availablePackages ?? []);
       if (!real) throw new Error('Package no longer available');
       const result = await Purchases.purchasePackage({ aPackage: real });
       return { transaction: result.transaction };

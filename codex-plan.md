@@ -10,6 +10,8 @@ The source of truth for the design direction and pacing investigation is [docs/P
 
 ## Work completed so far
 
+- **Pack offer recheck (2026-11-10):** Immediately before invoking the store purchase, the app checks that the refreshed package still has the identifier, product and localized price shown to the player. If any changed, it stops before requesting payment. Type checking and targeted unit tests passed; this is not a native purchase test and does not connect server delivery.
+
 - **Refill device test and database amounts (2026-11-10):** The owner reported receiving 100 energy and 30 gems in build 38 and keeping both after reopening. Applied the refill amount migration to Supabase and ran rolled-back tests for duplicate notifications, refund ordering, legacy amounts, account isolation and checkpoint claims. Permission checks show authenticated clients cannot call the credit function; no test rows remain. This does not establish server-backed delivery: the app still credits its local save, and the webhook, identity, reconciliation and recovery are not connected or verified with an actual purchase.
 
 - **Refill amount migration prepared (2026-11-09):** A migration changes newly observed refill transactions to the approved 100 energy and 30 gems and uses the first recorded event's amounts for its inverse, including legacy entries and refund-first events. A disposable PostgreSQL test passed for duplicates, both event orders, legacy refunds and cross-account rejection. The migration has not been applied to Supabase; the fixture did not exercise the live schema, webhook, app delivery or recovery, and the client is not connected to the ledger.
