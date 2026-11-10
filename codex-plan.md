@@ -1,6 +1,6 @@
 # Codex plan: Qahwa & Majlis
 
-Last updated: 2026-11-09
+Last updated: 2026-11-10
 
 ## Goal and product identity
 
@@ -9,6 +9,8 @@ Build a leading Capacitor iOS merge game around Saudi hospitality: players prepa
 The source of truth for the design direction and pacing investigation is [docs/PRODUCT_DIRECTION.md](docs/PRODUCT_DIRECTION.md). Treat competitor rankings and other market claims in older documentation as historical and unverified until independently rechecked.
 
 ## Work completed so far
+
+- **Refill device test and database amounts (2026-11-10):** The owner reported receiving 100 energy and 30 gems in build 38 and keeping both after reopening. Applied the refill amount migration to Supabase and ran rolled-back tests for duplicate notifications, refund ordering, legacy amounts, account isolation and checkpoint claims. Permission checks show authenticated clients cannot call the credit function; no test rows remain. This does not establish server-backed delivery: the app still credits its local save, and the webhook, identity, reconciliation and recovery are not connected or verified with an actual purchase.
 
 - **Refill amount migration prepared (2026-11-09):** A migration changes newly observed refill transactions to the approved 100 energy and 30 gems and uses the first recorded event's amounts for its inverse, including legacy entries and refund-first events. A disposable PostgreSQL test passed for duplicates, both event orders, legacy refunds and cross-account rejection. The migration has not been applied to Supabase; the fixture did not exercise the live schema, webhook, app delivery or recovery, and the client is not connected to the ledger.
 
