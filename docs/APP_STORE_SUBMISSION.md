@@ -81,7 +81,7 @@ puzzle,saudi,arabic,dates,story,renovate,hospitality,heritage,khaleeji,design,di
 >
 > This game is a work of fiction. All characters and families are imaginary.
 >
-> Questions or feedback: add support address here.
+> Questions or feedback: mounirrouissi2@gmail.com
 
 **Arabic**
 
@@ -112,7 +112,7 @@ puzzle,saudi,arabic,dates,story,renovate,hospitality,heritage,khaleeji,design,di
 >
 > هذه اللعبة عمل خيالي. كل الشخصيات والعائلات من وحي الخيال.
 >
-> للتواصل والملاحظات: أضف عنوان الدعم هنا.
+> للتواصل والملاحظات: mounirrouissi2@gmail.com
 
 Check before pasting: "Plays offline after the first launch" is true of the web build, and the native build bundles its assets, but it still needs a test on a real iPhone (`DOCUMENTATION.md`, Native offline behaviour). Remove that bullet if the device test says otherwise. "Some lines are spoken" holds only while the recorded lines ship; if the voice files are replaced or dropped, edit it.
 
@@ -128,9 +128,9 @@ The Arabic text is written by a non-native speaker and must go through `docs/ARA
 
 | Field | Value |
 |---|---|
-| Support URL | **You supply.** A page with a contact email is enough (the owner's website may serve as this if it shows one). |
-| Marketing URL | Optional. The owner's website is https://qahwa-majlis-merge.ai.studio/ and the web version of the game is at https://rouissimonir.github.io/saudi-game/ |
-| Privacy Policy URL | https://qahwa-majlis-merge.ai.studio/privacy.html (supplied by the owner on 29 October 2026; its text has **not** been checked against section 9 yet, because the page was unreachable from the build environment) |
+| Support URL | https://qahwa-majlis.monirrouissi.com/support.html (supplied by the owner on 11 November 2026; read by us the same day, see the warnings in section 9). Support email: mounirrouissi2@gmail.com |
+| Marketing URL | Optional. The web version of the game is at https://rouissimonir.github.io/saudi-game/ (the older qahwa-majlis-merge.ai.studio address is no longer the owner's site) |
+| Privacy Policy URL | https://qahwa-majlis.monirrouissi.com/privacy.html (supplied by the owner on 11 November 2026; read on 11 November 2026 and **not yet consistent with the app**, see section 9) |
 
 ## 8. Screenshots
 
@@ -154,7 +154,13 @@ The answer depends on how the release build is made, so decide it before you ans
 - **Option B, purchases in 1.0 (or the key is set anyway):** do **not** answer Data Not Collected. Declare what RevenueCat receives, following RevenueCat's current App Privacy guidance (it covers purchase history and identifiers; read the live page, do not guess), as collected for app functionality and not used for tracking. The privacy policy must then say that Apple processes payment and RevenueCat receives the purchase record.
 - If you add analytics or crash reporting later, update the label first.
 
-Privacy policy (https://qahwa-majlis-merge.ai.studio/privacy.html, supplied by the owner; not yet read by us): for Option A it should say progress is stored on the device only, no personal data is collected or sold, and give a contact address. For Option B it must also name Apple and RevenueCat as above. Whichever option you pick, the policy and the App Privacy answers must say the same thing.
+Privacy policy and support page, read on 11 November 2026 (https://qahwa-majlis.monirrouissi.com/privacy.html and /support.html). They are not part of this repository, so fixing them means editing that site. Fix these before submitting, because Apple reviews the pages and the App Privacy answers against the app:
+
+- **Wrong contact.** The policy's contact is `privacy@diriyahstudios.com`, and the support page's contact is `support@qahwa-merge.app` plus the template placeholder `you@domain.com`. None of them is the owner's address (mounirrouissi2@gmail.com). A dead support address is a common rejection reason.
+- **Wrong product.** Both pages call the game "Majlis Al-Qahwa" by "Diriyah Studios" and talk about the "Fasih Kids" reading coach, COPPA and Apple's Kids Category. This listing is Qahwa & Majlis Merge, rated 4+, not in the Kids Category. Make the name and developer match App Store Connect, and remove the Kids Category and Fasih claims unless Fasih ships in this app.
+- **Wrong platforms and features.** The support page promises Google Play, Android, desktop browsers, iPad, in-game "Restore Purchases" and an in-game support form. Version 1.0 is iPhone-only with no purchases (section 9, Option A). Remove what is not true.
+- **No RevenueCat statement.** The policy does not name RevenueCat. That is fine for Option A (build without the key) and wrong for Option B.
+- Whichever option you pick, the policy and the App Privacy answers must say the same thing.
 
 ## 10. Age rating questionnaire
 
@@ -195,7 +201,7 @@ Add the note about purchases only while it is true. If draft in-app purchase pro
 2. Voice licence: Starter plan active with invoices kept; the 24 October voice lines checked or regenerated; library-voice terms read and saved; or recordings from an actor with a written licence.
 3. Decide purchases in 1.0 or later (section 9, Option A or B), then set the release build's RevenueCat key to match, and make the privacy label and policy say the same.
 4. Native build: archive in Xcode, install on a real iPhone, play the first 10 minutes, kill and relaunch, airplane mode.
-5. Privacy page supplied (https://qahwa-majlis-merge.ai.studio/privacy.html): read it and compare it with section 9. Support page and support email live.
+5. Privacy and support pages supplied (https://qahwa-majlis.monirrouissi.com/privacy.html and /support.html) and read on 11 November 2026. Not ready: contact email, product name, Kids Category and platform claims need fixing on that site (section 9).
 6. TestFlight with 5 to 10 testers, including Saudi players.
 7. Screenshots: re-captured 29 October 2026. Re-capture after any visible change (`store/README.md`, Regenerating). Arabic app preview video ready (section 8).
 8. Fill the sections above in App Store Connect, add the build, and submit for review.
