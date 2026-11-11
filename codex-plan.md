@@ -4,7 +4,15 @@ Last updated: 2026-11-10
 
 ## Goal and product identity
 
-Build a leading Capacitor iOS merge game around Saudi hospitality: players prepare coffee and treats, welcome guests, personalize a majlis, and see their choices remembered. The owner selected Saudi Arabia's iPhone App Store Casual **top-grossing** chart as the first top-10 target. A ranking is an outcome to verify after release, not something source code or automated tests can establish. The measurement period and an independently verifiable source for the grossing chart still need to be chosen; record the source, device, territory, metric and observation time when checking it. Apple's Saudi Casual [free](https://apps.apple.com/sa/iphone/charts/7003?chart=top-free) and [paid](https://apps.apple.com/sa/iphone/charts/7003?chart=top-paid) views are separate charts and do not prove a grossing rank.
+Build the merge game Saudi iPhone players prefer: better Arabic, a better hospitality fantasy and less friction than the merge games currently charting in Saudi Arabia, in a Capacitor iOS game where players prepare coffee and treats, welcome guests, personalize a majlis, and see their choices remembered. "Better" is only claimed when measured, through three checks:
+
+1. **Moderated Saudi playtests:** Arabic-speaking Saudi players on real iPhones choose between this game and one charting competitor, unprompted, after a first session of each. Record the competitor, build commit, sample size and reasons given.
+2. **Retention after release:** day-1 and day-7 return rates from consent-aware analytics, compared with baselines recorded before any tuning.
+3. **Chart position:** the top-10 target below.
+
+The competitors cannot be out-built on content volume. The advantage to test is what none of them offers: Arabic-first writing, Khaleeji hospitality and guests who remember the player's choices. Add systems only after the single-player loop earns repeat play.
+
+The owner selected Saudi Arabia's iPhone App Store Casual **top-grossing** chart as the first top-10 target. A ranking is an outcome to verify after release, not something source code or automated tests can establish. The measurement period and an independently verifiable source for the grossing chart still need to be chosen; record the source, device, territory, metric and observation time when checking it. Apple's Saudi Casual [free](https://apps.apple.com/sa/iphone/charts/7003?chart=top-free) and [paid](https://apps.apple.com/sa/iphone/charts/7003?chart=top-paid) views are separate charts and do not prove a grossing rank.
 
 The source of truth for the design direction and pacing investigation is [docs/PRODUCT_DIRECTION.md](docs/PRODUCT_DIRECTION.md). Treat competitor rankings and other market claims in older documentation as historical and unverified until independently rechecked.
 
