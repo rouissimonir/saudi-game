@@ -13,6 +13,8 @@ name: TestFlight build
 #   APPLE_TEAM_ID    the 10-character Apple developer Team ID
 #   REVENUECAT_IOS_KEY   (optional) RevenueCat public App Store key, starts with appl_
 # Without REVENUECAT_IOS_KEY the build ships without RevenueCat (no purchases, nothing contacts RevenueCat).
+# The key is passed to the build only when 'daily_packs' or 'sandbox_purchase_test' is ticked on a manual run, so
+# automatic builds and the 1.0 release build are no-purchase builds (docs/APP_STORE_SUBMISSION.md, section 9, Option A).
 
 'on':
   workflow_dispatch:
@@ -59,7 +61,9 @@ jobs:
       ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
       ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-      VITE_REVENUECAT_IOS_KEY: ${{ secrets.REVENUECAT_IOS_KEY }}
+      # The key reaches the build only when a purchase option is switched on by hand, so every automatic
+      # (push) build is a no-purchase build that never configures RevenueCat, whatever the secret holds.
+      VITE_REVENUECAT_IOS_KEY: ${{ (inputs.daily_packs || inputs.sandbox_purchase_test) && secrets.REVENUECAT_IOS_KEY || '' }}
       VITE_APPLE_SANDBOX_PURCHASE_TEST: ${{ inputs.sandbox_purchase_test && '1' || '0' }}
       VITE_DAILY_PACKS: ${{ inputs.daily_packs && '1' || '0' }}
     steps:

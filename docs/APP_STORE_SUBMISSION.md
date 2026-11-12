@@ -150,6 +150,7 @@ The five screenshots were re-captured from `main` on 29 October 2026, because th
 The answer depends on how the release build is made, so decide it before you answer:
 
 - **Source as of 29 October 2026:** no accounts, no analytics, no ads and no server of our own. Progress is saved on the device. But commit `da307a7` makes a **production iOS build configure RevenueCat at startup whenever `VITE_REVENUECAT_IOS_KEY` (an `appl_` key) is set at build time** (`src/utils/revenueCatAppStore.ts`). RevenueCat then contacts its servers and creates an anonymous app user ID.
+- **Decision, 12 November 2026: Option A.** The owner chose no purchases in 1.0. Automatic builds already pass no key (workflow change on this date), and the draft page text is `docs/RELEASE_SUPPORT_PRIVACY_DRAFT.md`.
 - **Option A, no purchases in 1.0:** build the release **without** that key. The SDK is never configured and nothing leaves the device, so you can answer **Data Not Collected**. Confirm it in the Xcode archive (inspect the network traffic of the installed build) before you answer, because the answer is a legal statement.
 - **Option B, purchases in 1.0 (or the key is set anyway):** do **not** answer Data Not Collected. Declare what RevenueCat receives, following RevenueCat's current App Privacy guidance (it covers purchase history and identifiers; read the live page, do not guess), as collected for app functionality and not used for tracking. The privacy policy must then say that Apple processes payment and RevenueCat receives the purchase record.
 - If you add analytics or crash reporting later, update the label first.
@@ -157,6 +158,7 @@ The answer depends on how the release build is made, so decide it before you ans
 Privacy policy and support page, read on 11 November 2026 (https://qahwa-majlis.monirrouissi.com/privacy.html and /support.html). They are not part of this repository, so fixing them means editing that site. Fix these before submitting, because Apple reviews the pages and the App Privacy answers against the app:
 
 - **Wrong contact.** The policy's contact is `privacy@diriyahstudios.com`, and the support page's contact is `support@qahwa-merge.app` plus the template placeholder `you@domain.com`. None of them is the owner's address (mounirrouissi2@gmail.com). A dead support address is a common rejection reason.
+- **Fasih is not part of this app.** Nothing in the game links to `fasih.html` (checked 12 November 2026), so the app needs no microphone permission. Remove the Fasih, COPPA and Kids Category text from both pages.
 - **Wrong product.** Both pages call the game "Majlis Al-Qahwa" by "Diriyah Studios" and talk about the "Fasih Kids" reading coach, COPPA and Apple's Kids Category. This listing is Qahwa & Majlis Merge, rated 4+, not in the Kids Category. Make the name and developer match App Store Connect, and remove the Kids Category and Fasih claims unless Fasih ships in this app.
 - **Wrong platforms and features.** The support page promises Google Play, Android, desktop browsers, iPad, in-game "Restore Purchases" and an in-game support form. Version 1.0 is iPhone-only with no purchases (section 9, Option A). Remove what is not true.
 - **No RevenueCat statement.** The policy does not name RevenueCat. That is fine for Option A (build without the key) and wrong for Option B.
@@ -199,7 +201,7 @@ Add the note about purchases only while it is true. If draft in-app purchase pro
 
 1. Arabic reviewed by a native Saudi reviewer, applied with `tools/review/check_review.ts`, and logged. (Not done. An AI review pass, if it arrives, is not a native review.)
 2. Voice licence: Starter plan active with invoices kept; the 24 October voice lines checked or regenerated; library-voice terms read and saved; or recordings from an actor with a written licence.
-3. Decide purchases in 1.0 or later (section 9, Option A or B), then set the release build's RevenueCat key to match, and make the privacy label and policy say the same.
+3. Purchases: decided on 12 November 2026, none in 1.0 (Option A). The workflow only passes the RevenueCat key when a purchase option is ticked on a manual run, so a normal build has none. Still to do: answer App Privacy **Data Not Collected**, and confirm no network traffic from the installed build.
 4. Native build: archive in Xcode, install on a real iPhone, play the first 10 minutes, kill and relaunch, airplane mode.
 5. Privacy and support pages supplied (https://qahwa-majlis.monirrouissi.com/privacy.html and /support.html) and read on 11 November 2026. Not ready: contact email, product name, Kids Category and platform claims need fixing on that site (section 9).
 6. TestFlight with 5 to 10 testers, including Saudi players.
