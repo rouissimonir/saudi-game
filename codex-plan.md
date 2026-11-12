@@ -18,6 +18,8 @@ The source of truth for the design direction and pacing investigation is [docs/P
 
 ## Work completed so far
 
+- **Sandbox webhook deployed (2026-11-12):** At the owner's request, deployed version 1 of `refill-webhook` to Supabase with platform JWT verification disabled because the handler checks its own shared authorization header. An unauthenticated POST returned HTTP 503 `Not configured`, confirming the endpoint is not accepting events without the required setup. No webhook secret or RevenueCat integration was configured or verified, and no event or purchase was processed. This prototype accepts sandbox events only; app identity, redemption, monitoring and production reconciliation remain incomplete. The RevenueCat connector was not available in this session and an offline CLI check did not complete.
+
 - **Refill component retest (2026-11-12):** After the owner requested testing, 22 targeted local tests passed for pack behavior, identity preparation, checkpoint parsing and webhook event handling. The deployed Supabase database also passed rollback-only refill amount and checkpoint tests. The project's Edge Function list was empty, so no deployed RevenueCat webhook or end-to-end server purchase was tested; the active game still delivers locally. Build 41 failed signing and was not uploaded.
 
 - **First-release purchase decision (2026-11-12):** The owner confirmed that the 100-energy/30-gem refill should be offered in the first release. Decoration and its restore flow remain deferred. Server-backed delivery, account recovery, reconciliation and a release-ready paid build remain incomplete; the current TestFlight pack still uses local delivery.
