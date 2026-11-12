@@ -40,6 +40,7 @@
     "test:phone:monkey": "node tools/e2e/monkey.cjs 1 ar 350"
   },
   "dependencies": {
+    "@capacitor/browser": "^8.0.5",
     "@capacitor/core": "^8.5.2",
     "@capacitor/haptics": "^8.0.2",
     "@capacitor/ios": "^8.5.2",

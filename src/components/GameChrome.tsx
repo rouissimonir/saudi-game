@@ -4,6 +4,7 @@ import { Language } from '../game/rules';
 import { formatCountdown } from './ProgressionModals';
 import { useNow } from '../utils/useNow';
 import { soundFX } from '../utils/soundAndHaptics';
+import { Browser } from '@capacitor/browser';
 
 /** 980 -> "980", 12_480 -> "12.4k", 2_300_000 -> "2.3M" so pills never truncate on small phones. */
 export function compact(n: number): string {
@@ -175,6 +176,8 @@ export const GameHud: React.FC<{
             { icon: <Share2 className="w-4 h-4 text-[#0369A1]" />, label: isAr ? 'ادعُ صديقاً' : 'Invite a friend', on: p.onInvite },
             { icon: <BookOpen className="w-4 h-4" />, label: isAr ? 'حلقات القصة' : 'Story episodes', on: p.onReplayStory },
             { icon: <ArrowRightLeft className="w-4 h-4" />, label: isAr ? 'نقل التقدم لجهاز آخر' : 'Transfer progress', on: p.onTransfer },
+            { icon: <ScrollText className="w-4 h-4" />, label: isAr ? 'سياسة الخصوصية' : 'Privacy policy', on: () => { void Browser.open({ url: 'https://qahwa-majlis.monirrouissi.com/privacy.html' }).catch(() => {}); } },
+            { icon: <CircleHelp className="w-4 h-4" />, label: isAr ? 'الدعم' : 'Support', on: () => { void Browser.open({ url: 'https://qahwa-majlis.monirrouissi.com/support.html' }).catch(() => {}); } },
             ...(debugTools ? [{ icon: <AudioLines className="w-4 h-4" />, label: isAr ? 'فحص الصوت' : 'Audio check', on: () => { setAudioReport('…'); void soundFX.runAudioSelfTest().then(setAudioReport, (e: unknown) => setAudioReport(`Audio check failed: ${e instanceof Error ? e.message : String(e)}`)); } }] : []),
             { icon: <Pause className="w-4 h-4" />, label: isAr ? 'إيقاف مؤقت' : 'Pause', on: p.onPause },
           ].map((row) => (
