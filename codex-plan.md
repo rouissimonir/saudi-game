@@ -1,6 +1,6 @@
 # Codex plan: Qahwa & Majlis
 
-Last updated: 2026-11-10
+Last updated: 2026-11-12
 
 ## Goal and product identity
 
@@ -17,6 +17,8 @@ The owner selected Saudi Arabia's iPhone App Store Casual **top-grossing** chart
 The source of truth for the design direction and pacing investigation is [docs/PRODUCT_DIRECTION.md](docs/PRODUCT_DIRECTION.md). Treat competitor rankings and other market claims in older documentation as historical and unverified until independently rechecked.
 
 ## Work completed so far
+
+- **Version 1.0 is a no-purchase release (2026-11-12):** The owner chose to ship 1.0 without the refill pack, overriding the earlier plan to include it, because server delivery and recovery are unfinished. The TestFlight workflow now passes the RevenueCat key to a build only when a purchase option is ticked on a manual run, so automatic builds never configure RevenueCat; the YAML parses, but no build has run with the change and the Apple certificate limit (run 43172606213) still blocks every signed build until an unused certificate is revoked. The support and privacy text in `docs/RELEASE_SUPPORT_PRIVACY_DRAFT.md` now describes a no-purchase game, with an Arabic version that a Saudi reviewer has not read. Nothing in the game links to `fasih.html`, so no microphone permission is needed; the live pages still mention Kids Category, Fasih, Android and wrong emails and have not been republished. The App Privacy answer (Data Not Collected) is not yet given or checked against a signed build's network traffic.
 
 - **Sandbox webhook deployed (2026-11-12):** At the owner's request, deployed version 1 of `refill-webhook` to Supabase with platform JWT verification disabled because the handler checks its own shared authorization header. An unauthenticated POST returned HTTP 503 `Not configured`, confirming the endpoint is not accepting events without the required setup. No webhook secret or RevenueCat integration was configured or verified, and no event or purchase was processed. This prototype accepts sandbox events only; app identity, redemption, monitoring and production reconciliation remain incomplete. The RevenueCat connector was not available in this session and an offline CLI check did not complete.
 
