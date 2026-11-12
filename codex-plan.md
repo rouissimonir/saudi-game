@@ -18,6 +18,8 @@ The source of truth for the design direction and pacing investigation is [docs/P
 
 ## Work completed so far
 
+- **Refill component retest (2026-11-12):** After the owner requested testing, 22 targeted local tests passed for pack behavior, identity preparation, checkpoint parsing and webhook event handling. The deployed Supabase database also passed rollback-only refill amount and checkpoint tests. The project's Edge Function list was empty, so no deployed RevenueCat webhook or end-to-end server purchase was tested; the active game still delivers locally. Build 41 failed signing and was not uploaded.
+
 - **First-release purchase decision (2026-11-12):** The owner confirmed that the 100-energy/30-gem refill should be offered in the first release. Decoration and its restore flow remain deferred. Server-backed delivery, account recovery, reconciliation and a release-ready paid build remain incomplete; the current TestFlight pack still uses local delivery.
 
 - **First-release candidate attempt (2026-11-12):** Requested TestFlight build 41 from `a7a8cf5` with the refill on and the sandbox decoration controls off. Checks and the web/iOS sync succeeded, but [run 43172606213](https://github.com/rouissimonir/saudi-game/actions/runs/43172606213) failed during signing at Apple's certificate limit, so no build was uploaded. This candidate was for testing only: paid refill recovery, website policy accuracy and native link behavior still need verification before any App Store submission.
