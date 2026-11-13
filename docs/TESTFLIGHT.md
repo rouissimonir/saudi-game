@@ -63,3 +63,14 @@ Both are off for automatic builds from pushes to `main`.
 ## Troubleshooting
 
 **"Your account has reached the maximum number of certificates" / "No profiles for ... were found"** (seen on 7 November 2026, runs 31 and 32). Cloud signing creates a signing certificate for each build, and Apple caps how many an account can hold. Nothing is wrong in the code. Revoke old or unused certificates at developer.apple.com > Certificates, IDs & Profiles > Certificates (keep any you use for other apps or Macs), then re-run the failed workflow. The workflow now prints this advice as an error annotation when it happens. To stop it recurring, create one distribution certificate and profile once and store them as secrets so builds reuse them.
+
+## One saved signing certificate (instead of a new one per build)
+
+By default the TestFlight workflow uses Xcode cloud signing, which creates a new "Apple Development: Created via API" certificate on every fresh runner until Apple's limit is reached. To sign with one certificate every time:
+
+1. In App Store Connect and developer.apple.com, accept any new agreement (the API refuses requests while one is pending), and make sure the account has fewer than three Apple Distribution certificates (revoke an unused one if not).
+2. Run **Actions > Apple signing bootstrap > Run workflow**. It creates one Apple Distribution certificate and one App Store profile for `sa.qahwamajlis.merge` and offers a one-day download named `signing-secrets` with four text files.
+3. Save the text of each file as a secret in **Settings > Environments > dev**: `DIST_CERT_P12_BASE64`, `DIST_CERT_PASSWORD`, `DIST_PROFILE_BASE64` (`DIST_PROFILE_NAME.txt` is for reference). Then delete the artifact, because it contains a private key.
+4. From then on the TestFlight build detects those secrets and signs with them ("saved certificate" steps). Remove the secrets to go back to cloud signing.
+
+The certificate and profile last one year; run the bootstrap again before they expire. This path was written without being able to run it (Apple's API was refusing requests over a pending agreement), so watch the first build after setting the secrets.

@@ -1,0 +1,38 @@
+name: Apple signing bootstrap
+
+# One-time setup so TestFlight builds sign with ONE saved certificate instead of creating a new one every run.
+# Run by hand: Actions > Apple signing bootstrap > Run workflow. It creates one Apple Distribution certificate and one
+# App Store profile through the App Store Connect key, then offers four secret files as a one-day download ("signing-secrets").
+# Save each file's text as a repository secret (Settings > Environments > dev > secrets): DIST_CERT_P12_BASE64,
+# DIST_CERT_PASSWORD, DIST_PROFILE_BASE64, DIST_PROFILE_NAME. Then delete the artifact. The files contain a private key.
+# Apple allows three Apple Distribution certificates per account: revoke an unused one first if this fails at the limit.
+# The certificate and profile last one year; run this again before then.
+
+'on':
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+    environment: dev
+    timeout-minutes: 5
+    env:
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Create the certificate and profile
+        run: node tools/apple-signing-bootstrap.mjs signing-out
+      - uses: actions/upload-artifact@v4
+        with:
+          name: signing-secrets
+          path: signing-out/
+          retention-days: 1
+          if-no-files-found: error
