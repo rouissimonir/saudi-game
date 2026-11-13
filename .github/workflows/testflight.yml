@@ -99,6 +99,12 @@ jobs:
           npm run build
           npx cap sync ios
           npm run check:ios-assets
+      - name: Clear stale development certificates left by earlier runs
+        # Cloud signing makes a new "Apple Development: Created via API" certificate on every fresh runner and Apple caps
+        # how many an account may hold; at the cap signing fails. Removing the old ones keeps the count at one.
+        # Distribution certificates are never touched (tools/apple-certs.mjs). A failure here must not stop the build.
+        continue-on-error: true
+        run: node tools/apple-certs.mjs clean --delete
       - name: Archive and sign (cloud signing with the App Store Connect key)
         run: |
           mkdir -p "$HOME/private_keys"
