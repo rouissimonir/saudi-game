@@ -25,6 +25,7 @@ import {
 import { discoveryReward } from '../game/progression';
 import { ItemArtwork } from './ItemArtwork';
 import { rotationForWedge } from '../game/wheelRotation';
+import { LUCKY_WHEEL_ENABLED } from '../game/features';
 
 export const ChainTreeModal: React.FC<{
   lang: Language;
@@ -330,7 +331,7 @@ export const LeaderboardModal: React.FC<{
     <div
       role="dialog"
       aria-modal="true"
-      aria-label={isAr ? 'ديوان الكرم ومزاين المجالس وعجلة الحظ' : 'Diwan Al-Karam, Mazayen & Lucky Wheel'}
+      aria-label={isAr ? (LUCKY_WHEEL_ENABLED ? 'ديوان الكرم ومزاين المجالس وعجلة الحظ' : 'ديوان الكرم ومزاين المجالس') : (LUCKY_WHEEL_ENABLED ? 'Diwan Al-Karam, Mazayen & Lucky Wheel' : 'Diwan Al-Karam & Mazayen')}
       className="safe-dialog fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/80"
     >
       <div className="w-full max-w-2xl rounded-2xl border-2 border-[#D99B26] bg-[#221711] text-[#FBF7F0] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
@@ -344,7 +345,7 @@ export const LeaderboardModal: React.FC<{
             </div>
             <div>
               <span className="text-[11px] font-bold uppercase tracking-wider text-[#FBBF24] block">
-                {isAr ? 'مجالس داخل اللعبة وعجلة فنجال الصباح' : 'IN-GAME MAJLIS SHOWCASE & WHEEL'}
+                {isAr ? (LUCKY_WHEEL_ENABLED ? 'مجالس داخل اللعبة وعجلة فنجال الصباح' : 'مجالس داخل اللعبة') : (LUCKY_WHEEL_ENABLED ? 'IN-GAME MAJLIS SHOWCASE & WHEEL' : 'IN-GAME MAJLIS SHOWCASE')}
               </span>
               <h2 className="text-lg sm:text-xl font-bold">
                 {isAr ? 'ديوان الكرم ومزاين المجالس' : 'Diwan Al-Karam & Mazayen Hub'}
@@ -387,6 +388,7 @@ export const LeaderboardModal: React.FC<{
             <Sparkles className="w-3.5 h-3.5" />
             <span>{isAr ? `اختر مجلساً (${mazayenVotesRemaining})` : `Choose a Majlis (${mazayenVotesRemaining})`}</span>
           </button>
+          {LUCKY_WHEEL_ENABLED && (
           <button
             type="button"
             onClick={() => setSection('wheel')}
@@ -403,6 +405,7 @@ export const LeaderboardModal: React.FC<{
                 : `Lucky Dallah Spin (${freeSpinsAvailable > 0 ? 'FREE!' : '15💎'})`}
             </span>
           </button>
+          )}
         </div>
 
         {/* Section Content */}
@@ -551,7 +554,7 @@ export const LeaderboardModal: React.FC<{
             </div>
           )}
 
-          {section === 'wheel' && (
+          {LUCKY_WHEEL_ENABLED && section === 'wheel' && (
             <div className="flex flex-col items-center text-center space-y-4 py-2">
               {/* Interactive SVG Dallah Spin Wheel */}
               <div className="relative w-52 h-52 sm:w-60 sm:h-60 flex items-center justify-center">

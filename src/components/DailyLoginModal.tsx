@@ -1,6 +1,7 @@
 import React from 'react';
 import { Gem, Zap, Coins, Scissors, Wand2, Gift, Check } from 'lucide-react';
 import { DAILY_LOGIN_REWARDS, DailyReward, Language } from '../game/rules';
+import { LUCKY_WHEEL_ENABLED } from '../game/features';
 
 interface DailyLoginModalProps {
   lang: Language;
@@ -17,7 +18,7 @@ function rewardParts(reward: DailyReward, isAr: boolean): { icon: React.ReactNod
   if (reward.gems) parts.push({ icon: <Gem className="w-4 h-4 text-[#38BDF8]" />, label: `+${reward.gems}` });
   if (reward.scissors) parts.push({ icon: <Scissors className="w-4 h-4 text-[#F472B6]" />, label: `+${reward.scissors}` });
   if (reward.joker) parts.push({ icon: <Wand2 className="w-4 h-4 text-[#A78BFA]" />, label: `+${reward.joker}` });
-  if (reward.freeSpins) parts.push({ icon: <Gift className="w-4 h-4 text-[#34D399]" />, label: isAr ? `+${reward.freeSpins} دورة` : `+${reward.freeSpins} spin` });
+  if (LUCKY_WHEEL_ENABLED && reward.freeSpins) parts.push({ icon: <Gift className="w-4 h-4 text-[#34D399]" />, label: isAr ? `+${reward.freeSpins} دورة` : `+${reward.freeSpins} spin` });
   if (reward.chest) parts.push({ icon: <Gift className="w-4 h-4 text-[#FBBF24]" />, label: isAr ? 'صندوق ملكي' : 'Royal chest' });
   return parts;
 }

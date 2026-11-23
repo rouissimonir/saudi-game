@@ -5,6 +5,7 @@ import { formatCountdown } from './ProgressionModals';
 import { useNow } from '../utils/useNow';
 import { soundFX } from '../utils/soundAndHaptics';
 import { Browser } from '@capacitor/browser';
+import { LUCKY_WHEEL_ENABLED } from '../game/features';
 
 /** 980 -> "980", 12_480 -> "12.4k", 2_300_000 -> "2.3M" so pills never truncate on small phones. */
 export function compact(n: number): string {
@@ -164,7 +165,7 @@ export const GameHud: React.FC<{
       {menuOpen && (
         <div className="absolute end-2 top-full mt-1 w-56 max-h-[calc(100dvh-5rem)] overflow-y-auto rounded-2xl bg-[#FFFDF9] border-2 border-[#D97706] shadow-2xl p-2 grid gap-1 text-[#3E2723]" data-testid="hud-menu">
           {[
-            { icon: <Gift className="w-4 h-4 text-[#D97706]" />, label: isAr ? 'عجلة فنجال الصباح' : 'Morning wheel', badge: p.freeSpins > 0, on: p.onSpin },
+            ...(LUCKY_WHEEL_ENABLED ? [{ icon: <Gift className="w-4 h-4 text-[#D97706]" />, label: isAr ? 'عجلة فنجال الصباح' : 'Morning wheel', badge: p.freeSpins > 0, on: p.onSpin }] : []),
             { icon: <Trophy className="w-4 h-4 text-[#D97706]" />, label: isAr ? 'معرض المجالس' : 'Majlis showcase', on: p.onRank },
             { icon: <Languages className="w-4 h-4" />, label: isAr ? 'English' : 'العربية', on: p.onToggleLanguage },
             { icon: p.muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />, label: p.muted ? (isAr ? 'تشغيل الصوت' : 'Sound on') : isAr ? 'كتم الصوت' : 'Mute', on: p.onToggleMute },

@@ -172,7 +172,7 @@ Answer honestly in App Store Connect. Expected answers for the game as built:
 |---|---|
 | Cartoon or fantasy violence, realistic violence, sexual content, nudity, profanity, horror | None |
 | Alcohol, tobacco or drug references | None |
-| Simulated gambling | None |
+| Simulated gambling | None (the gem-cost Lucky Dallah wheel is hidden in 1.0 by `LUCKY_WHEEL_ENABLED = false` in `src/game/features.ts`; Apple blocks review of simulated-gambling ratings from individual accounts, 23 November 2026) |
 | Contests | None |
 | Unrestricted web access | No |
 | User-generated content, chat | No |

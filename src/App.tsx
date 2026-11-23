@@ -201,6 +201,7 @@ import {
   xpToReachLevel,
 } from './game/progression';
 import { isVoiceCharacter, speakerCharacter } from './game/voiceLines';
+import { LUCKY_WHEEL_ENABLED } from './game/features';
 
 type ShellState = 'title' | 'playing' | 'paused' | 'gameover';
 type ActiveWorkspace = 'merge' | 'majlis';
@@ -626,8 +627,8 @@ export default function App() {
         soundFX.playError();
         showFeedback(
           isAr
-            ? 'نفدت الطاقة! افتح عجلة فنجال الصباح أو متجر الديوان لشحن الطاقة.'
-            : 'Out of Energy! Spin the Morning Wheel or open Diwan Store for a refill.'
+            ? (LUCKY_WHEEL_ENABLED ? 'نفدت الطاقة! افتح عجلة فنجال الصباح أو متجر الديوان لشحن الطاقة.' : 'نفدت الطاقة! افتح متجر الديوان لشحن الطاقة.')
+            : (LUCKY_WHEEL_ENABLED ? 'Out of Energy! Spin the Morning Wheel or open Diwan Store for a refill.' : 'Out of Energy! Open the Diwan Store for a refill.')
         );
         setEnergyOpen(true);
       } else if (res.reason === 'BOARD_FULL') {
